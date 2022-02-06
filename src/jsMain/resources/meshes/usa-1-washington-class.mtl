@@ -1,0 +1,9 @@
+newmtl usa_1_washington_class
+illum 1
+Ka 0.0 0.0 0.0
+Kd 0.8 0.8 0.8
+Ks 0.6 0.6 0.6
+Ns 6.9
+map_Ka usa-1-washington-class.diff.png
+map_Kd usa-1-washington-class.diff.png
+map_Ks usa-1-washington-class.spec.png

@@ -1,0 +1,9 @@
+newmtl usa_5_new_york_class
+illum 1
+Ka 0.0 0.0 0.0
+Kd 0.8 0.8 0.8
+Ks 0.6 0.6 0.6
+Ns 6.9
+map_Ka usa-5-new-york-class.diff.png
+map_Kd usa-5-new-york-class.diff.png
+map_Ks usa-5-new-york-class.spec.png

@@ -1,0 +1,25 @@
+<?xml version="1.1" encoding="utf-8"?>
+<configuration>
+	<appender name="LOGDIR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>logs/server.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<fileNamePattern>logs/server.%d{yyyy-MM-dd}.log</fileNamePattern>
+		</rollingPolicy>
+
+		<encoder>
+			<charset>UTF-8</charset>
+			<pattern>%d{yyyy-MM-dd/HH:mm:ss.SSS} [%thread] %.-1level \(%logger\) - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>%d{yyyy-MM-dd/HH:mm:ss.SSS} [%thread] %.-1level \(%logger\) - %msg%n</pattern>
+		</encoder>
+	</appender>
+
+	<root level="any">
+		<appender-ref ref="STDOUT"/>
+		<appender-ref ref="LOGDIR"/>
+	</root>
+</configuration>
