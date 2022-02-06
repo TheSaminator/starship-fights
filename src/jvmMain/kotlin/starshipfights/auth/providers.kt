@@ -191,8 +191,6 @@ object TestAuthProvider : AuthProvider {
 			form("test-auth") {
 				userParamName = "username"
 				passwordParamName = "password"
-				skipWhen { it.sessions.get<Id<UserSession>>() != null }
-				
 				validate { credentials ->
 					val originAddress = request.origin.remoteHost
 					val userAgent = request.userAgent()
@@ -241,7 +239,7 @@ object TestAuthProvider : AuthProvider {
 				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
 						+"This method of authentication is only for testing. "
-						+"If you see it on the production site, you should start freaking out."
+						+"I trust you not to abuse this; don't make me regret my trust."
 					}
 				}) {
 					section {
