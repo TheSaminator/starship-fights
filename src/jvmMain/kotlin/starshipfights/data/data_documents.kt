@@ -5,12 +5,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import org.bson.conversions.Bson
-import org.litote.kmongo.coroutine.CoroutineCollection
 import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.serialization.IdController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import starshipfights.sfLogger
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -72,12 +70,7 @@ interface DocumentTable<T : DataDocument<T>> {
 }
 
 private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, private val initFunc: (DocumentTable<T>) -> Unit) : DocumentTable<T> {
-	private var collection: CoroutineCollection<T>? = null
-	suspend fun collection() =
-		collection
-			?: ConnectionHolder.getDatabase().database.getCollection(kclass.simpleName, kclass.java).coroutine.also {
-				collection = it
-			}
+	suspend fun collection() = ConnectionHolder.getDatabase().database.getCollection(kclass.simpleName, kclass.java).coroutine
 	
 	override fun initialize() {
 		initFunc(this)
@@ -112,12 +105,7 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	}
 	
 	override suspend fun locate(bson: Bson): T? {
-		try {
-			return collection().findOne(bson)
-		} catch (ex: Exception) {
-			sfLogger.error("Got exception from table ${kclass.simpleName}", ex)
-			throw ex
-		}
+		return collection().findOne(bson)
 	}
 	
 	override suspend fun update(where: Bson, set: Bson) {
