@@ -35,6 +35,8 @@ object DocumentIdController : IdController {
 }
 
 interface DocumentTable<T : DataDocument<T>> {
+	fun initialize()
+	
 	suspend fun index(vararg properties: KProperty1<T, *>)
 	suspend fun unique(vararg properties: KProperty1<T, *>)
 	
@@ -57,21 +59,27 @@ interface DocumentTable<T : DataDocument<T>> {
 			logger.error("Caught unhandled exception from initializing $name!", ex)
 		}
 		
-		fun <T : DataDocument<T>> create(kclass: KClass<T>, initFunc: suspend DocumentTable<T>.() -> Unit = {}): DocumentTable<T> = DocumentTableImpl(kclass).also {
-			launch { it.initFunc() }
+		fun <T : DataDocument<T>> create(kclass: KClass<T>, initFunc: suspend DocumentTable<T>.() -> Unit = {}): DocumentTable<T> = DocumentTableImpl(kclass) {
+			runBlocking {
+				it.initFunc()
+			}
 		}
 		
 		inline fun <reified T : DataDocument<T>> create(noinline initFunc: suspend DocumentTable<T>.() -> Unit = {}) = create(T::class, initFunc)
 	}
 }
 
-private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>) : DocumentTable<T> {
+private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, private val initFunc: (DocumentTable<T>) -> Unit) : DocumentTable<T> {
 	private var collection: CoroutineCollection<T>? = null
 	suspend fun collection() =
 		collection
 			?: ConnectionHolder.getDatabase().database.getCollection(kclass.simpleName, kclass.java).coroutine.also {
 				collection = it
 			}
+	
+	override fun initialize() {
+		initFunc(this)
+	}
 	
 	override suspend fun index(vararg properties: KProperty1<T, *>) {
 		collection().ensureIndex(*properties)
