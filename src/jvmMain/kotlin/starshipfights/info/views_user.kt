@@ -3,7 +3,6 @@ package starshipfights.info
 import io.ktor.application.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
 import org.litote.kmongo.eq
@@ -26,7 +25,7 @@ import java.time.Instant
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val username = parameters["name"]!!
-	val user = User.select(User::username eq username).singleOrNull()!!
+	val user = User.locate(User::username eq username)!!
 	
 	val isCurrentUser = user.id == getUserSession()?.user
 	

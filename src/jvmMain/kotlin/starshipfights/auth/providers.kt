@@ -12,7 +12,6 @@ import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.launch
 import kotlinx.html.*
 import org.litote.kmongo.eq
@@ -195,7 +194,7 @@ object TestAuthProvider : AuthProvider {
 					val originAddress = request.origin.remoteHost
 					val userAgent = request.userAgent()
 					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
-						val user = User.select(User::username eq credentials.name).singleOrNull()
+						val user = User.locate(User::username eq credentials.name)
 							?: User(username = credentials.name).also { User.put(it) }
 						
 						UserSession(

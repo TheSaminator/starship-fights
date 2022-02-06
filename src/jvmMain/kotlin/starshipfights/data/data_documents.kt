@@ -34,16 +34,6 @@ object DocumentIdController : IdController {
 	}
 }
 
-sealed interface FullDocDelta<T : DataDocument<T>> {
-	val doc: T
-}
-
-sealed class DocumentDelta<T : DataDocument<T>> {
-	data class Created<T : DataDocument<T>>(override val doc: T) : DocumentDelta<T>(), FullDocDelta<T>
-	data class Updated<T : DataDocument<T>>(override val doc: T) : DocumentDelta<T>(), FullDocDelta<T>
-	data class Deleted<T : DataDocument<T>>(val id: Id<T>) : DocumentDelta<T>()
-}
-
 interface DocumentTable<T : DataDocument<T>> {
 	suspend fun index(vararg properties: KProperty1<T, *>)
 	suspend fun unique(vararg properties: KProperty1<T, *>)
@@ -53,6 +43,7 @@ interface DocumentTable<T : DataDocument<T>> {
 	suspend fun del(id: Id<T>)
 	
 	suspend fun select(bson: Bson): Flow<T>
+	suspend fun locate(bson: Bson): T?
 	suspend fun update(where: Bson, set: Bson)
 	suspend fun remove(where: Bson)
 	
@@ -104,6 +95,10 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>) : Do
 	
 	override suspend fun select(bson: Bson): Flow<T> {
 		return collection().find(bson).toFlow()
+	}
+	
+	override suspend fun locate(bson: Bson): T? {
+		return collection().findOne(bson)
 	}
 	
 	override suspend fun update(where: Bson, set: Bson) {
