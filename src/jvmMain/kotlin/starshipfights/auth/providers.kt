@@ -25,6 +25,7 @@ import starshipfights.game.AdmiralRank
 import starshipfights.game.Faction
 import starshipfights.info.*
 import starshipfights.redirect
+import starshipfights.sfLogger
 
 interface AuthProvider {
 	fun installAuth(conf: Authentication.Configuration)
@@ -194,8 +195,10 @@ object TestAuthProvider : AuthProvider {
 					val originAddress = request.origin.remoteHost
 					val userAgent = request.userAgent()
 					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
+						sfLogger.info("Attempting to find user ${credentials.name}")
 						val user = User.locate(User::username eq credentials.name)
 							?: User(username = credentials.name).also { User.put(it) }
+						sfLogger.info("Got user ${user.id}")
 						
 						UserSession(
 							user = user.id,
