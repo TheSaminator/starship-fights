@@ -17,7 +17,7 @@ object DataRoutines : CoroutineScope {
 	}
 	
 	fun initializeRoutines(): Job {
-		// Initialize tables by referring to them
+		// Initialize tables
 		Admiral.initialize()
 		BattleRecord.initialize()
 		ShipInDrydock.initialize()
