@@ -43,6 +43,7 @@ interface DocumentTable<T : DataDocument<T>> {
 	suspend fun put(doc: T)
 	suspend fun get(id: Id<T>): T?
 	suspend fun del(id: Id<T>)
+	suspend fun all(): Flow<T>
 	
 	suspend fun select(bson: Bson): Flow<T>
 	suspend fun locate(bson: Bson): T?
@@ -99,6 +100,10 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	
 	override suspend fun del(id: Id<T>) {
 		collection().deleteOneById(id)
+	}
+	
+	override suspend fun all(): Flow<T> {
+		return collection().find().toFlow()
 	}
 	
 	override suspend fun select(bson: Bson): Flow<T> {

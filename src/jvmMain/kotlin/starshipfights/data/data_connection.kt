@@ -1,11 +1,5 @@
 package starshipfights.data
 
-import com.mongodb.ConnectionString
-import com.mongodb.MongoClientSettings
-import com.mongodb.event.CommandFailedEvent
-import com.mongodb.event.CommandListener
-import com.mongodb.event.CommandStartedEvent
-import com.mongodb.event.CommandSucceededEvent
 import de.flapdoodle.embed.mongo.MongodExecutable
 import de.flapdoodle.embed.mongo.MongodStarter
 import de.flapdoodle.embed.mongo.config.MongoCmdOptions
@@ -26,7 +20,6 @@ import org.litote.kmongo.serialization.registerSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import starshipfights.game.MomentSerializer
-import starshipfights.sfLogger
 import java.io.File
 import java.net.ServerSocket
 import kotlin.system.exitProcess
@@ -101,26 +94,6 @@ object ConnectionHolder {
 		registerSerializer(MomentSerializer)
 		
 		databaseName = db
-		clientDeferred.complete(
-			KMongo.createClient(
-				MongoClientSettings
-					.builder()
-					.applyConnectionString(ConnectionString(conn.createUrl()))
-					.addCommandListener(object : CommandListener {
-						override fun commandStarted(event: CommandStartedEvent) {
-							sfLogger.info("Started Mongo command ${event.commandName}")
-						}
-						
-						override fun commandSucceeded(event: CommandSucceededEvent) {
-							sfLogger.info("Succeeded Mongo command ${event.commandName}")
-						}
-						
-						override fun commandFailed(event: CommandFailedEvent) {
-							sfLogger.info("Failed Mongo command ${event.commandName}")
-						}
-					})
-					.build()
-			).coroutine
-		)
+		clientDeferred.complete(KMongo.createClient(conn.createUrl()).coroutine)
 	}
 }

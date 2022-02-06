@@ -12,9 +12,10 @@ import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.singleOrNull
 import kotlinx.coroutines.launch
 import kotlinx.html.*
-import org.litote.kmongo.eq
 import starshipfights.CurrentConfiguration
 import starshipfights.data.Id
 import starshipfights.data.admiralty.Admiral
@@ -196,7 +197,9 @@ object TestAuthProvider : AuthProvider {
 					val userAgent = request.userAgent()
 					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
 						sfLogger.info("Attempting to find user ${credentials.name}")
-						val user = User.locate(User::username eq credentials.name)
+						// TODO find out why java mongodb driver is such a piece of shit
+						//val user = User.locate(User::username eq credentials.name)
+						val user = User.all().filter { it.username == credentials.name }.singleOrNull()
 							?: User(username = credentials.name).also {
 								sfLogger.info("Attempting to add user with name ${credentials.name}")
 								User.put(it)
