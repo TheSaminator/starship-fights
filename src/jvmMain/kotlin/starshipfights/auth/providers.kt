@@ -197,7 +197,10 @@ object TestAuthProvider : AuthProvider {
 					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
 						sfLogger.info("Attempting to find user ${credentials.name}")
 						val user = User.locate(User::username eq credentials.name)
-							?: User(username = credentials.name).also { User.put(it) }
+							?: User(username = credentials.name).also {
+								sfLogger.info("Attempting to add user with name ${credentials.name}")
+								User.put(it)
+							}
 						sfLogger.info("Got user ${user.id}")
 						
 						UserSession(
