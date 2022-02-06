@@ -10,6 +10,7 @@ import org.litote.kmongo.coroutine.coroutine
 import org.litote.kmongo.serialization.IdController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import starshipfights.sfLogger
 import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
@@ -111,7 +112,12 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	}
 	
 	override suspend fun locate(bson: Bson): T? {
-		return collection().findOne(bson)
+		try {
+			return collection().findOne(bson)
+		} catch (ex: Exception) {
+			sfLogger.error("Got exception from table ${kclass.simpleName}", ex)
+			throw ex
+		}
 	}
 	
 	override suspend fun update(where: Bson, set: Bson) {

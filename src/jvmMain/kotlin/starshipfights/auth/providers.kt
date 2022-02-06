@@ -14,6 +14,7 @@ import io.ktor.util.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.html.*
+import org.litote.kmongo.eq
 import starshipfights.CurrentConfiguration
 import starshipfights.data.Id
 import starshipfights.data.admiralty.Admiral
@@ -195,9 +196,8 @@ object TestAuthProvider : AuthProvider {
 					val userAgent = request.userAgent()
 					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
 						sfLogger.info("Attempting to find user ${credentials.name}")
-						val user = //User.locate(User::username eq credentials.name)
-							//?: User(username = credentials.name).also {
-							User(username = credentials.name).also {
+						val user = User.locate(User::username eq credentials.name)
+							?: User(username = credentials.name).also {
 								sfLogger.info("Attempting to add user with name ${credentials.name}")
 								User.put(it)
 							}
