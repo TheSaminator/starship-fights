@@ -14,7 +14,10 @@ import io.ktor.util.*
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.html.*
+import org.litote.kmongo.and
 import org.litote.kmongo.eq
+import org.litote.kmongo.ne
+import org.litote.kmongo.setValue
 import starshipfights.CurrentConfiguration
 import starshipfights.data.Id
 import starshipfights.data.admiralty.Admiral
@@ -172,14 +175,38 @@ interface AuthProvider {
 				}
 				
 				get("/logout") {
-					call.sessions.get<Id<UserSession>>()?.let { sessId ->
+					call.getUserSession()?.let { sess ->
 						launch {
-							UserSession.del(sessId)
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expirationMillis, newTime))
 						}
 					}
 					
 					call.sessions.clear<Id<UserSession>>()
 					redirect("/")
+				}
+				
+				get("/logout/{id}") {
+					val id = Id<UserSession>(call.parameters.getOrFail("id"))
+					call.getUserSession()?.let { sess ->
+						launch {
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expirationMillis, newTime))
+						}
+					}
+					
+					redirect("/me/manage")
+				}
+				
+				get("/logout-all") {
+					call.getUserSession()?.let { sess ->
+						launch {
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expirationMillis, newTime))
+						}
+					}
+					
+					redirect("/me/manage")
 				}
 				
 				currentProvider.installRouting(this)

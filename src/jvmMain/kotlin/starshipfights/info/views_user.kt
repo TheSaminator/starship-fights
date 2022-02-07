@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
+import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.or
 import starshipfights.auth.getUser
@@ -15,6 +16,7 @@ import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.DrydockStatus
 import starshipfights.data.admiralty.ShipInDrydock
 import starshipfights.data.auth.User
+import starshipfights.data.auth.UserSession
 import starshipfights.data.auth.usernameRegexStr
 import starshipfights.data.auth.usernameTooltip
 import starshipfights.game.Faction
@@ -22,6 +24,11 @@ import starshipfights.game.GlobalSide
 import starshipfights.game.toUrlSlug
 import starshipfights.redirect
 import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+import java.util.*
+
+private val instantFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.US)
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val username = parameters["name"]!!
@@ -74,7 +81,9 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
-	val currentUser = getUser() ?: redirect("/login")
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = User.get(currentSession.user) ?: redirect("/login")
+	val allUserSessions = UserSession.select(and(UserSession::user eq currentUser.id)).toList()
 	
 	return page(
 		"User Preferences", standardNavBar(), PageNavSidebar(
@@ -111,6 +120,58 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				}
 				submitInput {
 					value = "Accept Changes"
+				}
+			}
+		}
+		section {
+			h1 { +"Other Active Sessions" }
+			table {
+				tr {
+					th { +"User-Agent" }
+					th { +"Client IPs" }
+					th { +Entities.nbsp }
+				}
+				val now = System.currentTimeMillis()
+				val expiredSessions = mutableListOf<UserSession>()
+				allUserSessions.forEach { session ->
+					if (session.expirationMillis < now) {
+						expiredSessions += session
+						return@forEach
+					}
+					
+					tr {
+						td { +session.userAgent }
+						td {
+							session.clientAddresses.forEachIndexed { i, clientAddress ->
+								if (i != 0) br
+								+clientAddress
+							}
+						}
+						td {
+							a(href = "/logout/${session.id}") { +"Logout" }
+						}
+					}
+				}
+				tr {
+					td {
+						colSpan = "3"
+						a(href = "/logout-all") { +"Logout All" }
+					}
+				}
+				expiredSessions.forEach { session ->
+					tr {
+						td { +session.userAgent }
+						td {
+							session.clientAddresses.forEachIndexed { i, clientAddress ->
+								if (i != 0) br
+								+clientAddress
+							}
+						}
+						td {
+							+"Expired at "
+							+instantFormatter.format(Instant.ofEpochMilli(session.expirationMillis))
+						}
+					}
 				}
 			}
 		}
@@ -282,6 +343,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 				tr {
 					th { +"Role" }
 					th { +"Against" }
+					th { +"Time" }
 					th { +"Result" }
 				}
 				records.sortedBy { it.whenEnded }.forEach { record ->
@@ -301,6 +363,9 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								a(href = "/admiral/${opponent.id}") {
 									+opponent.fullName
 								}
+						}
+						td {
+							+instantFormatter.format(record.whenEnded)
 						}
 						td {
 							+when (recordRoles[record.id]) {

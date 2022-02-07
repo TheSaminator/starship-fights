@@ -3,7 +3,6 @@ package starshipfights.data
 import kotlinx.coroutines.*
 import org.litote.kmongo.div
 import org.litote.kmongo.lt
-import org.litote.kmongo.lte
 import org.litote.kmongo.setValue
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
@@ -30,15 +29,7 @@ object DataRoutines : CoroutineScope {
 		UserSession.initialize()
 		
 		return launch {
-			launch {
-				while (currentCoroutineContext().isActive) {
-					launch {
-						UserSession.remove(UserSession::expirationMillis lte System.currentTimeMillis())
-					}
-					delay(900_000)
-				}
-			}
-			
+			// Repair ships
 			launch {
 				while (currentCoroutineContext().isActive) {
 					val now = Instant.now()
