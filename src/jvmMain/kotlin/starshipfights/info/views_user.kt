@@ -143,6 +143,10 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							}
 						}
 						td {
+							if (session.id == currentSession.id) {
+								+"Current Session"
+								br
+							}
 							a(href = "/logout/${session.id}") { +"Logout" }
 						}
 					}
