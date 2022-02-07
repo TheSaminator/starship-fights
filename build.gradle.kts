@@ -55,7 +55,7 @@ kotlin {
 				implementation("org.slf4j:slf4j-api:1.7.31")
 				implementation("ch.qos.logback:logback-classic:1.2.5")
 				
-				implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.4.0") {
+				implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.3.0") {
 					exclude("org.jetbrains.kotlin", "kotlin-reflect")
 				}
 				
