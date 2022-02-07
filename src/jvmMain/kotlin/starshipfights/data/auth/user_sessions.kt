@@ -3,7 +3,10 @@ package starshipfights.data.auth
 import io.ktor.auth.*
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import starshipfights.data.*
+import starshipfights.data.DataDocument
+import starshipfights.data.DocumentTable
+import starshipfights.data.Id
+import starshipfights.data.invoke
 
 const val usernameRegexStr = "[a-zA-Z0-9_\\-]{2,32}"
 val usernameRegex = Regex(usernameRegexStr)
@@ -16,11 +19,15 @@ data class User(
 	@SerialName("_id")
 	override val id: Id<User> = Id(),
 	val username: String,
-	val isInBattle: Boolean = false,
+	val status: UserStatus = UserStatus.AVAILABLE,
 ) : DataDocument<User> {
 	companion object Table : DocumentTable<User> by DocumentTable.create({
 		unique(User::username)
 	})
+}
+
+enum class UserStatus {
+	AVAILABLE, IN_MATCHMAKING, IN_BATTLE
 }
 
 @Serializable

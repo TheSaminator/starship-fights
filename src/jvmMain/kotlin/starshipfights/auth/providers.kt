@@ -27,6 +27,7 @@ import starshipfights.info.*
 import starshipfights.redirect
 
 interface AuthProvider {
+	fun installApplication(app: Application) = Unit
 	fun installAuth(conf: Authentication.Configuration)
 	fun installRouting(conf: Routing)
 	
@@ -38,10 +39,15 @@ interface AuthProvider {
 				TODO("Need to implement production AuthProvider")
 		
 		fun install(into: Application) {
+			currentProvider.installApplication(into)
+			
 			into.install(Sessions) {
 				cookie<Id<UserSession>>("sf_user_session") {
+					serializer = UserSessionIdSerializer
+					
 					cookie.path = "/"
-					cookie.maxAgeInSeconds = 900
+					cookie.secure = true
+					cookie.extensions["SameSite"] = "Lax"
 				}
 			}
 			
@@ -183,27 +189,42 @@ interface AuthProvider {
 }
 
 object TestAuthProvider : AuthProvider {
-	private const val TEST_PASSWORD = "very secure"
+	private const val USERNAME_KEY = "username"
+	private const val PASSWORD_KEY = "password"
+	private const val REMEMBER_ME_KEY = "remember-me"
+	
+	private const val PASSWORD_VALUE = "very secure"
+	private const val REMEMBER_ME_VALUE = "yes"
+	
+	override fun installApplication(app: Application) {
+		app.install(DoubleReceive)
+	}
 	
 	override fun installAuth(conf: Authentication.Configuration) {
 		with(conf) {
 			form("test-auth") {
-				userParamName = "username"
-				passwordParamName = "password"
+				userParamName = USERNAME_KEY
+				passwordParamName = PASSWORD_KEY
 				validate { credentials ->
 					val originAddress = request.origin.remoteHost
 					val userAgent = request.userAgent()
-					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == TEST_PASSWORD) {
+					if (userAgent != null && credentials.name.isValidUsername() && credentials.password == PASSWORD_VALUE) {
 						val user = User.locate(User::username eq credentials.name)
 							?: User(username = credentials.name).also {
 								User.put(it)
 							}
 						
+						val formParams = receiveOrNull<Parameters>()
+						val timeToRemember = if (formParams?.get(REMEMBER_ME_KEY) == REMEMBER_ME_VALUE)
+							31_556_925_216L // 1 solar year
+						else
+							3_600_000L // 1 hour
+						
 						UserSession(
 							user = user.id,
 							clientAddresses = listOf(originAddress),
 							userAgent = userAgent,
-							expirationMillis = System.currentTimeMillis() + 900_000
+							expirationMillis = System.currentTimeMillis() + timeToRemember
 						).also {
 							UserSession.put(it)
 						}
@@ -217,7 +238,7 @@ object TestAuthProvider : AuthProvider {
 						"A username must be provided."
 					else if (!credentials.name.isValidUsername())
 						invalidUsernameErrorMessage
-					else if (credentials.password != TEST_PASSWORD)
+					else if (credentials.password != PASSWORD_VALUE)
 						"Password is incorrect."
 					else
 						"An unknown error occurred."
@@ -248,13 +269,13 @@ object TestAuthProvider : AuthProvider {
 						form(action = "/login", method = FormMethod.post) {
 							h3 {
 								label {
-									this.htmlFor = "username"
+									this.htmlFor = USERNAME_KEY
 									+"Username"
 								}
 							}
 							textInput {
-								id = "username"
-								name = "username"
+								id = USERNAME_KEY
+								name = USERNAME_KEY
 								autoComplete = false
 								
 								required = true
@@ -269,12 +290,23 @@ object TestAuthProvider : AuthProvider {
 									+msg
 								}
 							}
+							p {
+								label {
+									htmlFor = REMEMBER_ME_KEY
+									checkBoxInput {
+										id = REMEMBER_ME_KEY
+										name = REMEMBER_ME_KEY
+										value = REMEMBER_ME_VALUE
+									}
+									+"Remember Me"
+								}
+							}
 							submitInput {
 								value = "Authenticate"
 							}
 							hiddenInput {
-								name = "password"
-								value = TEST_PASSWORD
+								name = PASSWORD_KEY
+								value = PASSWORD_VALUE
 							}
 						}
 					}

@@ -19,3 +19,13 @@ suspend fun UserSession.renewed(clientAddress: String) = copy(
 suspend fun ApplicationCall.getUserSession() = request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }
 
 suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }
+
+object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
+	override fun serialize(session: Id<UserSession>): String {
+		return session.id
+	}
+	
+	override fun deserialize(text: String): Id<UserSession> {
+		return Id(text)
+	}
+}

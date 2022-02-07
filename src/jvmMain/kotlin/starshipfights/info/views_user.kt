@@ -156,27 +156,29 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 						}
 						+"Female"
 					}
-					h3 {
-						label {
-							htmlFor = "faction"
-							+"Faction"
-						}
+				}
+				h3 {
+					label {
+						htmlFor = "faction"
+						+"Faction"
 					}
 				}
-				Faction.values().forEach { faction ->
-					val factionId = "faction-${faction.toUrlSlug()}"
-					label {
-						htmlFor = factionId
-						radioInput(name = "faction") {
-							id = factionId
-							value = faction.name
-							required = true
+				p {
+					Faction.values().forEach { faction ->
+						val factionId = "faction-${faction.toUrlSlug()}"
+						label {
+							htmlFor = factionId
+							radioInput(name = "faction") {
+								id = factionId
+								value = faction.name
+								required = true
+							}
+							img(src = faction.flagUrl) {
+								style = "height:0.75em;width:1.2em"
+							}
+							+Entities.nbsp
+							+faction.shortName
 						}
-						img(src = faction.flagUrl) {
-							style = "height:0.75em;width:1.2em"
-						}
-						+Entities.nbsp
-						+faction.shortName
 					}
 				}
 				submitInput {

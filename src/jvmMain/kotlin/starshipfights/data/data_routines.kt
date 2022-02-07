@@ -1,13 +1,18 @@
 package starshipfights.data
 
 import kotlinx.coroutines.*
+import org.litote.kmongo.div
+import org.litote.kmongo.lt
 import org.litote.kmongo.lte
+import org.litote.kmongo.setValue
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
+import starshipfights.data.admiralty.DrydockStatus
 import starshipfights.data.admiralty.ShipInDrydock
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.sfLogger
+import java.time.Instant
 import kotlin.coroutines.CoroutineContext
 
 object DataRoutines : CoroutineScope {
@@ -30,7 +35,17 @@ object DataRoutines : CoroutineScope {
 					launch {
 						UserSession.remove(UserSession::expirationMillis lte System.currentTimeMillis())
 					}
-					delay(3600_000)
+					delay(900_000)
+				}
+			}
+			
+			launch {
+				while (currentCoroutineContext().isActive) {
+					val now = Instant.now()
+					launch {
+						ShipInDrydock.update(ShipInDrydock::status / DrydockStatus.InRepair::until lt now, setValue(ShipInDrydock::status, DrydockStatus.Ready))
+					}
+					delay(300_000)
 				}
 			}
 		}
