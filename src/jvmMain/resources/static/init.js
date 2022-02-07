@@ -69,6 +69,6 @@ window.addEventListener("load", function () {
 	for (let moment of moments) {
 		let date = new Date(Number(moment.innerHTML.trim()));
 		moment.innerHTML = date.toLocaleString();
-		moment.attributes["style"] = "";
+		moment.style.display = "inline";
 	}
 });

@@ -119,7 +119,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 			}
 		}
 		section {
-			h1 { +"Other Active Sessions" }
+			h1 { +"Other Sessions" }
 			table {
 				tr {
 					th { +"User-Agent" }
