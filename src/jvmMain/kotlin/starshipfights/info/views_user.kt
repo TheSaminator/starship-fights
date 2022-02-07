@@ -24,11 +24,6 @@ import starshipfights.game.GlobalSide
 import starshipfights.game.toUrlSlug
 import starshipfights.redirect
 import java.time.Instant
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.*
-
-private val instantFormatter: DateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM).withLocale(Locale.US)
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val username = parameters["name"]!!
@@ -169,7 +164,10 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						}
 						td {
 							+"Expired at "
-							+instantFormatter.format(Instant.ofEpochMilli(session.expirationMillis))
+							span(classes = "moment") {
+								style = "display:none"
+								+session.expirationMillis.toString()
+							}
 						}
 					}
 				}
@@ -365,7 +363,10 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								}
 						}
 						td {
-							+instantFormatter.format(record.whenEnded)
+							span(classes = "moment") {
+								style = "display:none"
+								+record.whenEnded.toEpochMilli().toString()
+							}
 						}
 						td {
 							+when (recordRoles[record.id]) {

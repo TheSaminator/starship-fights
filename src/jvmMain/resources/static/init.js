@@ -63,3 +63,12 @@ window.addEventListener("load", function () {
 		});
 	}
 });
+
+window.addEventListener("load", function () {
+	const moments = document.getElementsByClassName("moment");
+	for (let moment of moments) {
+		let date = new Date(Number(moment.innerHTML.trim()));
+		moment.innerHTML = date.toLocaleString();
+		moment.attributes["style"] = "";
+	}
+});
