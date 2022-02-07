@@ -37,6 +37,7 @@ kotlin {
 		val commonMain by getting {
 			dependencies {
 				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+				implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
 				implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 				
 				implementation("org.jetbrains.kotlinx:kotlinx-html:0.7.3")
@@ -45,6 +46,9 @@ kotlin {
 		
 		val jvmMain by getting {
 			dependencies {
+				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
+				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.0")
+				
 				implementation("io.ktor:ktor-server-netty:1.6.7")
 				implementation("io.ktor:ktor-html-builder:1.6.7")
 				implementation("io.ktor:ktor-auth:1.6.7")
@@ -57,6 +61,10 @@ kotlin {
 				
 				implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.4.0") {
 					exclude("org.jetbrains.kotlin", "kotlin-reflect")
+					
+					exclude("org.jetbrains.kotlinx", "kotlinx-coroutines-jdk8")
+					exclude("org.jetbrains.kotlinx", "kotlinx-coroutines-reactive")
+					exclude("org.jetbrains.kotlinx", "kotlinx-serialization-core-jvm")
 				}
 				
 				implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo:3.0.0")

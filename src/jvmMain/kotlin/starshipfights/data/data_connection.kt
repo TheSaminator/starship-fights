@@ -19,7 +19,6 @@ import org.litote.kmongo.serialization.changeIdController
 import org.litote.kmongo.serialization.registerSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import starshipfights.game.MomentSerializer
 import java.io.File
 import java.net.ServerSocket
 import kotlin.system.exitProcess
@@ -91,7 +90,6 @@ object ConnectionHolder {
 		
 		changeIdController(DocumentIdController)
 		registerSerializer(IdSerializer)
-		registerSerializer(MomentSerializer)
 		
 		databaseName = db
 		clientDeferred.complete(KMongo.createClient(conn.createUrl()).coroutine)
