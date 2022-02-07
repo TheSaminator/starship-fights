@@ -218,10 +218,8 @@ interface AuthProvider {
 object TestAuthProvider : AuthProvider {
 	private const val USERNAME_KEY = "username"
 	private const val PASSWORD_KEY = "password"
-	private const val REMEMBER_ME_KEY = "remember-me"
 	
 	private const val PASSWORD_VALUE = "very secure"
-	private const val REMEMBER_ME_VALUE = "yes"
 	
 	override fun installApplication(app: Application) {
 		app.install(DoubleReceive)
@@ -241,17 +239,11 @@ object TestAuthProvider : AuthProvider {
 								User.put(it)
 							}
 						
-						val formParams = receiveOrNull<Parameters>()
-						val timeToRemember = if (formParams?.get(REMEMBER_ME_KEY) == REMEMBER_ME_VALUE)
-							31_556_925_216L // 1 solar year
-						else
-							3_600_000L // 1 hour
-						
 						UserSession(
 							user = user.id,
 							clientAddresses = listOf(originAddress),
 							userAgent = userAgent,
-							expirationMillis = System.currentTimeMillis() + timeToRemember
+							expirationMillis = System.currentTimeMillis() + 3_600_000L
 						).also {
 							UserSession.put(it)
 						}
@@ -315,17 +307,6 @@ object TestAuthProvider : AuthProvider {
 								p {
 									style = "color:#d22"
 									+msg
-								}
-							}
-							p {
-								label {
-									htmlFor = REMEMBER_ME_KEY
-									checkBoxInput {
-										id = REMEMBER_ME_KEY
-										name = REMEMBER_ME_KEY
-										value = REMEMBER_ME_VALUE
-									}
-									+"Remember Me"
 								}
 							}
 							submitInput {
