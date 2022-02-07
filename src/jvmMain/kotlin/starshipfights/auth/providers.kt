@@ -46,7 +46,7 @@ interface AuthProvider {
 					serializer = UserSessionIdSerializer
 					
 					cookie.path = "/"
-					cookie.secure = true
+					cookie.extensions["Secure"] = null
 					cookie.extensions["SameSite"] = "Lax"
 				}
 			}
