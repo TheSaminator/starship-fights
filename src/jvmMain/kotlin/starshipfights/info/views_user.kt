@@ -11,10 +11,7 @@ import org.litote.kmongo.or
 import starshipfights.auth.getUser
 import starshipfights.auth.getUserSession
 import starshipfights.data.Id
-import starshipfights.data.admiralty.Admiral
-import starshipfights.data.admiralty.BattleRecord
-import starshipfights.data.admiralty.DrydockStatus
-import starshipfights.data.admiralty.ShipInDrydock
+import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.auth.usernameRegexStr
@@ -191,14 +188,40 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 			form(method = FormMethod.post, action = "/admiral/new") {
 				h3 {
 					label {
+						htmlFor = "faction"
+						+"Faction"
+					}
+				}
+				p {
+					Faction.values().forEach { faction ->
+						val factionId = "faction-${faction.toUrlSlug()}"
+						label {
+							htmlFor = factionId
+							radioInput(name = "faction") {
+								id = factionId
+								value = faction.name
+								required = true
+							}
+							img(src = faction.flagUrl) {
+								style = "height:0.75em;width:1.2em"
+							}
+							+Entities.nbsp
+							+faction.shortName
+						}
+					}
+				}
+				h3 {
+					label {
 						htmlFor = "name"
 						+"Name"
 					}
 				}
 				textInput(name = "name") {
+					id = "name"
+					autoComplete = false
 					required = true
-					minLength = "4"
-					maxLength = "24"
+					minLength = "2"
+					maxLength = "32"
 				}
 				p {
 					label {
@@ -220,27 +243,14 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 						+"Female"
 					}
 				}
-				h3 {
-					label {
-						htmlFor = "faction"
-						+"Faction"
-					}
-				}
+				h3 { +"Generate Random Name" }
 				p {
-					Faction.values().forEach { faction ->
-						val factionId = "faction-${faction.toUrlSlug()}"
-						label {
-							htmlFor = factionId
-							radioInput(name = "faction") {
-								id = factionId
-								value = faction.name
-								required = true
-							}
-							img(src = faction.flagUrl) {
-								style = "height:0.75em;width:1.2em"
-							}
-							+Entities.nbsp
-							+faction.shortName
+					AdmiralNameFlavor.values().forEachIndexed { i, flavor ->
+						if (i != 0)
+							br
+						a(href = "#", classes = "generate-admiral-name") {
+							attributes["data-flavor"] = flavor.toUrlSlug()
+							+flavor.displayName
 						}
 					}
 				}

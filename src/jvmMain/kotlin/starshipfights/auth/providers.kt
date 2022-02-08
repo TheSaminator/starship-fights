@@ -116,7 +116,7 @@ interface AuthProvider {
 					
 					val newAdmiral = Admiral(
 						owningUser = currentUser,
-						name = form.getOrFail("name"),
+						name = form["name"]?.takeIf { it.isNotBlank() } ?: throw MissingRequestParameterException("name"),
 						isFemale = form.getOrFail("sex") == "female",
 						faction = Faction.valueOf(form.getOrFail("faction")),
 						// TODO change to Rear Admiral
@@ -151,7 +151,7 @@ interface AuthProvider {
 					
 					val form = call.receiveParameters()
 					val newAdmiral = admiral.copy(
-						name = form["name"] ?: admiral.name,
+						name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
 						isFemale = form["sex"] == "female"
 					)
 					

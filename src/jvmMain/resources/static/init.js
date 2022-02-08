@@ -72,3 +72,20 @@ window.addEventListener("load", function () {
 		moment.style.display = "inline";
 	}
 });
+
+window.addEventListener("load", function () {
+	const nameBox = document.getElementById("name");
+	const isFemaleButton = document.getElementById("sex-female");
+	const generators = document.getElementsByClassName("generate-admiral-name");
+	for (let generator of generators) {
+		const flavor = generator.getAttribute("data-flavor");
+		generator.onclick = (e) => {
+			e.preventDefault();
+			(async () => {
+				nameBox.value = await (await fetch({
+					url: "/generate-name/" + flavor + "/" + (isFemaleButton.checked ? "female" : "male")
+				})).text();
+			})();
+		};
+	}
+});
