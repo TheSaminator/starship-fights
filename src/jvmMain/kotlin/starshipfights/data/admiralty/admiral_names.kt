@@ -258,6 +258,7 @@ object AdmiralNames {
 		"Skull",
 		"Blood",
 		"Death",
+		"Claw",
 		"Doom",
 		"Dread",
 		"Soul",
@@ -274,7 +275,8 @@ object AdmiralNames {
 		"Heart",
 		"Murder",
 		"Gore",
-		"Daemon"
+		"Daemon",
+		"Talon"
 	)
 	
 	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
