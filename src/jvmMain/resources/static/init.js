@@ -82,9 +82,7 @@ window.addEventListener("load", function () {
 		generator.onclick = (e) => {
 			e.preventDefault();
 			(async () => {
-				nameBox.value = await (await fetch({
-					url: "/generate-name/" + flavor + "/" + (isFemaleButton.checked ? "female" : "male")
-				})).text();
+				nameBox.value = await (await fetch("/generate-name/" + flavor + "/" + (isFemaleButton.checked ? "female" : "male"))).text();
 			})();
 		};
 	}
