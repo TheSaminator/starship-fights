@@ -75,14 +75,14 @@ window.addEventListener("load", function () {
 
 window.addEventListener("load", function () {
 	const nameBox = document.getElementById("name");
-	const isFemaleButton = document.getElementById("sex-female");
+	const isMaleButton = document.getElementById("sex-male");
 	const generators = document.getElementsByClassName("generate-admiral-name");
 	for (let generator of generators) {
 		const flavor = generator.getAttribute("data-flavor");
 		generator.onclick = (e) => {
 			e.preventDefault();
 			(async () => {
-				nameBox.value = await (await fetch("/generate-name/" + flavor + "/" + (isFemaleButton.checked ? "female" : "male"))).text();
+				nameBox.value = await (await fetch("/generate-name/" + flavor + "/" + (isMaleButton.checked ? "male" : "female"))).text();
 			})();
 		};
 	}
