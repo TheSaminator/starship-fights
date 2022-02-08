@@ -111,10 +111,11 @@ object AdmiralNames {
 		"Velga" to "Velgas",
 	)
 	
+	// Tylans use matronymics for both sons and daughters
 	private fun randomTylanName(isFemale: Boolean) = if (isFemale)
 		tylanFemaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nahra"
 	else
-		tylanMaleNames.random().first + " " + tylanMaleNames.random().second + "-Nensar"
+		tylanMaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nensar"
 	
 	private val caliboreseNames = listOf(
 		"Jathee",
