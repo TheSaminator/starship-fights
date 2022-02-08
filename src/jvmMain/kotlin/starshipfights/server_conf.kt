@@ -14,7 +14,19 @@ data class Configuration(
 	val port: Int,
 	
 	val dbConn: ConnectionType,
-	val dbName: String
+	val dbName: String,
+	
+	val discordClient: DiscordLogin? = null
+)
+
+@Serializable
+data class DiscordLogin(
+	val redirectUrlOrigin: String,
+	
+	val clientId: String,
+	val clientSecret: String,
+	
+	val ownerId: String,
 )
 
 private val DEFAULT_CONFIG = Configuration(
@@ -22,7 +34,8 @@ private val DEFAULT_CONFIG = Configuration(
 	host = "127.0.0.1",
 	port = 8080,
 	dbConn = ConnectionType.Embedded(),
-	dbName = "sf"
+	dbName = "sf",
+	discordClient = null
 )
 
 private var currentConfig: Configuration? = null

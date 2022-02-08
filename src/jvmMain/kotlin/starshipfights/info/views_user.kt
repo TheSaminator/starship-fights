@@ -8,14 +8,13 @@ import kotlinx.html.*
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.or
+import starshipfights.ForbiddenException
 import starshipfights.auth.getUser
 import starshipfights.auth.getUserSession
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
-import starshipfights.data.auth.usernameRegexStr
-import starshipfights.data.auth.usernameTooltip
 import starshipfights.game.Faction
 import starshipfights.game.GlobalSide
 import starshipfights.game.toUrlSlug
@@ -23,15 +22,15 @@ import starshipfights.redirect
 import java.time.Instant
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
-	val username = parameters["name"]!!
-	val user = User.locate(User::username eq username)!!
+	val username = Id<User>(parameters["id"]!!)
+	val user = User.get(username)!!
 	
 	val isCurrentUser = user.id == getUserSession()?.user
 	
 	val admirals = Admiral.select(Admiral::owningUser eq user.id).toList()
 	
 	return page(
-		username, standardNavBar(), if (isCurrentUser)
+		user.profileName, standardNavBar(), if (isCurrentUser)
 			PageNavSidebar(
 				listOf(
 					NavLink("/admiral/new", "New Admiral"),
@@ -43,9 +42,9 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 			}
 	) {
 		section {
-			h1 { +username }
+			h1 { +user.profileName }
 			p {
-				+"This user's username is $username!"
+				+"This user's profile name is ${user.profileName}!"
 			}
 			
 			if (isCurrentUser)
@@ -89,24 +88,20 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 			form(method = FormMethod.post, action = "/me/manage") {
 				h3 {
 					label {
-						htmlFor = "username"
-						+"Username"
+						htmlFor = "name"
+						+"Profile Name"
 					}
 				}
 				textInput(name = "name") {
 					required = true
-					value = currentUser.username
+					value = currentUser.profileName
 					autoComplete = false
 					
 					required = true
-					minLength = "2"
-					maxLength = "32"
-					title = usernameTooltip
-					pattern = usernameRegexStr
 				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
-						style = "color:#d33"
+						style = "color:#d22"
 						+errorMsg
 					}
 				}
@@ -272,8 +267,6 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 		
 		Triple(admiral.await(), ships.await(), records.await())
 	}
-	val admiralOwner = User.get(admiral.owningUser)!!.username
-	
 	val recordRoles = records.mapNotNull {
 		when (admiralId) {
 			it.hostAdmiral -> GlobalSide.HOST
@@ -299,7 +292,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 	return page(
 		admiral.fullName, standardNavBar(), PageNavSidebar(
 			listOf(
-				NavLink("/user/${admiralOwner}", "Back to User")
+				NavLink("/user/${admiral.owningUser}", "Back to User")
 			) + if (currentUser == admiral.owningUser)
 				listOf(
 					NavLink("/admiral/${admiral.id}/manage", "Manage Admiral")
@@ -400,7 +393,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
-	if (admiral.owningUser != currentUser) throw IllegalArgumentException()
+	if (admiral.owningUser != currentUser) throw ForbiddenException()
 	
 	return page(
 		"Managing ${admiral.name}", standardNavBar(), PageNavSidebar(
@@ -464,7 +457,7 @@ suspend fun ApplicationCall.deleteAdmiralConfirmPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
-	if (admiral.owningUser != currentUser) throw IllegalArgumentException()
+	if (admiral.owningUser != currentUser) throw ForbiddenException()
 	
 	return page(
 		"Are You Sure?", null, null

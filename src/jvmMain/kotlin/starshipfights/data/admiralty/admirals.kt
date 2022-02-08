@@ -64,7 +64,7 @@ data class ShipInDrydock(
 suspend fun getAllInGameAdmirals(user: User) = Admiral.select(Admiral::owningUser eq user.id).map { admiral ->
 	InGameAdmiral(
 		admiral.id.reinterpret(),
-		InGameUser(user.id.reinterpret(), user.username),
+		InGameUser(user.id.reinterpret(), user.profileName),
 		admiral.name,
 		admiral.isFemale,
 		admiral.faction,
@@ -76,7 +76,7 @@ suspend fun getInGameAdmiral(admiralId: Id<InGameAdmiral>) = Admiral.get(admiral
 	User.get(admiral.owningUser)?.let { user ->
 		InGameAdmiral(
 			admiralId,
-			InGameUser(user.id.reinterpret(), user.username),
+			InGameUser(user.id.reinterpret(), user.profileName),
 			admiral.name,
 			admiral.isFemale,
 			admiral.faction,

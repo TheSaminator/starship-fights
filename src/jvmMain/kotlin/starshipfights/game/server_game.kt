@@ -16,7 +16,7 @@ import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.DrydockStatus
 import starshipfights.data.admiralty.ShipInDrydock
 import starshipfights.data.auth.User
-import starshipfights.data.newToken
+import starshipfights.data.createToken
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -78,8 +78,8 @@ object GameManager {
 			}
 		}
 		
-		val hostId = newToken()
-		val joinId = newToken()
+		val hostId = createToken()
+		val joinId = createToken()
 		games.use {
 			it[hostId] = GameEntry(hostInfo.user.id.reinterpret(), GlobalSide.HOST, session)
 			it[joinId] = GameEntry(guestInfo.user.id.reinterpret(), GlobalSide.GUEST, session)

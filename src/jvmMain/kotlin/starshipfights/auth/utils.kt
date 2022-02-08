@@ -1,7 +1,7 @@
 package starshipfights.auth
 
 import io.ktor.application.*
-import io.ktor.request.*
+import io.ktor.auth.*
 import io.ktor.sessions.*
 import starshipfights.data.Id
 import starshipfights.data.auth.User
@@ -16,7 +16,7 @@ suspend fun UserSession.renewed(clientAddress: String) = copy(
 	clientAddresses = if (clientAddresses.last() != clientAddress) clientAddresses + clientAddress else clientAddresses
 ).also { UserSession.put(it) }
 
-suspend fun ApplicationCall.getUserSession() = request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }
+fun ApplicationCall.getUserSession() = principal<UserSession>()
 
 suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }
 

@@ -2,12 +2,13 @@ package starshipfights.data
 
 import com.aventrix.jnanoid.jnanoid.NanoIdUtils
 
-private val tokenAlphabet = "0123456789ABCDEFGHILMNOPQRSTVXYZ".toCharArray()
+private val alphabet32 = "BCDFGHLMNPQRSTXZbcdfghlmnpqrstxz".toCharArray()
+
 private const val tokenLength = 8
+fun createToken(): String = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, alphabet32, tokenLength)
 
-fun newToken(): String = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, tokenAlphabet, tokenLength)
+private const val nonceLength = 16
+fun createNonce(): String = NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, alphabet32, nonceLength)
 
-private val idAlphabet = "BCDFGHLMNPQRSTXZ".toCharArray()
-private const val idLength = 42
-
-operator fun <T> Id.Companion.invoke() = Id<T>(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, idAlphabet, idLength))
+private const val idLength = 24
+operator fun <T> Id.Companion.invoke() = Id<T>(NanoIdUtils.randomNanoId(NanoIdUtils.DEFAULT_NUMBER_GENERATOR, alphabet32, idLength))

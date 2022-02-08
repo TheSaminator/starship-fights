@@ -54,6 +54,7 @@ kotlin {
 				implementation("io.ktor:ktor-auth:1.6.7")
 				implementation("io.ktor:ktor-serialization:1.6.7")
 				implementation("io.ktor:ktor-websockets:1.6.7")
+				implementation("io.ktor:ktor-client-apache:1.6.7")
 				
 				implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3")
 				implementation("org.slf4j:slf4j-api:1.7.31")

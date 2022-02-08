@@ -36,10 +36,10 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 	NavHead("Your Account"),
 ) + when (val user = getUser()) {
 	null -> listOf(
-		NavLink("/login", "Log In"),
+		NavLink("/login", "Login with Discord"),
 	)
 	else -> listOf(
-		NavLink("/me", user.username),
+		NavLink("/me", user.profileName),
 		NavLink("/me/manage", "User Preferences"),
 		NavLink("/lobby", "Enter Game Lobby"),
 		NavLink("/logout", "Log Out"),

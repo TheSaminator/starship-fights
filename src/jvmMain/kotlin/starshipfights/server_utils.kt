@@ -3,6 +3,8 @@ package starshipfights
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+class ForbiddenException : IllegalArgumentException()
+
 data class HttpRedirectException(val url: String, val permanent: Boolean) : RuntimeException()
 fun redirect(url: String, permanent: Boolean = false): Nothing = throw HttpRedirectException(url, permanent)
 
