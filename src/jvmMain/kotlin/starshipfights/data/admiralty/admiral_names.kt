@@ -281,13 +281,239 @@ object AdmiralNames {
 	
 	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
 	
+	private val thedishMaleNames = listOf(
+		"Prethoris",
+		"Severus",
+		"Augast",
+		"Dagobar",
+		"Vrankenn",
+		"Kandar",
+		"Kleon",
+		"Glaius",
+		"Karul",
+		"Ylai",
+		"Toval",
+		"Ivon",
+		"Belis",
+		"Jorh"
+	)
+	
+	private val thedishFemaleNames = listOf(
+		"Serna",
+		"Veleska",
+		"Ielga",
+		"Glae",
+		"Rova",
+		"Ylia",
+		"Galera",
+		"Nerys",
+		"Veleer",
+		"Karuleyn",
+		"Amberli",
+		"Alysia",
+		"Lenera",
+	)
+	
+	private val thedishSurnames = listOf(
+		"Kassck",
+		"Orsh",
+		"Falk",
+		"Khorr",
+		"Vaskoman",
+		"Vholkazk",
+		"Brekoryn",
+		"Lorus",
+		"Karnas",
+		"Hathar",
+		"Takan",
+		"Pertona",
+		"Tefran",
+		"Arvi",
+		"Galvus",
+		"Voss",
+		"Mandanof"
+	)
+	
+	private fun randomThedishName(isFemale: Boolean) = (if (isFemale) thedishFemaleNames else thedishMaleNames).random() + " " + thedishSurnames.random()
+	
+	private val americanMaleNames = listOf(
+		"George",
+		"John",
+		"Thomas",
+		"James",
+		"Quincy",
+		"Andrew",
+		"Martin",
+		"William",
+		"Henry",
+		"James",
+		"Zachary",
+		"Millard",
+		"Franklin",
+		"Abraham",
+		"Ulysses",
+		"Rutherford",
+		"Chester",
+		"Grover",
+		"Benjamin",
+		"Theodore",
+		"Warren",
+		"Calvin",
+		"Herbert",
+		"Harry",
+		"Dwight",
+		"Lyndon",
+		"Richard",
+		"Dick",
+		"Gerald",
+		"Jimmy",
+		"Ronald",
+		"Donald"
+	)
+	
+	private val americanFemaleNames = listOf(
+		"Martha",
+		"Abigail",
+		"Elizabeth",
+		"Louisa",
+		"Emily",
+		"Sarah",
+		"Anna",
+		"Jane",
+		"Julia",
+		"Margaret",
+		"Harriet",
+		"Mary",
+		"Lucy",
+		"Rose",
+		"Caroline",
+		"Ida",
+		"Helen",
+		"Grace",
+		"Jacqueline",
+		"Thelma",
+		"Eleanor",
+		"Nancy",
+		"Barbara",
+		"Laura",
+		"Melania"
+	)
+	
+	private val americanFamilyNames = listOf(
+		"Knox",
+		"Pickering",
+		"McHenry",
+		"Dexter",
+		"Drawborn",
+		"Eustis",
+		"Armstrong",
+		"Monroe",
+		"Crawford",
+		"Calhoun",
+		"Barbour",
+		"Porter",
+		"Eaton",
+		"Cass",
+		"Poinsett",
+		"Bell",
+		"Forrestal",
+		"Johnson",
+		"Marshall",
+		"Lovett",
+		"Wilson",
+		"McElroy",
+		"McNamara",
+		"Clifford",
+		"Richardson",
+		"Burndt",
+	)
+	
+	private fun randomAmericanName(isFemale: Boolean) = (if (isFemale) americanFemaleNames else americanMaleNames).random() + " " + americanFamilyNames.random()
+	
+	private val hispanicMaleNames = listOf(
+		"Aaron",
+		"Antonio",
+		"Augusto",
+		"Eliseo",
+		"Manuel",
+		"Jose",
+		"Juan",
+		"Miguel",
+		"Rafael",
+		"Raul",
+		"Adriano",
+		"Emilio",
+		"Francisco",
+		"Ignacio",
+		"Marco",
+		"Pablo",
+		"Octavio",
+		"Victor",
+		"Vito",
+		"Valentin"
+	)
+	
+	private val hispanicFemaleNames = listOf(
+		"Maria",
+		"Ana",
+		"Camila",
+		"Eva",
+		"Flora",
+		"Gloria",
+		"Julia",
+		"Marcelina",
+		"Rosalia",
+		"Victoria",
+		"Valentina",
+		"Cecilia",
+		"Francisca",
+		"Aurelia",
+		"Cristina",
+		"Magdalena",
+		"Margarita",
+		"Martina",
+		"Teresa"
+	)
+	
+	private val hispanicFamilyNames = listOf(
+		"Acorda",
+		"Aguirre",
+		"Alzaga",
+		"Arriaga",
+		"Arrieta",
+		"Berroya",
+		"Barahona",
+		"Carranza",
+		"Carriaga",
+		"Elcano",
+		"Elizaga",
+		"Endaya",
+		"Franco",
+		"Garalde",
+		"Ibarra",
+		"Juarez",
+		"Lazarte",
+		"Legarda",
+		"Madariaga",
+		"Medrano",
+		"Narvaez",
+		"Olano",
+		"Ricarte",
+		"Salazar",
+		"Uriarte",
+		"Varona",
+		"Vergar",
+	)
+	
+	private fun randomHispanicName(isFemale: Boolean) = (if (isFemale) hispanicFemaleNames else hispanicMaleNames).random() + " " + hispanicFamilyNames.random()
+	
 	fun randomName(flavor: AdmiralNameFlavor, isFemale: Boolean) = when (flavor) {
 		AdmiralNameFlavor.MECHYRDIA -> randomMechyrdianName(isFemale)
 		AdmiralNameFlavor.TYLA -> randomTylanName(isFemale)
 		AdmiralNameFlavor.CALIBOR -> randomCaliboreseName(isFemale)
 		AdmiralNameFlavor.DIADOCHI -> randomDiadochiName(isFemale)
-		AdmiralNameFlavor.FULKREYKK -> "TODO NOT IMPLEMENTED" // TODO implement
-		AdmiralNameFlavor.AMERICAN -> "TODO NOT IMPLEMENTED" // TODO implement
-		AdmiralNameFlavor.HISPANIC_AMERICAN -> "TODO NOT IMPLEMENTED" // TODO implement
+		AdmiralNameFlavor.FULKREYKK -> randomThedishName(isFemale)
+		AdmiralNameFlavor.AMERICAN -> randomAmericanName(isFemale)
+		AdmiralNameFlavor.HISPANIC_AMERICAN -> randomHispanicName(isFemale)
 	}
 }
