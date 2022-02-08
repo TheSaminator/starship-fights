@@ -69,141 +69,136 @@ interface AuthProvider {
 			}
 			
 			into.routing {
-				authenticate("session") {
-					get("/me") {
-						val redirectTo = call.principal<UserSession>()?.let {
-							"/user/${it.user}"
-						} ?: "/login"
-						
-						redirect(redirectTo)
-					}
+				get("/me") {
+					val redirectTo = call.getUserSession()?.let { sess ->
+						"/user/${sess.user}"
+					} ?: "/login"
 					
-					get("/me/manage") {
-						call.respondHtml(HttpStatusCode.OK, call.manageUserPage())
-					}
+					redirect(redirectTo)
+				}
+				
+				get("/me/manage") {
+					call.respondHtml(HttpStatusCode.OK, call.manageUserPage())
+				}
+				
+				post("/me/manage") {
+					val currentUser = call.getUser() ?: redirect("/login")
+					val form = call.receiveParameters()
 					
-					post("/me/manage") {
-						val currentUser = call.getUser() ?: redirect("/login")
-						val form = call.receiveParameters()
-						
-						val newUser = currentUser.copy(
-							profileName = form["name"]?.takeIf { it.isNotBlank() } ?: currentUser.profileName
-						)
-						User.put(newUser)
-						redirect("/user/${newUser.id}")
-					}
+					val newUser = currentUser.copy(
+						profileName = form["name"]?.takeIf { it.isNotBlank() } ?: currentUser.profileName
+					)
+					User.put(newUser)
+					redirect("/user/${newUser.id}")
 				}
 				
 				get("/user/{id}") {
 					call.respondHtml(HttpStatusCode.OK, call.userPage())
 				}
 				
-				authenticate("session") {
-					get("/admiral/new") {
-						call.respondHtml(HttpStatusCode.OK, call.createAdmiralPage())
+				get("/admiral/new") {
+					call.respondHtml(HttpStatusCode.OK, call.createAdmiralPage())
+				}
+				
+				post("/admiral/new") {
+					val currentUser = call.getUserSession()?.user ?: redirect("/login")
+					val form = call.receiveParameters()
+					
+					val newAdmiral = Admiral(
+						owningUser = currentUser,
+						name = form["name"]?.takeIf { it.isNotBlank() } ?: throw MissingRequestParameterException("name"),
+						isFemale = form.getOrFail("sex") == "female",
+						faction = Faction.valueOf(form.getOrFail("faction")),
+						// TODO change to Rear Admiral
+						rank = AdmiralRank.LORD_ADMIRAL
+					)
+					val newShips = generateFleet(newAdmiral)
+					
+					coroutineScope {
+						launch { Admiral.put(newAdmiral) }
+						newShips.forEach {
+							launch { ShipInDrydock.put(it) }
+						}
 					}
 					
-					post("/admiral/new") {
-						val currentUser = call.getUserSession()?.user ?: redirect("/login")
-						val form = call.receiveParameters()
-						
-						val newAdmiral = Admiral(
-							owningUser = currentUser,
-							name = form["name"]?.takeIf { it.isNotBlank() } ?: throw MissingRequestParameterException("name"),
-							isFemale = form.getOrFail("sex") == "female",
-							faction = Faction.valueOf(form.getOrFail("faction")),
-							// TODO change to Rear Admiral
-							rank = AdmiralRank.LORD_ADMIRAL
-						)
-						val newShips = generateFleet(newAdmiral)
-						
-						coroutineScope {
-							launch { Admiral.put(newAdmiral) }
-							newShips.forEach {
-								launch { ShipInDrydock.put(it) }
-							}
-						}
-						
-						redirect("/admiral/${newAdmiral.id}")
-					}
+					redirect("/admiral/${newAdmiral.id}")
 				}
 				
 				get("/admiral/{id}") {
 					call.respondHtml(HttpStatusCode.OK, call.admiralPage())
 				}
 				
-				authenticate("session") {
-					get("/admiral/{id}/manage") {
-						call.respondHtml(HttpStatusCode.OK, call.manageAdmiralPage())
-					}
-					
-					post("/admiral/{id}/manage") {
-						val currentUser = call.getUserSession()?.user
-						val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
-						val admiral = Admiral.get(admiralId)!!
-						
-						if (admiral.owningUser != currentUser) throw ForbiddenException()
-						
-						val form = call.receiveParameters()
-						val newAdmiral = admiral.copy(
-							name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
-							isFemale = form["sex"] == "female"
-						)
-						
-						Admiral.put(newAdmiral)
-						redirect("/admiral/$admiralId")
-					}
-					
-					get("/admiral/{id}/delete") {
-						call.respondHtml(HttpStatusCode.OK, call.deleteAdmiralConfirmPage())
-					}
-					
-					post("/admiral/{id}/delete") {
-						val currentUser = call.getUserSession()?.user
-						val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
-						val admiral = Admiral.get(admiralId)!!
-						
-						if (admiral.owningUser != currentUser) throw ForbiddenException()
-						
-						Admiral.del(admiralId)
-						redirect("/me")
-					}
-					
-					get("/logout") {
-						call.getUserSession()?.let { sess ->
-							launch {
-								val newTime = System.currentTimeMillis() - 100
-								UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expirationMillis, newTime))
-							}
-						}
-						
-						call.sessions.clear<Id<UserSession>>()
-						redirect("/")
-					}
-					
-					get("/logout/{id}") {
-						val id = Id<UserSession>(call.parameters.getOrFail("id"))
-						call.getUserSession()?.let { sess ->
-							launch {
-								val newTime = System.currentTimeMillis() - 100
-								UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expirationMillis, newTime))
-							}
-						}
-						
-						redirect("/me/manage")
-					}
-					
-					get("/logout-all") {
-						call.getUserSession()?.let { sess ->
-							launch {
-								val newTime = System.currentTimeMillis() - 100
-								UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expirationMillis, newTime))
-							}
-						}
-						
-						redirect("/me/manage")
-					}
+				get("/admiral/{id}/manage") {
+					call.respondHtml(HttpStatusCode.OK, call.manageAdmiralPage())
 				}
+				
+				post("/admiral/{id}/manage") {
+					val currentUser = call.getUserSession()?.user
+					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
+					val admiral = Admiral.get(admiralId)!!
+					
+					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					
+					val form = call.receiveParameters()
+					val newAdmiral = admiral.copy(
+						name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
+						isFemale = form["sex"] == "female"
+					)
+					
+					Admiral.put(newAdmiral)
+					redirect("/admiral/$admiralId")
+				}
+				
+				get("/admiral/{id}/delete") {
+					call.respondHtml(HttpStatusCode.OK, call.deleteAdmiralConfirmPage())
+				}
+				
+				post("/admiral/{id}/delete") {
+					val currentUser = call.getUserSession()?.user
+					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
+					val admiral = Admiral.get(admiralId)!!
+					
+					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					
+					Admiral.del(admiralId)
+					redirect("/me")
+				}
+				
+				get("/logout") {
+					call.getUserSession()?.let { sess ->
+						launch {
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expirationMillis, newTime))
+						}
+					}
+					
+					call.sessions.clear<Id<UserSession>>()
+					redirect("/")
+				}
+				
+				get("/logout/{id}") {
+					val id = Id<UserSession>(call.parameters.getOrFail("id"))
+					call.getUserSession()?.let { sess ->
+						launch {
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expirationMillis, newTime))
+						}
+					}
+					
+					redirect("/me/manage")
+				}
+				
+				get("/logout-all") {
+					call.getUserSession()?.let { sess ->
+						launch {
+							val newTime = System.currentTimeMillis() - 100
+							UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expirationMillis, newTime))
+						}
+					}
+					
+					redirect("/me/manage")
+				}
+				
 				currentProvider.installRouting(this)
 			}
 		}
