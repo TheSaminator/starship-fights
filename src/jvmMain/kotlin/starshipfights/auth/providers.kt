@@ -377,7 +377,6 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 				get("/login/discord/callback") {
 					val userAgent = call.request.userAgent() ?: throw ForbiddenException()
 					val principal: OAuthAccessTokenResponse.OAuth2 = call.principal() ?: redirect("/login")
-					//call.sessions.set(UserSession(principal?.accessToken.toString()))
 					val userInfoJson = httpClient.get<String>("https://discord.com/api/users/@me") {
 						headers {
 							append(HttpHeaders.Authorization, "Bearer ${principal.accessToken}")
