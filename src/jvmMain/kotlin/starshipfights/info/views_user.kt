@@ -353,13 +353,19 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 			}
 			table {
 				tr {
+					th { +"When" }
 					th { +"Role" }
 					th { +"Against" }
-					th { +"Time" }
 					th { +"Result" }
 				}
 				records.sortedBy { it.whenEnded }.forEach { record ->
 					tr {
+						td {
+							span(classes = "moment") {
+								style = "display:none"
+								+record.whenEnded.toEpochMilli().toString()
+							}
+						}
 						td {
 							+when (recordRoles[record.id]) {
 								GlobalSide.HOST -> "Host"
@@ -375,12 +381,6 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								a(href = "/admiral/${opponent.id}") {
 									+opponent.fullName
 								}
-						}
-						td {
-							span(classes = "moment") {
-								style = "display:none"
-								+record.whenEnded.toEpochMilli().toString()
-							}
 						}
 						td {
 							+when (recordRoles[record.id]) {
