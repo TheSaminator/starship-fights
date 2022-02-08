@@ -399,7 +399,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 					
 					val userSession = UserSession(
 						user = user.id,
-						clientAddresses = listOf(call.request.origin.host),
+						clientAddresses = listOf(call.request.origin.remoteHost),
 						userAgent = userAgent,
 						expirationMillis = System.currentTimeMillis() + 86_400_000
 					)
