@@ -8,6 +8,7 @@ import kotlinx.html.*
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.or
+import starshipfights.CurrentConfiguration
 import starshipfights.ForbiddenException
 import starshipfights.auth.getUser
 import starshipfights.auth.getUserSession
@@ -36,20 +37,24 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					NavLink("/admiral/new", "New Admiral"),
 				)
 			)
-		else
-			CustomSidebar {
-			
-			}
+		else null
 	) {
 		section {
 			h1 { +user.profileName }
 			p {
-				+"This user's profile name is ${user.profileName}!"
+				+user.discordName
+				+"#"
+				+user.discordDiscriminator
 			}
 			
 			if (isCurrentUser)
 				p {
 					+"This user is you!"
+				}
+			
+			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
+				p {
+					+"This user is the owner of the site!"
 				}
 			
 			if (admirals.isNotEmpty()) {
