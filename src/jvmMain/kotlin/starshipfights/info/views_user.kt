@@ -31,31 +31,28 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val admirals = Admiral.select(Admiral::owningUser eq user.id).toList()
 	
 	return page(
-		user.profileName, standardNavBar(), if (isCurrentUser)
-			PageNavSidebar(
-				listOf(
-					NavLink("/admiral/new", "New Admiral"),
-				)
-			)
-		else null
-	) {
-		section {
-			h1 { +user.profileName }
+		user.profileName, standardNavBar(), CustomSidebar {
+			img(src = user.discordAvatarUrl)
 			p {
+				style = "text-align:center"
 				+user.discordName
 				+"#"
 				+user.discordDiscriminator
 			}
-			
-			if (isCurrentUser)
-				p {
-					+"This user is you!"
-				}
-			
 			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
 				p {
-					+"This user is the owner of the site!"
+					style = "text-align:center"
+					+"Site Owner"
 				}
+			if (isCurrentUser)
+				p {
+					style = "text-align:center"
+					a(href = "/admiral/new") { +"Create New Admiral" }
+				}
+		}
+	) {
+		section {
+			h1 { +user.profileName }
 			
 			if (admirals.isNotEmpty()) {
 				p {

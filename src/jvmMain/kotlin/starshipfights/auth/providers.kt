@@ -234,6 +234,7 @@ object TestAuthProvider : AuthProvider {
 								discordId = credentials.name,
 								discordName = "",
 								discordDiscriminator = "0000",
+								discordAvatar = null,
 								profileName = "Test User"
 							).also {
 								User.put(it)
@@ -387,14 +388,17 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 					val discordId = (userInfo["id"] as? JsonPrimitive)?.content ?: redirect("/login")
 					val discordUsername = (userInfo["username"] as? JsonPrimitive)?.content ?: redirect("/login")
 					val discordDiscriminator = (userInfo["discriminator"] as? JsonPrimitive)?.content ?: redirect("/login")
+					val discordAvatar = (userInfo["avatar"] as? JsonPrimitive)?.content
 					
 					val user = User.locate(User::discordId eq discordId)?.copy(
 						discordName = discordUsername,
-						discordDiscriminator = discordDiscriminator
+						discordDiscriminator = discordDiscriminator,
+						discordAvatar = discordAvatar
 					) ?: User(
 						discordId = discordId,
 						discordName = discordUsername,
 						discordDiscriminator = discordDiscriminator,
+						discordAvatar = discordAvatar,
 						profileName = discordUsername
 					)
 					
@@ -405,10 +409,8 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						expirationMillis = System.currentTimeMillis() + 86_400_000
 					)
 					
-					launch {
-						User.put(user)
-						UserSession.put(userSession)
-					}
+					launch { User.put(user) }
+					launch { UserSession.put(userSession) }
 					
 					call.sessions.set(userSession.id)
 					redirect("/me")
