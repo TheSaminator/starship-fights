@@ -277,7 +277,7 @@ object AdmiralNames {
 		"Daemon"
 	)
 	
-	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiMaleNames else diadochiFemaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
+	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
 	
 	fun randomName(flavor: AdmiralNameFlavor, isFemale: Boolean) = when (flavor) {
 		AdmiralNameFlavor.MECHYRDIA -> randomMechyrdianName(isFemale)
