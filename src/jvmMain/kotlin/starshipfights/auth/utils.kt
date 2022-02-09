@@ -8,12 +8,14 @@ import starshipfights.data.Id
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 
+const val EXPIRATION_TIME = 86_400_000
+
 suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.takeIf { session ->
 	session.userAgent == userAgent && session.expirationMillis > System.currentTimeMillis()
 }
 
 suspend fun UserSession.renewed(clientAddress: String) = copy(
-	expirationMillis = System.currentTimeMillis() + 900_000,
+	expirationMillis = System.currentTimeMillis() + EXPIRATION_TIME,
 	clientAddresses = if (clientAddresses.last() != clientAddress) clientAddresses + clientAddress else clientAddresses
 ).also { UserSession.put(it) }
 

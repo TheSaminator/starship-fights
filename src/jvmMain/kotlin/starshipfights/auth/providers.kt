@@ -401,7 +401,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						user = user.id,
 						clientAddresses = listOf(call.request.origin.remoteHost),
 						userAgent = userAgent,
-						expirationMillis = System.currentTimeMillis() + 86_400_000
+						expirationMillis = System.currentTimeMillis() + EXPIRATION_TIME
 					)
 					
 					launch { User.put(user) }
