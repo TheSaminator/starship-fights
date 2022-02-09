@@ -7,7 +7,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.launch
-import starshipfights.auth.getUser
 import starshipfights.data.admiralty.getInGameAdmiral
 import starshipfights.data.auth.User
 

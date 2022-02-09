@@ -33,6 +33,8 @@ import starshipfights.data.createNonce
 import starshipfights.game.AdmiralRank
 import starshipfights.game.Faction
 import starshipfights.info.*
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 interface AuthProvider {
 	fun installApplication(app: Application) = Unit
@@ -167,8 +169,8 @@ interface AuthProvider {
 				get("/logout") {
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = System.currentTimeMillis() - 100
-							UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expirationMillis, newTime))
+							val newTime = Instant.now().minusMillis(100)
+							UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expiration, newTime))
 						}
 					}
 					
@@ -180,8 +182,8 @@ interface AuthProvider {
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = System.currentTimeMillis() - 100
-							UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expirationMillis, newTime))
+							val newTime = Instant.now().minusMillis(100)
+							UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expiration, newTime))
 						}
 					}
 					
@@ -191,8 +193,8 @@ interface AuthProvider {
 				get("/logout-all") {
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = System.currentTimeMillis() - 100
-							UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expirationMillis, newTime))
+							val newTime = Instant.now().minusMillis(100)
+							UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expiration, newTime))
 						}
 					}
 					
@@ -239,7 +241,7 @@ object TestAuthProvider : AuthProvider {
 							user = user.id,
 							clientAddresses = listOf(originAddress),
 							userAgent = userAgent,
-							expirationMillis = System.currentTimeMillis() + 3_600_000L
+							expiration = Instant.now().plus(1, ChronoUnit.DAYS)
 						).also {
 							UserSession.put(it)
 						}
@@ -400,7 +402,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						user = user.id,
 						clientAddresses = listOf(call.request.origin.remoteHost),
 						userAgent = userAgent,
-						expirationMillis = System.currentTimeMillis() + EXPIRATION_TIME
+						expiration = Instant.now().plus(1, ChronoUnit.DAYS)
 					)
 					
 					launch { User.put(user) }

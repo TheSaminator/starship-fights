@@ -1,12 +1,14 @@
 package starshipfights.data.auth
 
 import io.ktor.auth.*
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import starshipfights.data.DataDocument
 import starshipfights.data.DocumentTable
 import starshipfights.data.Id
 import starshipfights.data.invoke
+import java.time.Instant
 
 @Serializable
 data class User(
@@ -40,7 +42,7 @@ data class UserSession(
 	val user: Id<User>,
 	val clientAddresses: List<String>,
 	val userAgent: String,
-	val expirationMillis: Long
+	val expiration: @Contextual Instant
 ) : DataDocument<UserSession>, Principal {
 	companion object Table : DocumentTable<UserSession> by DocumentTable.create({
 		index(UserSession::user)

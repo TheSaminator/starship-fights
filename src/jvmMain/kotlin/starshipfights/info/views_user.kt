@@ -120,10 +120,10 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					th { +"Client IPs" }
 					th { +Entities.nbsp }
 				}
-				val now = System.currentTimeMillis()
+				val now = Instant.now()
 				val expiredSessions = mutableListOf<UserSession>()
 				allUserSessions.forEach { session ->
-					if (session.expirationMillis < now) {
+					if (session.expiration.isBefore(now)) {
 						expiredSessions += session
 						return@forEach
 					}
@@ -164,7 +164,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							+"Expired at "
 							span(classes = "moment") {
 								style = "display:none"
-								+session.expirationMillis.toString()
+								+session.expiration.toEpochMilli().toString()
 							}
 						}
 					}
@@ -303,7 +303,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 		)
 	) {
 		section {
-			h1 { +admiral.fullName }
+			h1 { +admiral.name }
 			p {
 				+admiral.fullName
 				+" is a flag officer of the "
@@ -328,12 +328,16 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 							}
 						}
 						td {
-							val now = Instant.now()
-							+when (ship.status) {
-								DrydockStatus.Ready -> "Ready"
+							when (ship.status) {
+								DrydockStatus.Ready -> +"Ready"
 								is DrydockStatus.InRepair -> {
-									val distance = (ship.status.until.epochSecond - now.epochSecond) / 3600 + 1
-									"Repairing (ready in ${distance}h)"
+									+"Repairing"
+									br
+									+"Will be ready at "
+									span(classes = "moment") {
+										style = "display:none"
+										+ship.status.until.toEpochMilli().toString()
+									}
 								}
 							}
 						}
@@ -356,6 +360,13 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 				records.sortedBy { it.whenEnded }.forEach { record ->
 					tr {
 						td {
+							+"Started at "
+							span(classes = "moment") {
+								style = "display:none"
+								+record.whenStarted.toEpochMilli().toString()
+							}
+							br
+							+"Ended at "
 							span(classes = "moment") {
 								style = "display:none"
 								+record.whenEnded.toEpochMilli().toString()

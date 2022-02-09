@@ -5,10 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
-import kotlin.math.abs
 import kotlin.math.roundToInt
-import kotlin.math.sign
-import kotlin.math.sqrt
 
 val jsonSerializer = Json {
 	classDiscriminator = "\$ktClass"

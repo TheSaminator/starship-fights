@@ -7,15 +7,15 @@ import io.ktor.sessions.*
 import starshipfights.data.Id
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
-
-const val EXPIRATION_TIME = 86_400_000
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.takeIf { session ->
-	session.userAgent == userAgent && session.expirationMillis > System.currentTimeMillis()
+	session.userAgent == userAgent && session.expiration.isAfter(Instant.now())
 }
 
 suspend fun UserSession.renewed(clientAddress: String) = copy(
-	expirationMillis = System.currentTimeMillis() + EXPIRATION_TIME,
+	expiration = Instant.now().plus(1, ChronoUnit.DAYS),
 	clientAddresses = if (clientAddresses.last() != clientAddress) clientAddresses + clientAddress else clientAddresses
 ).also { UserSession.put(it) }
 

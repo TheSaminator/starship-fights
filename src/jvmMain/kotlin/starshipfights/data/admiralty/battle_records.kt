@@ -16,6 +16,7 @@ data class BattleRecord(
 	@SerialName("_id")
 	override val id: Id<BattleRecord> = Id(),
 	
+	val whenStarted: @Contextual Instant,
 	val whenEnded: @Contextual Instant,
 	
 	val hostUser: Id<User>,

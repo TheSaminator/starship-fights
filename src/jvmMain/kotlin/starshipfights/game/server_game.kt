@@ -33,13 +33,16 @@ object GameManager {
 		
 		val session = GameSession(gameState)
 		DocumentTable.launch {
-			val end = session.gameEnd.await()
+			session.gameStart.join()
+			val startedAt = Instant.now()
 			
-			val now = Instant.now()
-			val destroyedShipStatus = DrydockStatus.InRepair(now.plus(12, ChronoUnit.HOURS))
-			val damagedShipStatus = DrydockStatus.InRepair(now.plus(9, ChronoUnit.HOURS))
-			val intactShipStatus = DrydockStatus.InRepair(now.plus(6, ChronoUnit.HOURS))
-			val escapedShipStatus = DrydockStatus.InRepair(now.plus(3, ChronoUnit.HOURS))
+			val end = session.gameEnd.await()
+			val endedAt = Instant.now()
+			
+			val destroyedShipStatus = DrydockStatus.InRepair(endedAt.plus(12, ChronoUnit.HOURS))
+			val damagedShipStatus = DrydockStatus.InRepair(endedAt.plus(9, ChronoUnit.HOURS))
+			val intactShipStatus = DrydockStatus.InRepair(endedAt.plus(6, ChronoUnit.HOURS))
+			val escapedShipStatus = DrydockStatus.InRepair(endedAt.plus(3, ChronoUnit.HOURS))
 			
 			val shipWrecks = session.state.value.destroyedShips
 			val destroyedShips = shipWrecks.filterValues { !it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
@@ -61,7 +64,8 @@ object GameManager {
 			}
 			
 			val battleRecord = BattleRecord(
-				whenEnded = now,
+				whenStarted = startedAt,
+				whenEnded = endedAt,
 				
 				hostUser = hostInfo.user.id.reinterpret(),
 				guestUser = guestInfo.user.id.reinterpret(),
@@ -114,7 +118,16 @@ class GameSession(gameState: GameState) {
 				true
 			} ?: false
 		}
-	}.also { if (!it) onPacket(player.other, PlayerAction.TimeOut) }
+	}.also {
+		if (it)
+			_gameStart.complete()
+		else
+			onPacket(player.other, PlayerAction.TimeOut)
+	}
+	
+	private val _gameStart = Job()
+	val gameStart: Job
+		get() = _gameStart
 	
 	private val stateMutable = MutableStateFlow(gameState)
 	private val stateMutex = Mutex()
