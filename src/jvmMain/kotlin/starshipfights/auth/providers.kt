@@ -273,8 +273,7 @@ object TestAuthProvider : AuthProvider {
 				
 				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
-						+"This method of authentication is only for testing. "
-						+"I trust you not to abuse this; don't make me regret my trust."
+						+"This instance does not have Discrd OAuth login set up. As a fallback, this authentication mode is used for testing."
 					}
 				}) {
 					section {

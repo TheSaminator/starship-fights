@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+screen -S starshipfights -X quit
+git pull
+./run
