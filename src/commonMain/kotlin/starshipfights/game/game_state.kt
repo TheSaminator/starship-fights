@@ -32,19 +32,14 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 	val newChatEntries = mutableListOf<ChatEntry>()
 	
 	when (phase) {
-		is GamePhase.Power -> {
-			newShips = newShips.mapValues { (_, ship) ->
-				ship.copy(
-					weaponAmount = ship.powerMode.weapons,
-					shieldAmount = ship.powerMode.shields,
-				)
-			}
-		}
 		is GamePhase.Move -> {
+			// Auto-move drifting ships
 			newShips = newShips.mapValues { (_, ship) ->
 				if (ship.isDoneCurrentPhase) ship
 				else ship.copy(position = ship.position.drift)
 			}
+			
+			// Ships that move off the battlefield are considered to disengage
 			newShips = newShips.mapNotNull fleeingShips@{ (id, ship) ->
 				val r = ship.position.currentLocation.vector
 				val mx = start.battlefieldWidth / 2
@@ -58,6 +53,8 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 				
 				id to ship
 			}.toMap()
+			
+			// Identify enemy ships
 			newShips = newShips.mapValues { (_, ship) ->
 				if (ship.isIdentified) ship
 				else if (newShips.values.any { it.owner != ship.owner && (it.position.currentLocation - ship.position.currentLocation).length <= SHIP_SENSOR_RANGE })
@@ -70,6 +67,7 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 		is GamePhase.Attack -> {
 			val strikeWingDamage = mutableMapOf<ShipHangarWing, Double>()
 			
+			// Apply damage to ships from strike craft
 			newShips = newShips.mapNotNull strikeBombard@{ (id, ship) ->
 				if (ship.bomberWings.isEmpty())
 					return@strikeBombard id to ship
@@ -115,6 +113,8 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 					}
 				}
 			}.toMap()
+			
+			// Apply damage to strike craft wings
 			newShips = newShips.mapValues { (shipId, ship) ->
 				val newArmaments = ship.armaments.weaponInstances.mapValues { (weaponId, weapon) ->
 					if (weapon is ShipWeaponInstance.Hangar)
@@ -126,8 +126,13 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 					armaments = ShipInstanceArmaments(newArmaments)
 				)
 			}
+			
+			// Recall strike craft and regenerate weapon and shield powers
 			newShips = newShips.mapValues { (_, ship) ->
 				ship.copy(
+					weaponAmount = ship.powerMode.weapons,
+					shieldAmount = (ship.shieldAmount..ship.powerMode.shields).random(),
+					
 					fighterWings = emptyList(),
 					bomberWings = emptyList(),
 					usedArmaments = emptySet(),

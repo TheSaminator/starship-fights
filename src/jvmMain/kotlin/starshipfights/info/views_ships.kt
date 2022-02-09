@@ -30,7 +30,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 		}
 		h3 { +"Subsystem Powering" }
 		p {
-			+"Ships have two particular attributes that are closely related: Reactor Power and Energy Flow. Reactor Power is how much power the ship's generators generate, and starts off as being split evenly between the ship's four subsystems: Weapons, Shields, Engines, and Emitters. Weapons Power is expended when firing Cannons or charging Lances; Shields Power is expended whenever the ship's shields are impacted by enemy fire; Engines Power modifies the speed and turn rate of the ship; finally, Emitter Power modifies the ship's special techno-science abilities. The ship's Energy Flow statistic determines how many transfers can be made between subsystems during the Power Distribution phase of a turn."
+			+"Ships have two particular attributes that are closely related: Reactor Power and Energy Flow. Reactor Power is how much power the ship's generators generate, and starts off as being split evenly between the ship's four subsystems: Weapons, Shields, Engines, and Battery. Weapons Power is expended when firing Cannons or charging Lances; Shields Power is expended whenever the ship's shields are impacted by enemy fire; Engines Power modifies the speed and turn rate of the ship; finally, Battery Power modifies the ship's special techno-science abilities. The ship's Energy Flow statistic determines how many transfers can be made between subsystems during the Power Distribution phase of a turn."
 		}
 		h3 { +"Turn Structure" }
 		p {

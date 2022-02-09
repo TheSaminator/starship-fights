@@ -137,12 +137,14 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (!shipInstance.validatePowerMode(data.powerMode)) return GameEvent.InvalidAction("Invalid power distribution")
 			
+			val prevShieldDamage = shipInstance.powerMode.shields - shipInstance.shieldAmount
+			
 			val newShipInstance = shipInstance.copy(
 				powerMode = data.powerMode,
 				isDoneCurrentPhase = true,
 				
 				weaponAmount = data.powerMode.weapons,
-				shieldAmount = data.powerMode.shields,
+				shieldAmount = (data.powerMode.shields - prevShieldDamage).coerceAtLeast(0),
 			)
 			val newShips = gameState.ships + mapOf(ship to newShipInstance)
 			

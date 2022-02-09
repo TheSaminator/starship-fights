@@ -59,7 +59,7 @@ data class ShipPosition(
 }
 
 enum class ShipSubsystem {
-	WEAPONS, SHIELDS, ENGINES, EMITTER;
+	WEAPONS, SHIELDS, ENGINES, BATTERY;
 	
 	val displayName: String
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
@@ -69,7 +69,7 @@ enum class ShipSubsystem {
 			WEAPONS -> "#FF6633"
 			SHIELDS -> "#6699FF"
 			ENGINES -> "#FFCC33"
-			EMITTER -> "#33FF66"
+			BATTERY -> "#33FF66"
 		}
 	
 	val imageUrl: String
@@ -86,13 +86,13 @@ data class ShipPowerMode(
 	val weapons: Int,
 	val shields: Int,
 	val engines: Int,
-	val emitter: Int,
+	val battery: Int,
 ) {
 	operator fun plus(delta: Map<ShipSubsystem, Int>) = copy(
 		weapons = weapons + (delta[ShipSubsystem.WEAPONS] ?: 0),
 		shields = shields + (delta[ShipSubsystem.SHIELDS] ?: 0),
 		engines = engines + (delta[ShipSubsystem.ENGINES] ?: 0),
-		emitter = emitter + (delta[ShipSubsystem.EMITTER] ?: 0),
+		battery = battery + (delta[ShipSubsystem.BATTERY] ?: 0),
 	)
 	
 	operator fun minus(delta: Map<ShipSubsystem, Int>) = this + delta.mapValues { (_, d) -> -d }
@@ -101,11 +101,11 @@ data class ShipPowerMode(
 		ShipSubsystem.WEAPONS -> weapons
 		ShipSubsystem.SHIELDS -> shields
 		ShipSubsystem.ENGINES -> engines
-		ShipSubsystem.EMITTER -> emitter
+		ShipSubsystem.BATTERY -> battery
 	}
 	
 	val total: Int
-		get() = weapons + shields + engines + emitter
+		get() = weapons + shields + engines + battery
 	
 	infix fun distanceTo(other: ShipPowerMode) = ShipSubsystem.values().sumOf { subsystem -> abs(this[subsystem] - other[subsystem]) }
 }
