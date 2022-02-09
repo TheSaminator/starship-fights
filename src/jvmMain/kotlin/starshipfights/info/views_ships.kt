@@ -3,6 +3,7 @@ package starshipfights.info
 import io.ktor.application.*
 import kotlinx.html.*
 import starshipfights.game.*
+import java.util.Comparator
 import kotlin.math.PI
 import kotlin.math.roundToInt
 
@@ -42,16 +43,21 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 			+"At the last phase of a turn, ships fire weapons at each other. Again, both players take this phase simultaneously. Ships fire weapons at enemy ships, as far as they can and as much as they can. Damage from weapons is inflicted on targeted ships instantly, so players are encouraged to click fast when attacking enemy ships. Note that this does not apply to strike craft; they are deployed to ships, with percentages on the ship labels indicating the total strength of all strike wings surrounding a ship, and the damage done by bombers is calculated at the end of the phase, before the next turn begins."
 		}
 	}
-	val allShipTypes = ShipType.values().sortedBy { it.weightClass }.groupBy { it.faction }
-	allShipTypes.forEach { (faction, shipTypes) ->
+	ShipType.values().groupBy { it.faction }.toSortedMap().forEach { (faction, factionShipTypes) ->
 		section {
 			id = faction.toUrlSlug()
 			
 			h2 { +faction.shortName }
-			ul {
-				shipTypes.forEach { shipType ->
-					li {
-						a(href = "/info/${shipType.toUrlSlug()}") { +shipType.fullDisplayName }
+			
+			faction.blurbDesc(consumer)
+			
+			factionShipTypes.groupBy { it.weightClass }.toSortedMap(Comparator.comparingInt(ShipWeightClass::rank)).forEach { (weightClass, weightedShipTypes) ->
+				h3 { +weightClass.displayName }
+				ul {
+					weightedShipTypes.forEach { shipType ->
+						li {
+							a(href = "/info/${shipType.toUrlSlug()}") { +shipType.fullDisplayName }
+						}
 					}
 				}
 			}

@@ -2,7 +2,6 @@ package starshipfights.game
 
 import kotlinx.html.TagConsumer
 import kotlinx.html.p
-import kotlinx.html.style
 
 enum class Faction(
 	val shortName: String,
@@ -10,7 +9,6 @@ enum class Faction(
 	val navyName: String,
 	val polityName: String,
 	val demonymSingular: String,
-	val demonymPlural: String,
 	val shipPrefix: String,
 	val blurbDesc: TagConsumer<*>.() -> Unit,
 ) {
@@ -20,18 +18,13 @@ enum class Faction(
 		navyName = "Mechyrdian Star Fleet",
 		polityName = "Empire of Mechyrdia",
 		demonymSingular = "Mechyrdian",
-		demonymPlural = "Mechyrdians",
-		shipPrefix = "MÉMN ", // Mehurdias Éji Magéstati Nau
+		shipPrefix = "CMS ", // Ciarstuos Mehurdiasi Štelnau
 		blurbDesc = {
 			p {
 				+"Having spent much of its history coming under threat from oppressive theocracies, invading hordes, and revolutionary insurrections, the Empire of Mechyrdia now enjoys a place in the stars as the foremost power of the galaxy."
 			}
 			p {
 				+"But things are not so ideal for Mechyrdia. The western menace, the Diadochus Masra Draetsen, threatens to upend this peaceful order and conquer Mechyrdia, to succeed where their predecessors the Arkant Horde had failed. Their new leader, Ogus Khan, has made many connections with the disgraced nations of the galaxy, and will stop at nothing to see Mechyrdia fall."
-			}
-			p {
-				style = "text-align:center"
-				+"Fight for liberty and justice with the Empire of Mechyrdia!"
 			}
 		},
 	),
@@ -40,8 +33,7 @@ enum class Faction(
 		shortNameIsDefinite = true,
 		navyName = "Masra Draetsen Khoy'qan",
 		polityName = "Diadochus Masra Draetsen",
-		demonymSingular = "Masrian",
-		demonymPlural = "Masrians",
+		demonymSingular = "Diadochi",
 		shipPrefix = "", // The Diadochi don't use ship prefixes
 		blurbDesc = {
 			p {
@@ -49,10 +41,6 @@ enum class Faction(
 			}
 			p {
 				+"But now, one of these Diadochi has come to the forefront: the Diadochus Masra Draetsen. Their new leader, Ogus Khan, has forged alliances with many other oppressed nations and remnant states of the galaxy, and stands ready to begin the true conquest of Mechyrdia! May there be woe to the vanquished!"
-			}
-			p {
-				style = "text-align:center"
-				+"Conquer for glory with the Diadochus Masra Draetsen!"
 			}
 		},
 	),
@@ -62,7 +50,6 @@ enum class Faction(
 		navyName = "Isarnareyksk Styurnamariyn",
 		polityName = "Isarnareyksk Iunta",
 		demonymSingular = "Isarnareyksk",
-		demonymPlural = "Isarnareykski",
 		shipPrefix = "ISMS ", // Isarnareyksk StyurnaMariyn nu Skyf
 		blurbDesc = {
 			p {
@@ -70,10 +57,6 @@ enum class Faction(
 			}
 			p {
 				+"Isarnareykk is at a crossroads now. Shall they embrace democracy and join forces with Mechyrdia? Shall they give the Faurasitand a perpetual dictatorship to end the crisis? Or shall one of the Iunta's factions win out: the military reclaiming the former glory of Fulkreykk, or the tech barons to gain fatter profits?"
-			}
-			p {
-				style = "text-align:center"
-				+"Choose the fate of your homeland with the Isarnareyksk Styurnamariyn!"
 			}
 		},
 	),
@@ -83,18 +66,13 @@ enum class Faction(
 		navyName = "Imperial States Space Force",
 		polityName = "Imperial States of America",
 		demonymSingular = "American",
-		demonymPlural = "Americans",
 		shipPrefix = "ISFC ", // Imperial Space Force Craft
 		blurbDesc = {
 			p {
 				+"The Imperial States of America was once the political hyperpower of Earth and beyond, and the ideological bulwark of the Caesarism of its time. They were strong, they were proud... they were hated. Hated to the point that entire nations fled from Earth and colonized the stars just to escape American hegemony."
 			}
 			p {
-				+"The American Imperium has been fallen for a long time to barbarian warlords, and its homeworld Earth has been turned into a museum planet by the Mechyrdian government. But the government lives on; hidden away in secret space stations, they desire nothing less than to conquer the stars and establish a ten-thousand-year empire."
-			}
-			p {
-				style = "text-align:center"
-				+"Seize the stars with the Imperial States Space Force!"
+				+"The American Empire has been fallen for a long time to barbarian warlords, and its homeworld Earth has been turned into a museum planet by the Mechyrdian government. But the government lives on; hidden away in secret space stations, they desire nothing less than to conquer the stars and establish a ten-thousand-year empire."
 			}
 		},
 	);
