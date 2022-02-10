@@ -6,7 +6,6 @@ fun newShipName(faction: Faction, shipWeightClass: ShipWeightClass, existingName
 	ShipNames.nameShip(faction, shipWeightClass, random)
 }.take(20).dropWhile { it in existingNames }.firstOrNull()?.also { existingNames.add(it) }
 
-
 object ShipNames {
 	private val mechyrdianFrigateNames1 = listOf(
 		"Unconquerable",
