@@ -1,4 +1,6 @@
 window.addEventListener("load", function () {
+	if (!window.sfShipMeshViewer) return;
+
 	const canvases = document.getElementsByTagName("canvas");
 	for (let canvas of canvases) {
 		const modelName = canvas.getAttribute("data-model");
@@ -74,6 +76,8 @@ window.addEventListener("load", function () {
 });
 
 window.addEventListener("load", function () {
+	if (!window.sfAdmiralNameGen) return;
+
 	const nameBox = document.getElementById("name");
 	const isFemaleButton = document.getElementById("sex-female");
 	const generators = document.getElementsByClassName("generate-admiral-name");
@@ -85,5 +89,33 @@ window.addEventListener("load", function () {
 				nameBox.value = await (await fetch("/generate-name/" + flavor + "/" + (isFemaleButton.checked ? "female" : "male"))).text();
 			})();
 		};
+	}
+});
+
+window.addEventListener("load", function () {
+	const textareas = document.getElementsByTagName("textarea");
+	for (let textarea of textareas) {
+		if (!textarea.hasAttribute("maxLength")) continue;
+
+		const maxLengthIndicator = document.createElement("p");
+		maxLengthIndicator.style.fontSize = "0.8em";
+		maxLengthIndicator.style.fontStyle = "italic";
+		maxLengthIndicator.style.color = "#555";
+
+		textarea.after(maxLengthIndicator);
+
+		function updateIndicator() {
+			const maxLengthAttr = textarea.getAttribute("maxLength");
+			if (!maxLengthAttr) return;
+			const maxLength = Number(maxLengthAttr);
+
+			maxLengthIndicator.innerText = "" + textarea.value.length + "/" + maxLength;
+		}
+
+		textarea.addEventListener("input", () => {
+			updateIndicator();
+		});
+
+		updateIndicator();
 	}
 });

@@ -44,14 +44,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 				+user.discordName
 				+"#"
 				+user.discordDiscriminator
-			}
-			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
-				p {
-					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
-					+"Site Owner"
-				}
-			p {
-				style = "text-align:center"
+				br
 				when (user.status) {
 					UserStatus.IN_BATTLE -> +"In Battle"
 					UserStatus.READY_FOR_BATTLE -> +"In Battle"
@@ -59,17 +52,31 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					UserStatus.AVAILABLE -> if (hasOpenSessions) +"Online" else +"Offline"
 				}
 			}
+			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
+				p {
+					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
+					+"Site Owner"
+				}
 			if (isCurrentUser) {
 				hr { style = "border-color:#036" }
-				p {
-					style = "text-align:center"
-					a(href = "/admiral/new") { +"Create New Admiral" }
+				div(classes = "list") {
+					div(classes = "item") {
+						a(href = "/admiral/new") { +"Create New Admiral" }
+					}
+					div(classes = "item") {
+						a(href = "/me/manage") { +"Edit Profile" }
+					}
 				}
 			}
 		}
 	) {
 		section {
 			h1 { +user.profileName }
+			
+			+user.profileBio
+		}
+		section {
+			h2 { +"Admirals" }
 			
 			if (admirals.isNotEmpty()) {
 				p {
@@ -105,18 +112,40 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 		section {
 			h1 { +"User Preferences" }
 			form(method = FormMethod.post, action = "/me/manage") {
+				h2 {
+					+"Profile"
+				}
 				h3 {
 					label {
 						htmlFor = "name"
-						+"Profile Name"
+						+"Display Name"
 					}
 				}
 				textInput(name = "name") {
 					required = true
+					maxLength = "32"
+					
 					value = currentUser.profileName
 					autoComplete = false
+				}
+				p {
+					style = "font-style:italic;font-size:0.8em;color:#555"
+					+"Max length 32 characters"
+				}
+				h3 {
+					label {
+						htmlFor = "bio"
+						+"Public Bio"
+					}
+				}
+				textArea {
+					name = "bio"
+					style = "width: 100%;height:5em"
 					
 					required = true
+					maxLength = "240"
+					
+					+currentUser.profileBio
 				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
@@ -271,6 +300,9 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 				submitInput {
 					value = "Create Admiral"
 				}
+			}
+			script {
+				unsafe { +"window.sfAdmiralNameGen = true;" }
 			}
 		}
 	}

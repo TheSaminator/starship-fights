@@ -3,7 +3,6 @@ package starshipfights.info
 import io.ktor.application.*
 import kotlinx.html.*
 import starshipfights.game.*
-import java.util.Comparator
 import kotlin.math.PI
 import kotlin.math.roundToInt
 
@@ -167,6 +166,10 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 		canvas {
 			style = "width:100%;height:25em"
 			attributes["data-model"] = shipType.meshName
+		}
+		
+		script {
+			unsafe { +"window.sfShipMeshViewer = true;" }
 		}
 	}
 }

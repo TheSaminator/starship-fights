@@ -88,7 +88,8 @@ interface AuthProvider {
 					val form = call.receiveParameters()
 					
 					val newUser = currentUser.copy(
-						profileName = form["name"]?.takeIf { it.isNotBlank() } ?: currentUser.profileName
+						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= 32 } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most 32 characters").formUrlEncode()),
+						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= 240 } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most 240 characters").formUrlEncode())
 					)
 					User.put(newUser)
 					redirect("/user/${newUser.id}")
@@ -232,7 +233,8 @@ object TestAuthProvider : AuthProvider {
 								discordName = "",
 								discordDiscriminator = "",
 								discordAvatar = null,
-								profileName = credentials.name
+								profileName = credentials.name,
+								profileBio = "BEEP BOOP I EXIST ONLY FOR TESTING BLOP BLARP."
 							).also {
 								User.put(it)
 							}
@@ -395,7 +397,8 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						discordName = discordUsername,
 						discordDiscriminator = discordDiscriminator,
 						discordAvatar = discordAvatar,
-						profileName = discordUsername
+						profileName = discordUsername,
+						profileBio = "Hi, I'm new here!"
 					)
 					
 					val userSession = UserSession(

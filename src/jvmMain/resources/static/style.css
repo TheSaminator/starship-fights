@@ -226,7 +226,8 @@ th {
 
 input[type=text],
 input[type=password],
-input[type=email] {
+input[type=email],
+textarea {
 	box-sizing: border-box;
 	background-color: #aaa;
 	border: none;
@@ -240,14 +241,16 @@ input[type=email] {
 
 input[type=text]:focus,
 input[type=password]:focus,
-input[type=email]:focus {
+input[type=email]:focus,
+textarea:focus {
 	outline: none;
 	background-color: #888;
 }
 
 input[type=text]:invalid,
 input[type=password]:invalid,
-input[type=email]:invalid {
+input[type=email]:invalid,
+textarea:invalid {
 	color: #422;
 	background-color: #e77;
 	border-bottom-color: #211;

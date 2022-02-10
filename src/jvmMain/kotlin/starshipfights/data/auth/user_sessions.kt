@@ -19,6 +19,7 @@ data class User(
 	val discordDiscriminator: String,
 	val discordAvatar: String?,
 	val profileName: String,
+	val profileBio: String,
 	val status: UserStatus = UserStatus.AVAILABLE,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String
