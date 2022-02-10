@@ -1,5 +1,7 @@
-package starshipfights.game
+package starshipfights.data.admiralty
 
+import starshipfights.game.Faction
+import starshipfights.game.ShipWeightClass
 import kotlin.random.Random
 
 fun newShipName(faction: Faction, shipWeightClass: ShipWeightClass, existingNames: MutableSet<String>, random: Random = Random) = generateSequence {
