@@ -14,7 +14,6 @@ import kotlinx.html.*
 import kotlinx.html.dom.append
 import kotlinx.html.js.onClickFunction
 import org.w3c.dom.HTMLDivElement
-import org.w3c.dom.HTMLFormElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 
@@ -357,36 +356,6 @@ sealed class Popup<out T> {
 					onClickFunction = { e ->
 						e.preventDefault()
 						callback(Unit)
-					}
-				}
-			}
-		}
-	}
-	
-	class GameReadyScreen(private val connectToken: String) : Popup<Nothing>() {
-		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Nothing) -> Unit) {
-			p {
-				style = "text-align:center"
-				
-				+"Your battle is ready for you to enter!"
-			}
-			
-			form(action = "/play", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
-				id = "battle-entry"
-				style = "display:none"
-				hiddenInput {
-					name = "token"
-					value = connectToken
-				}
-			}
-			
-			div(classes = "button-set row") {
-				button {
-					+"Enter Battle"
-					onClickFunction = { e ->
-						e.preventDefault()
-						
-						document.getElementById("battle-entry").unsafeCast<HTMLFormElement>().submit()
 					}
 				}
 			}

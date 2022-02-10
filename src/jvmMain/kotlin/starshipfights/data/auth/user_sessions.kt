@@ -32,7 +32,7 @@ data class User(
 }
 
 enum class UserStatus {
-	AVAILABLE, IN_MATCHMAKING, IN_BATTLE
+	AVAILABLE, IN_MATCHMAKING, READY_FOR_BATTLE, IN_BATTLE
 }
 
 @Serializable

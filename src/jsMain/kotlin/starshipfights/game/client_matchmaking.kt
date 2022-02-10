@@ -6,8 +6,14 @@ import externals.threejs.WebGLRenderer
 import io.ktor.client.features.websocket.*
 import kotlinx.browser.document
 import kotlinx.browser.window
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.html.FormEncType
+import kotlinx.html.FormMethod
+import kotlinx.html.dom.create
+import kotlinx.html.hiddenInput
+import kotlinx.html.js.form
 
 suspend fun setupBackground() {
 	val camera = PerspectiveCamera(69, window.aspectRatio, 0.01, 1_000)
@@ -35,6 +41,16 @@ suspend fun setupBackground() {
 		renderer.render(scene, camera)
 		camera.rotateY(dt * 0.25)
 	}
+}
+
+private suspend fun enterGame(connectToken: String): Nothing {
+	document.create.form(action = "/play", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
+		hiddenInput {
+			name = "token"
+			value = connectToken
+		}
+	}.submit()
+	awaitCancellation()
 }
 
 private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
@@ -66,7 +82,7 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 					} while (!joinConnected)
 					
 					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
-					Popup.GameReadyScreen(connectToken).display()
+					enterGame(connectToken)
 				}
 				GlobalSide.GUEST -> {
 					val listOfHosts = receiveObject(JoinListing.serializer()) { closeAndReturn { return@webSocket } }.openGames
@@ -86,7 +102,7 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 					} while (!joinAcceptance)
 					
 					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
-					Popup.GameReadyScreen(connectToken).display()
+					enterGame(connectToken)
 				}
 			}
 		}

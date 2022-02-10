@@ -29,7 +29,8 @@ fun Routing.installGame() {
 		
 		val clientMode = when (user.status) {
 			UserStatus.AVAILABLE -> ClientMode.Error("You must use the matchmaking interface to enter a game")
-			UserStatus.IN_MATCHMAKING -> call.getGameClientMode()
+			UserStatus.IN_MATCHMAKING -> ClientMode.Error("You must start a game in the matchmaking interface")
+			UserStatus.READY_FOR_BATTLE -> call.getGameClientMode()
 			UserStatus.IN_BATTLE -> ClientMode.Error("You cannot play in multiple battles at the same time")
 		}
 		
@@ -42,11 +43,13 @@ fun Routing.installGame() {
 			closeAndReturn("You cannot play in multiple battles at the same time") { return@webSocket }
 		
 		val user = oldUser.copy(status = UserStatus.IN_MATCHMAKING)
-		launch {
-			User.put(user)
-		}
+		User.put(user)
 		
 		matchmakingEndpoint(user)
+		
+		launch {
+			User.put(user.copy(status = UserStatus.READY_FOR_BATTLE))
+		}
 	}
 	
 	webSocket("/game/{token}") {
@@ -56,6 +59,8 @@ fun Routing.installGame() {
 		
 		if (oldUser.status == UserStatus.IN_BATTLE)
 			closeAndReturn("You cannot play in multiple battles at the same time") { return@webSocket }
+		if (oldUser.status == UserStatus.IN_MATCHMAKING)
+			closeAndReturn("You must start a game in the matchmaking interface") { return@webSocket }
 		if (oldUser.status == UserStatus.AVAILABLE)
 			closeAndReturn("You must use the matchmaking interface to enter a game") { return@webSocket }
 		
@@ -65,8 +70,7 @@ fun Routing.installGame() {
 		gameEndpoint(user, token)
 		
 		launch {
-			val postGameUser = user.copy(status = UserStatus.AVAILABLE)
-			User.put(postGameUser)
+			User.put(user.copy(status = UserStatus.AVAILABLE))
 		}
 	}
 }
