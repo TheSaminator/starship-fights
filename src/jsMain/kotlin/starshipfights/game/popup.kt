@@ -445,6 +445,13 @@ sealed class Popup<out T> {
 				
 				+outcome
 			}
+			p {
+				style = "text-align:center"
+				
+				a(href = "/me") {
+					+"Return to Home Page"
+				}
+			}
 		}
 	}
 }

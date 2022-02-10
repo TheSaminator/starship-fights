@@ -120,8 +120,14 @@ object RenderResources {
 					
 					val material = MeshBasicMaterial(configure {
 						map = gridTex
-						alphaTest = 0.5
+						
 						side = DoubleSide
+						depthWrite = false
+						
+						blending = CustomBlending
+						blendEquation = AddEquation
+						blendSrc = OneFactor
+						blendDst = OneMinusSrcColorFactor
 					})
 					
 					val plane = PlaneGeometry(w3d, l3d)
