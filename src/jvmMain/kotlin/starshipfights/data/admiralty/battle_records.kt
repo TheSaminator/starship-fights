@@ -29,6 +29,9 @@ data class BattleRecord(
 	val winMessage: String,
 ) : DataDocument<BattleRecord> {
 	companion object Table : DocumentTable<BattleRecord> by DocumentTable.create({
+		index(BattleRecord::hostUser)
+		index(BattleRecord::guestUser)
+		
 		index(BattleRecord::hostAdmiral)
 		index(BattleRecord::guestAdmiral)
 	})
