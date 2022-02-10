@@ -40,6 +40,7 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 	)
 	else -> listOf(
 		NavLink("/me", user.profileName),
+		NavLink("/me/manage", "User Preferences"),
 		NavLink("/lobby", "Enter Game Lobby"),
 		NavLink("/logout", "Log Out"),
 	)

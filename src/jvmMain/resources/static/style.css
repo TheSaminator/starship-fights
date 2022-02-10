@@ -239,6 +239,10 @@ textarea {
 	width: 100%;
 }
 
+textarea {
+	font-family: 'Noto Sans', sans-serif;
+}
+
 input[type=text]:focus,
 input[type=password]:focus,
 input[type=email]:focus,
