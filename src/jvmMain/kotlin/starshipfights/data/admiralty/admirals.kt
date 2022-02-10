@@ -106,13 +106,15 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 	}
 	.let { shipTypes ->
 		val shipNames = mutableSetOf<String>()
-		shipTypes.map {
-			ShipInDrydock(
-				id = Id(),
-				name = newShipName(it.faction, it.weightClass, shipNames),
-				shipType = it,
-				status = DrydockStatus.Ready,
-				owningAdmiral = admiral.id
-			)
+		shipTypes.mapNotNull { st ->
+			newShipName(st.faction, st.weightClass, shipNames)?.let { name ->
+				ShipInDrydock(
+					id = Id(),
+					name = name,
+					shipType = st,
+					status = DrydockStatus.Ready,
+					owningAdmiral = admiral.id
+				)
+			}
 		}
 	}

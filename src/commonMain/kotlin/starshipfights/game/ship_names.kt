@@ -4,7 +4,8 @@ import kotlin.random.Random
 
 fun newShipName(faction: Faction, shipWeightClass: ShipWeightClass, existingNames: MutableSet<String>, random: Random = Random) = generateSequence {
 	ShipNames.nameShip(faction, shipWeightClass, random)
-}.dropWhile { it in existingNames }.first().also { existingNames.add(it) }
+}.take(20).dropWhile { it in existingNames }.firstOrNull()?.also { existingNames.add(it) }
+
 
 object ShipNames {
 	private val mechyrdianFrigateNames1 = listOf(
