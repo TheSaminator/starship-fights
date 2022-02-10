@@ -19,9 +19,13 @@ suspend fun UserSession.renewed(clientAddress: String) = copy(
 	clientAddresses = if (clientAddresses.last() != clientAddress) clientAddresses + clientAddress else clientAddresses
 ).also { UserSession.put(it) }
 
+suspend fun User.updated() = copy(
+	lastActivity = Instant.now()
+).also { User.put(it) }
+
 suspend fun ApplicationCall.getUserSession() = request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }?.renewed(request.origin.remoteHost)
 
-suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }
+suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }?.updated()
 
 object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
 	override fun serialize(session: Id<UserSession>): String {

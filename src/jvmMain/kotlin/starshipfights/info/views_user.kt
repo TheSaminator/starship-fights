@@ -57,6 +57,21 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
 					+"Site Owner"
 				}
+			hr { style = "border-color:#036" }
+			p {
+				style = "text-align:center"
+				+"Registered at "
+				span(classes = "moment") {
+					style = "display:none"
+					+user.registeredAt.toEpochMilli().toString()
+				}
+				br
+				+"Last active at "
+				span(classes = "moment") {
+					style = "display:none"
+					+user.lastActivity.toEpochMilli().toString()
+				}
+			}
 			if (isCurrentUser) {
 				hr { style = "border-color:#036" }
 				div(classes = "list") {

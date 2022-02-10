@@ -14,12 +14,18 @@ import java.time.Instant
 data class User(
 	@SerialName("_id")
 	override val id: Id<User> = Id(),
+	
 	val discordId: String,
 	val discordName: String,
 	val discordDiscriminator: String,
 	val discordAvatar: String?,
+	
 	val profileName: String,
 	val profileBio: String,
+	
+	val registeredAt: @Contextual Instant,
+	val lastActivity: @Contextual Instant,
+	
 	val status: UserStatus = UserStatus.AVAILABLE,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String

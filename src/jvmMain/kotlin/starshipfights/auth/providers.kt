@@ -234,7 +234,9 @@ object TestAuthProvider : AuthProvider {
 								discordDiscriminator = "",
 								discordAvatar = null,
 								profileName = credentials.name,
-								profileBio = "BEEP BOOP I EXIST ONLY FOR TESTING BLOP BLARP."
+								profileBio = "BEEP BOOP I EXIST ONLY FOR TESTING BLOP BLARP.",
+								registeredAt = Instant.now(),
+								lastActivity = Instant.now(),
 							).also {
 								User.put(it)
 							}
@@ -398,7 +400,9 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						discordDiscriminator = discordDiscriminator,
 						discordAvatar = discordAvatar,
 						profileName = discordUsername,
-						profileBio = "Hi, I'm new here!"
+						profileBio = "Hi, I'm new here!",
+						registeredAt = Instant.now(),
+						lastActivity = Instant.now(),
 					)
 					
 					val userSession = UserSession(
