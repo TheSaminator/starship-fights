@@ -230,9 +230,9 @@ object TestAuthProvider : AuthProvider {
 							?: User(
 								discordId = credentials.name,
 								discordName = "",
-								discordDiscriminator = "0000",
+								discordDiscriminator = "",
 								discordAvatar = null,
-								profileName = "Test User"
+								profileName = credentials.name
 							).also {
 								User.put(it)
 							}
@@ -275,7 +275,7 @@ object TestAuthProvider : AuthProvider {
 				
 				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
-						+"This instance does not have Discrd OAuth login set up. As a fallback, this authentication mode is used for testing."
+						+"This instance does not have Discord OAuth login set up. As a fallback, this authentication mode is used for testing."
 					}
 				}) {
 					section {

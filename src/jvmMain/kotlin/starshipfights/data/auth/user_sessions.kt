@@ -24,7 +24,7 @@ data class User(
 	val discordAvatarUrl: String
 		get() = discordAvatar?.let {
 			"https://cdn.discordapp.com/avatars/$discordId/$it." + (if (it.startsWith("a_")) "gif" else "png") + "?size=256"
-		} ?: "https://cdn.discordapp.com/embed/avatars/${discordDiscriminator.last().digitToInt() % 5}.png"
+		} ?: "https://cdn.discordapp.com/embed/avatars/${(discordDiscriminator.lastOrNull()?.digitToInt() ?: 0) % 5}.png"
 	
 	companion object Table : DocumentTable<User> by DocumentTable.create({
 		unique(User::discordId)
