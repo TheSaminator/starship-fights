@@ -3,10 +3,12 @@ package starshipfights.info
 import io.ktor.application.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
+import org.litote.kmongo.gt
 import org.litote.kmongo.or
 import starshipfights.CurrentConfiguration
 import starshipfights.ForbiddenException
@@ -16,6 +18,7 @@ import starshipfights.data.Id
 import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
+import starshipfights.data.auth.UserStatus
 import starshipfights.game.Faction
 import starshipfights.game.GlobalSide
 import starshipfights.game.toUrlSlug
@@ -27,6 +30,9 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val user = User.get(username)!!
 	
 	val isCurrentUser = user.id == getUserSession()?.user
+	val hasOpenSessions = UserSession.select(
+		and(UserSession::user eq username, UserSession::expiration gt Instant.now())
+	).firstOrNull() != null
 	
 	val admirals = Admiral.select(Admiral::owningUser eq user.id).toList()
 	
@@ -41,14 +47,25 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 			}
 			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
 				p {
-					style = "text-align:center"
+					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
 					+"Site Owner"
 				}
-			if (isCurrentUser)
+			p {
+				style = "text-align:center"
+				when (user.status) {
+					UserStatus.IN_BATTLE -> +"In Battle"
+					UserStatus.READY_FOR_BATTLE -> +"In Battle"
+					UserStatus.IN_MATCHMAKING -> +"In Matchmaking"
+					UserStatus.AVAILABLE -> if (hasOpenSessions) +"Online" else +"Offline"
+				}
+			}
+			if (isCurrentUser) {
+				hr { style = "border-color:#036" }
 				p {
 					style = "text-align:center"
 					a(href = "/admiral/new") { +"Create New Admiral" }
 				}
+			}
 		}
 	) {
 		section {
