@@ -241,6 +241,7 @@ textarea {
 
 textarea {
 	font-family: 'Noto Sans', sans-serif;
+	resize: vertical;
 }
 
 input[type=text]:focus,
