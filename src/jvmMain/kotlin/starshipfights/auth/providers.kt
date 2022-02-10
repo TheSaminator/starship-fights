@@ -241,7 +241,7 @@ object TestAuthProvider : AuthProvider {
 							user = user.id,
 							clientAddresses = listOf(originAddress),
 							userAgent = userAgent,
-							expiration = Instant.now().plus(1, ChronoUnit.DAYS)
+							expiration = Instant.now().plus(1, ChronoUnit.HOURS)
 						).also {
 							UserSession.put(it)
 						}
@@ -402,7 +402,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						user = user.id,
 						clientAddresses = listOf(call.request.origin.remoteHost),
 						userAgent = userAgent,
-						expiration = Instant.now().plus(1, ChronoUnit.DAYS)
+						expiration = Instant.now().plus(1, ChronoUnit.HOURS)
 					)
 					
 					launch { User.put(user) }
