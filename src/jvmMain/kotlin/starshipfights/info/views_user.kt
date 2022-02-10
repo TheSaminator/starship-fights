@@ -353,6 +353,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 			table {
 				tr {
 					th { +"When" }
+					th { +"Size" }
 					th { +"Role" }
 					th { +"Against" }
 					th { +"Result" }
@@ -371,6 +372,12 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								style = "display:none"
 								+record.whenEnded.toEpochMilli().toString()
 							}
+						}
+						td {
+							+record.battleInfo.size.displayName
+							+" ("
+							+record.battleInfo.size.numPoints.toString()
+							+")"
 						}
 						td {
 							+when (recordRoles[record.id]) {

@@ -64,6 +64,8 @@ object GameManager {
 			}
 			
 			val battleRecord = BattleRecord(
+				battleInfo = session.state.value.battleInfo,
+				
 				whenStarted = startedAt,
 				whenEnded = endedAt,
 				

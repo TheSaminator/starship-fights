@@ -8,6 +8,7 @@ import starshipfights.data.DocumentTable
 import starshipfights.data.Id
 import starshipfights.data.auth.User
 import starshipfights.data.invoke
+import starshipfights.game.BattleInfo
 import starshipfights.game.GlobalSide
 import java.time.Instant
 
@@ -15,6 +16,8 @@ import java.time.Instant
 data class BattleRecord(
 	@SerialName("_id")
 	override val id: Id<BattleRecord> = Id(),
+	
+	val battleInfo: BattleInfo,
 	
 	val whenStarted: @Contextual Instant,
 	val whenEnded: @Contextual Instant,

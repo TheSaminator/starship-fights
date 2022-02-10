@@ -158,6 +158,9 @@ sealed class Popup<out T> {
 					if (battleSize <= maxBattleSize)
 						button {
 							+battleSize.displayName
+							+" ("
+							+battleSize.numPoints.toString()
+							+")"
 							onClickFunction = { e ->
 								e.preventDefault()
 								callback(battleSize)
@@ -299,6 +302,9 @@ sealed class Popup<out T> {
 						td {
 							style = "text-align:center"
 							+joinable.battleInfo.size.displayName
+							+" ("
+							+joinable.battleInfo.size.numPoints.toString()
+							+")"
 						}
 						td {
 							style = "text-align:center"
