@@ -9,9 +9,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.litote.kmongo.`in`
+import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import starshipfights.data.DocumentTable
 import starshipfights.data.Id
+import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.DrydockStatus
 import starshipfights.data.admiralty.ShipInDrydock
@@ -39,49 +41,7 @@ object GameManager {
 			val end = session.gameEnd.await()
 			val endedAt = Instant.now()
 			
-			val destroyedShipStatus = DrydockStatus.InRepair(endedAt.plus(12, ChronoUnit.HOURS))
-			val damagedShipStatus = DrydockStatus.InRepair(endedAt.plus(9, ChronoUnit.HOURS))
-			val intactShipStatus = DrydockStatus.InRepair(endedAt.plus(6, ChronoUnit.HOURS))
-			val escapedShipStatus = DrydockStatus.InRepair(endedAt.plus(3, ChronoUnit.HOURS))
-			
-			val shipWrecks = session.state.value.destroyedShips
-			val destroyedShips = shipWrecks.filterValues { !it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-			val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-			val damagedShips = session.state.value.ships.filterValues { it.hullAmount < it.ship.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-			val intactShips = session.state.value.ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
-			
-			launch {
-				ShipInDrydock.update(ShipInDrydock::id `in` destroyedShips, setValue(ShipInDrydock::status, destroyedShipStatus))
-			}
-			launch {
-				ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::status, damagedShipStatus))
-			}
-			launch {
-				ShipInDrydock.update(ShipInDrydock::id `in` intactShips, setValue(ShipInDrydock::status, intactShipStatus))
-			}
-			launch {
-				ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::status, escapedShipStatus))
-			}
-			
-			val battleRecord = BattleRecord(
-				battleInfo = session.state.value.battleInfo,
-				
-				whenStarted = startedAt,
-				whenEnded = endedAt,
-				
-				hostUser = hostInfo.user.id.reinterpret(),
-				guestUser = guestInfo.user.id.reinterpret(),
-				
-				hostAdmiral = hostInfo.id.reinterpret(),
-				guestAdmiral = guestInfo.id.reinterpret(),
-				
-				winner = end.winner,
-				winMessage = end.message
-			)
-			
-			launch {
-				BattleRecord.put(battleRecord)
-			}
+			onGameEnd(session.state.value, end, startedAt, endedAt)
 		}
 		
 		val hostId = createToken()
@@ -225,4 +185,67 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 	
 	sendEventsJob.cancelAndJoin()
 	receiveActionsJob.cancelAndJoin()
+}
+
+private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
+	val destroyedShipStatus = DrydockStatus.InRepair(endedAt.plus(12, ChronoUnit.HOURS))
+	val damagedShipStatus = DrydockStatus.InRepair(endedAt.plus(8, ChronoUnit.HOURS))
+	val intactShipStatus = DrydockStatus.InRepair(endedAt.plus(4, ChronoUnit.HOURS))
+	val escapedShipStatus = DrydockStatus.InRepair(endedAt.plus(4, ChronoUnit.HOURS))
+	
+	val shipWrecks = gameState.destroyedShips
+	val ships = gameState.ships
+	
+	val destroyedShips = shipWrecks.filterValues { !it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val damagedShips = ships.filterValues { it.hullAmount < it.ship.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
+	
+	val hostAdmiralId = gameState.hostInfo.id.reinterpret<Admiral>()
+	val guestAdmiralId = gameState.guestInfo.id.reinterpret<Admiral>()
+	
+	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost }
+	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost }
+	
+	val battleRecord = BattleRecord(
+		battleInfo = gameState.battleInfo,
+		
+		whenStarted = startedAt,
+		whenEnded = endedAt,
+		
+		hostUser = gameState.hostInfo.user.id.reinterpret(),
+		guestUser = gameState.guestInfo.user.id.reinterpret(),
+		
+		hostAdmiral = hostAdmiralId,
+		guestAdmiral = guestAdmiralId,
+		
+		winner = gameEnd.winner,
+		winMessage = gameEnd.message
+	)
+	
+	coroutineScope {
+		launch {
+			ShipInDrydock.update(ShipInDrydock::id `in` destroyedShips, setValue(ShipInDrydock::status, destroyedShipStatus))
+		}
+		launch {
+			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::status, damagedShipStatus))
+		}
+		launch {
+			ShipInDrydock.update(ShipInDrydock::id `in` intactShips, setValue(ShipInDrydock::status, intactShipStatus))
+		}
+		launch {
+			ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::status, escapedShipStatus))
+		}
+		
+		launch {
+			Admiral.set(hostAdmiralId, inc(Admiral::acumen, hostAcumenGain))
+		}
+		launch {
+			Admiral.set(guestAdmiralId, inc(Admiral::acumen, guestAcumenGain))
+		}
+		
+		launch {
+			BattleRecord.put(battleRecord)
+		}
+	}
 }

@@ -5,9 +5,16 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import org.bson.conversions.Bson
+import org.litote.kmongo.and
 import org.litote.kmongo.eq
-import starshipfights.data.*
+import org.litote.kmongo.gte
+import org.litote.kmongo.lt
+import starshipfights.data.DataDocument
+import starshipfights.data.DocumentTable
+import starshipfights.data.Id
 import starshipfights.data.auth.User
+import starshipfights.data.invoke
 import starshipfights.game.*
 import java.time.Instant
 
@@ -22,14 +29,27 @@ data class Admiral(
 	val isFemale: Boolean,
 	
 	val faction: Faction,
-	val rank: AdmiralRank,
+	val acumen: Int,
+	val money: Int,
 ) : DataDocument<Admiral> {
+	val rank: AdmiralRank
+		get() = AdmiralRank.fromAcumen(acumen)
+	
 	val fullName: String
 		get() = "${rank.getDisplayName(faction)} $name"
 	
 	companion object Table : DocumentTable<Admiral> by DocumentTable.create({
 		index(Admiral::owningUser)
 	})
+}
+
+infix fun AdmiralRank.Companion.eq(rank: AdmiralRank): Bson = when (rank.ordinal) {
+	0 -> Admiral::acumen lt AdmiralRank.values()[1].minAcumen
+	AdmiralRank.values().size - 1 -> Admiral::acumen gte rank.minAcumen
+	else -> and(
+		Admiral::acumen gte rank.minAcumen,
+		Admiral::acumen lt AdmiralRank.values()[rank.ordinal + 1].minAcumen
+	)
 }
 
 @Serializable
@@ -92,15 +112,15 @@ suspend fun getAdmiralsShips(admiralId: Id<Admiral>) = ShipInDrydock
 	.associate { it.shipData.id to it.shipData }
 
 fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.values()
-	.flatMap {
+	.flatMap { swc ->
 		val shipTypes = ShipType.values().filter { st ->
-			st.weightClass == it && st.faction == admiral.faction
+			st.weightClass == swc && st.faction == admiral.faction
 		}.shuffled()
 		
 		if (shipTypes.isEmpty())
 			emptyList()
 		else
-			(0..((admiral.rank.maxShipWeightClass.rank - it.rank) * 2 + 1).coerceAtLeast(0)).map { i ->
+			(0..((admiral.rank.maxShipWeightClass.rank - swc.rank) * 2 + 1).coerceAtLeast(0)).map { i ->
 				shipTypes[i % shipTypes.size]
 			}
 	}

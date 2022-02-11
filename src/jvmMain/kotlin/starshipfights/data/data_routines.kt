@@ -2,16 +2,16 @@ package starshipfights.data
 
 import kotlinx.coroutines.*
 import org.litote.kmongo.div
+import org.litote.kmongo.inc
 import org.litote.kmongo.lt
 import org.litote.kmongo.setValue
-import starshipfights.data.admiralty.Admiral
-import starshipfights.data.admiralty.BattleRecord
-import starshipfights.data.admiralty.DrydockStatus
-import starshipfights.data.admiralty.ShipInDrydock
+import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
+import starshipfights.game.AdmiralRank
 import starshipfights.sfLogger
 import java.time.Instant
+import java.time.ZoneId
 import kotlin.coroutines.CoroutineContext
 
 object DataRoutines : CoroutineScope {
@@ -32,11 +32,32 @@ object DataRoutines : CoroutineScope {
 			// Repair ships
 			launch {
 				while (currentCoroutineContext().isActive) {
-					val now = Instant.now()
 					launch {
+						val now = Instant.now()
 						ShipInDrydock.update(ShipInDrydock::status / DrydockStatus.InRepair::until lt now, setValue(ShipInDrydock::status, DrydockStatus.Ready))
 					}
 					delay(300_000)
+				}
+			}
+			
+			// Pay admirals
+			launch {
+				var prevTime = Instant.now().atZone(ZoneId.systemDefault())
+				while (currentCoroutineContext().isActive) {
+					val currTime = Instant.now().atZone(ZoneId.systemDefault())
+					if (currTime.dayOfWeek != prevTime.dayOfWeek)
+						launch {
+							AdmiralRank.values().forEach { rank ->
+								launch {
+									Admiral.update(
+										AdmiralRank eq rank,
+										inc(Admiral::money, rank.dailyWage)
+									)
+								}
+							}
+						}
+					prevTime = currTime
+					delay(900_000)
 				}
 			}
 		}

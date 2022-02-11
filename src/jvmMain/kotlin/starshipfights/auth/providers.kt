@@ -14,24 +14,22 @@ import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.html.*
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import org.litote.kmongo.and
-import org.litote.kmongo.eq
-import org.litote.kmongo.ne
-import org.litote.kmongo.setValue
+import org.litote.kmongo.*
 import starshipfights.*
 import starshipfights.data.Id
-import starshipfights.data.admiralty.Admiral
-import starshipfights.data.admiralty.ShipInDrydock
-import starshipfights.data.admiralty.generateFleet
+import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.createNonce
-import starshipfights.game.AdmiralRank
 import starshipfights.game.Faction
+import starshipfights.game.ShipType
+import starshipfights.game.buyPrice
+import starshipfights.game.toUrlSlug
 import starshipfights.info.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
@@ -112,8 +110,8 @@ interface AuthProvider {
 						name = form["name"]?.takeIf { it.isNotBlank() } ?: throw MissingRequestParameterException("name"),
 						isFemale = form.getOrFail("sex") == "female",
 						faction = Faction.valueOf(form.getOrFail("faction")),
-						// TODO change to Rear Admiral
-						rank = AdmiralRank.LORD_ADMIRAL
+						acumen = 0,
+						money = 500
 					)
 					val newShips = generateFleet(newAdmiral)
 					
@@ -150,6 +148,51 @@ interface AuthProvider {
 					
 					Admiral.put(newAdmiral)
 					redirect("/admiral/$admiralId")
+				}
+				
+				get("/admiral/{id}/buy/{ship}") {
+					call.respondHtml(HttpStatusCode.OK, call.buyShipConfirmPage())
+				}
+				
+				post("/admiral/{id}/buy/{ship}") {
+					val currentUser = call.getUserSession()?.user
+					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
+					val admiral = Admiral.get(admiralId)!!
+					
+					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					
+					val shipType = call.parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
+					
+					if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
+						throw NotFoundException()
+					
+					if (shipType.weightClass.buyPrice > admiral.money)
+						redirect("/admiral/${admiralId}/manage")
+					
+					val ownedShips = ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList()
+					
+					if (shipType.weightClass.isUnique) {
+						val hasSameWeightClass = ownedShips.any { it.shipType.weightClass == shipType.weightClass }
+						if (hasSameWeightClass)
+							redirect("/admiral/${admiralId}/manage")
+					}
+					
+					val shipNames = ownedShips.map { it.name }.toMutableSet()
+					val newShipName = newShipName(shipType.faction, shipType.weightClass, shipNames) ?: ShipNames.nameShip(shipType.faction, shipType.weightClass)
+					
+					val newShip = ShipInDrydock(
+						name = newShipName,
+						shipType = shipType,
+						status = DrydockStatus.Ready,
+						owningAdmiral = admiralId
+					)
+					
+					launch { ShipInDrydock.put(newShip) }
+					launch {
+						Admiral.set(admiralId, inc(Admiral::money, -shipType.weightClass.buyPrice))
+					}
+					
+					redirect("/admiral/${admiralId}/manage")
 				}
 				
 				get("/admiral/{id}/delete") {

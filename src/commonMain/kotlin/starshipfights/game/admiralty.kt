@@ -3,15 +3,46 @@ package starshipfights.game
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 
-enum class AdmiralRank(val maxShipWeightClass: ShipWeightClass) {
-	REAR_ADMIRAL(ShipWeightClass.CRUISER),
-	VICE_ADMIRAL(ShipWeightClass.CRUISER),
-	ADMIRAL(ShipWeightClass.BATTLECRUISER),
-	HIGH_ADMIRAL(ShipWeightClass.BATTLESHIP),
-	LORD_ADMIRAL(ShipWeightClass.COLOSSUS);
+enum class AdmiralRank {
+	REAR_ADMIRAL,
+	VICE_ADMIRAL,
+	ADMIRAL,
+	HIGH_ADMIRAL,
+	LORD_ADMIRAL;
+	
+	val maxShipWeightClass: ShipWeightClass
+		get() = when (this) {
+			REAR_ADMIRAL -> ShipWeightClass.CRUISER
+			VICE_ADMIRAL -> ShipWeightClass.CRUISER
+			ADMIRAL -> ShipWeightClass.BATTLECRUISER
+			HIGH_ADMIRAL -> ShipWeightClass.BATTLESHIP
+			LORD_ADMIRAL -> ShipWeightClass.COLOSSUS
+		}
 	
 	val maxBattleSize: BattleSize
 		get() = BattleSize.values().last { it.maxWeightClass <= maxShipWeightClass }
+	
+	val minAcumen: Int
+		get() = when (this) {
+			REAR_ADMIRAL -> 0
+			VICE_ADMIRAL -> 1000
+			ADMIRAL -> 4000
+			HIGH_ADMIRAL -> 9000
+			LORD_ADMIRAL -> 16000
+		}
+	
+	val dailyWage: Int
+		get() = when (this) {
+			REAR_ADMIRAL -> 40
+			VICE_ADMIRAL -> 50
+			ADMIRAL -> 60
+			HIGH_ADMIRAL -> 70
+			LORD_ADMIRAL -> 80
+		}
+	
+	companion object {
+		fun fromAcumen(acumen: Int) = values().firstOrNull { it.minAcumen <= acumen } ?: REAR_ADMIRAL
+	}
 }
 
 fun AdmiralRank.getDisplayName(faction: Faction) = when (faction) {

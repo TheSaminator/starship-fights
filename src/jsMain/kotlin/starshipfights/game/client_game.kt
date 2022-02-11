@@ -121,7 +121,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): String {
 			}.display()
 			
 			if (!opponentJoined)
-				Popup.GameOver("Unfortunately, your opponent never entered the battle.").display()
+				Popup.GameOver("Unfortunately, your opponent never entered the battle.", gameState.value).display()
 			
 			val sendActionsJob = launch {
 				while (true) {
@@ -201,6 +201,6 @@ suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 		val finalMessage = connectionJob.await()
 		renderingJob.cancel()
 		
-		Popup.GameOver(finalMessage).display()
+		Popup.GameOver(finalMessage, gameState.value).display()
 	}
 }

@@ -413,7 +413,7 @@ sealed class Popup<out T> {
 		}
 	}
 	
-	class GameOver(private val outcome: String) : Popup<Nothing>() {
+	class GameOver(private val outcome: String, private val finalState: GameState) : Popup<Nothing>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Nothing) -> Unit) {
 			p {
 				style = "text-align:center"
@@ -423,8 +423,10 @@ sealed class Popup<out T> {
 			p {
 				style = "text-align:center"
 				
-				a(href = "/me") {
-					+"Return to Home Page"
+				val admiralId = finalState.admiralInfo(mySide).id
+				
+				a(href = "/admiral/${admiralId}") {
+					+"Exit Battle"
 				}
 			}
 		}

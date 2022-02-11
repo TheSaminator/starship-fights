@@ -1,6 +1,7 @@
 package starshipfights.info
 
 import io.ktor.application.*
+import io.ktor.features.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.firstOrNull
@@ -19,9 +20,7 @@ import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.auth.UserStatus
-import starshipfights.game.Faction
-import starshipfights.game.GlobalSide
-import starshipfights.game.toUrlSlug
+import starshipfights.game.*
 import starshipfights.redirect
 import java.time.Instant
 
@@ -276,10 +275,9 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 				}
 				textInput(name = "name") {
 					id = "name"
+					
 					autoComplete = false
 					required = true
-					minLength = "2"
-					maxLength = "32"
 				}
 				p {
 					label {
@@ -333,6 +331,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 		
 		Triple(admiral.await(), ships.await(), records.await())
 	}
+	
 	val recordRoles = records.mapNotNull {
 		when (admiralId) {
 			it.hostAdmiral -> GlobalSide.HOST
@@ -369,7 +368,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 		section {
 			h1 { +admiral.name }
 			p {
-				+admiral.fullName
+				b { +admiral.fullName }
 				+" is a flag officer of the "
 				+admiral.faction.navyName
 				+". "
@@ -460,8 +459,9 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								}
 						}
 						td {
-							+when (recordRoles[record.id]) {
-								record.winner -> "Victory"
+							+when (record.winner) {
+								null -> "Stalemate"
+								recordRoles[record.id] -> "Victory"
 								else -> "Defeat"
 							}
 						}
@@ -478,6 +478,14 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	val admiral = Admiral.get(admiralId)!!
 	
 	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	
+	val ownedShips = ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList()
+	
+	//val sellableShips = ownedShips.filter { it.status == DrydockStatus.Ready }.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }
+	
+	val buyableShips = ShipType.values().filter { type ->
+		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.weightClass.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)
+	}.sortedBy { it.name }.sortedBy { it.weightClass.rank }
 	
 	return page(
 		"Managing ${admiral.name}", standardNavBar(), PageNavSidebar(
@@ -496,10 +504,11 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					}
 				}
 				textInput(name = "name") {
+					id = "name"
+					autoComplete = false
+					
 					required = true
 					value = admiral.name
-					minLength = "4"
-					maxLength = "24"
 				}
 				p {
 					label {
@@ -523,6 +532,20 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 						+"Female"
 					}
 				}
+				h3 { +"Generate Random Name" }
+				p {
+					AdmiralNameFlavor.values().forEachIndexed { i, flavor ->
+						if (i != 0)
+							br
+						a(href = "#", classes = "generate-admiral-name") {
+							attributes["data-flavor"] = flavor.toUrlSlug()
+							+flavor.displayName
+						}
+					}
+				}
+				script {
+					unsafe { +"window.sfAdmiralNameGen = true;" }
+				}
 				submitInput {
 					value = "Submit Changes"
 				}
@@ -530,6 +553,85 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/delete") {
 				submitInput(classes = "evil") {
 					value = "Delete this Admiral"
+				}
+			}
+		}
+		section {
+			h2 { +"Manage Fleet" }
+			h3 { +"Buy New Ship" }
+			table {
+				tr {
+					th { +"Ship Class" }
+					th { +"Ship Cost" }
+					th { +Entities.nbsp }
+				}
+				buyableShips.forEach { st ->
+					tr {
+						td { +st.fullDisplayName }
+						td {
+							+st.weightClass.buyPrice.toString()
+							+" Electro-Ducats"
+						}
+						td {
+							form(action = "/admiral/${admiralId}/buy/${st.toUrlSlug()}", method = FormMethod.get) {
+								submitInput {
+									value = "Buy"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
+	val currentUser = getUserSession()?.user
+	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
+	val admiral = Admiral.get(admiralId)!!
+	
+	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	
+	val shipType = parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
+	
+	if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
+		throw NotFoundException()
+	
+	if (shipType.weightClass.buyPrice > admiral.money) {
+		return page(
+			"Too Expensive", null, null
+		) {
+			section {
+				h1 { +"Too Expensive" }
+				p {
+					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} Electro-Ducats, and ${admiral.name} only has ${admiral.money} Electro-Ducats."
+				}
+				form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
+					submitInput {
+						value = "Back"
+					}
+				}
+			}
+		}
+	}
+	
+	return page(
+		"Are You Sure?", null, null
+	) {
+		section {
+			h1 { +"Are You Sure?" }
+			p {
+				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} Electro-Ducats."
+			}
+			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
+				submitInput {
+					value = "Cancel"
+				}
+			}
+			form(method = FormMethod.post, action = "/admiral/${admiral.id}/buy/${shipType.toUrlSlug()}") {
+				submitInput {
+					value = "Checkout"
 				}
 			}
 		}

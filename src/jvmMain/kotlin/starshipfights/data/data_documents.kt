@@ -40,6 +40,7 @@ interface DocumentTable<T : DataDocument<T>> {
 	suspend fun unique(vararg properties: KProperty1<T, *>)
 	
 	suspend fun put(doc: T)
+	suspend fun set(id: Id<T>, set: Bson): Boolean
 	suspend fun get(id: Id<T>): T?
 	suspend fun del(id: Id<T>)
 	suspend fun all(): Flow<T>
@@ -86,6 +87,10 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	
 	override suspend fun put(doc: T) {
 		collection().replaceOneById(doc.id, doc, ReplaceOptions().upsert(true))
+	}
+	
+	override suspend fun set(id: Id<T>, set: Bson): Boolean {
+		return collection().updateOneById(id, set).matchedCount != 0L
 	}
 	
 	override suspend fun get(id: Id<T>): T? {

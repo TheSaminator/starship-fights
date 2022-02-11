@@ -240,7 +240,7 @@ object AdmiralNames {
 	private val diadochiFemaleNames = listOf(
 		"Lursha",
 		"Jamoqena",
-		"Hikari",
+		"Lokoria",
 		"Iekuna",
 		"Shara",
 		"Etugen",

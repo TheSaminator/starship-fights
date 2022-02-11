@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.launch
+import org.litote.kmongo.setValue
 import starshipfights.auth.getUser
 import starshipfights.data.admiralty.getAllInGameAdmirals
 import starshipfights.data.auth.User
@@ -48,7 +49,7 @@ fun Routing.installGame() {
 		matchmakingEndpoint(user)
 		
 		launch {
-			User.put(user.copy(status = UserStatus.READY_FOR_BATTLE))
+			User.set(user.id, setValue(User::status, UserStatus.READY_FOR_BATTLE))
 		}
 	}
 	
@@ -70,7 +71,7 @@ fun Routing.installGame() {
 		gameEndpoint(user, token)
 		
 		launch {
-			User.put(user.copy(status = UserStatus.AVAILABLE))
+			User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
 		}
 	}
 }
