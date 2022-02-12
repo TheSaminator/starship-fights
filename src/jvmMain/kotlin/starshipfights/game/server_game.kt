@@ -187,6 +187,8 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 	receiveActionsJob.cancelAndJoin()
 }
 
+private const val SHIP_POINTS_PER_ACUMEN = 5
+
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
 	val destroyedShipStatus = DrydockStatus.InRepair(endedAt.plus(12, ChronoUnit.HOURS))
 	val damagedShipStatus = DrydockStatus.InRepair(endedAt.plus(8, ChronoUnit.HOURS))
@@ -204,8 +206,8 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	val hostAdmiralId = gameState.hostInfo.id.reinterpret<Admiral>()
 	val guestAdmiralId = gameState.guestInfo.id.reinterpret<Admiral>()
 	
-	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost }
-	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost }
+	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
+	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
 	
 	val battleRecord = BattleRecord(
 		battleInfo = gameState.battleInfo,
