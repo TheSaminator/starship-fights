@@ -666,6 +666,7 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/rename/${ship.id}") {
 				textInput(name = "name") {
 					id = "name"
+					value = ship.name
 					
 					autoComplete = false
 					required = true
