@@ -5,9 +5,12 @@ import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import org.litote.kmongo.setValue
 import starshipfights.auth.getUser
+import starshipfights.data.DocumentTable
 import starshipfights.data.admiralty.getAllInGameAdmirals
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserStatus
@@ -46,11 +49,20 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_MATCHMAKING)
 		User.put(user)
 		
-		matchmakingEndpoint(user)
-		
-		launch {
-			User.set(user.id, setValue(User::status, UserStatus.READY_FOR_BATTLE))
+		currentCoroutineContext().job.invokeOnCompletion {
+			DocumentTable.launch {
+				val cancelUser = User.get(user.id)!!
+				if (cancelUser.status == UserStatus.IN_MATCHMAKING)
+					User.put(
+						cancelUser.copy(
+							status = UserStatus.AVAILABLE
+						)
+					)
+			}
 		}
+		
+		if (matchmakingEndpoint(user))
+			User.set(user.id, setValue(User::status, UserStatus.READY_FOR_BATTLE))
 	}
 	
 	webSocket("/game/{token}") {
@@ -68,10 +80,12 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_BATTLE)
 		User.put(user)
 		
-		gameEndpoint(user, token)
-		
-		launch {
-			User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
+		currentCoroutineContext().job.invokeOnCompletion {
+			DocumentTable.launch {
+				User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
+			}
 		}
+		
+		gameEndpoint(user, token)
 	}
 }

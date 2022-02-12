@@ -23,11 +23,11 @@ class JoinInvitation(val joinRequest: JoinRequest, val responseHandler: Completa
 	val gameIdHandler = CompletableDeferred<String>()
 }
 
-suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User) {
-	val playerLogin = receiveObject(PlayerLogin.serializer()) { closeAndReturn { return } }
+suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boolean {
+	val playerLogin = receiveObject(PlayerLogin.serializer()) { closeAndReturn { return false } }
 	val admiralId = playerLogin.admiral
-	val inGameAdmiral = getInGameAdmiral(admiralId) ?: closeAndReturn("That admiral does not exist") { return }
-	if (inGameAdmiral.user.id != user.id) closeAndReturn("You do not own that admiral") { return }
+	val inGameAdmiral = getInGameAdmiral(admiralId) ?: closeAndReturn("That admiral does not exist") { return false }
+	if (inGameAdmiral.user.id != user.id) closeAndReturn("You do not own that admiral") { return false }
 	
 	when (val loginMode = playerLogin.login) {
 		is LoginMode.Host -> {
@@ -52,7 +52,7 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User) {
 				val joinResponse = receiveObject(JoinResponse.serializer()) {
 					closeAndReturn {
 						joinInvitation.responseHandler.complete(JoinResponse(false))
-						return
+						return false
 					}
 				}
 				
@@ -89,7 +89,7 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User) {
 				val joinListing = JoinListing(openGames.mapValues { (_, invitation) -> invitation.joinable })
 				sendObject(JoinListing.serializer(), joinListing)
 				
-				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return } }
+				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return false } }
 				val hostInvitation = openGames.getValue(joinSelection.selectedId)
 				
 				val joinResponseHandler = CompletableDeferred<JoinResponse>()
@@ -116,4 +116,6 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User) {
 			}
 		}
 	}
+	
+	return true
 }
