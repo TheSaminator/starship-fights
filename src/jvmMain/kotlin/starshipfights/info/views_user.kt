@@ -661,7 +661,7 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Renaming Ship" }
 			p {
-				+"${admiral.fullName} is about to rename the ${ship.shipData.fullName}. Choose a name here:"
+				+"${admiral.fullName} is about to rename the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName}. Choose a name here:"
 			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/rename/${ship.id}") {
 				textInput(name = "name") {
@@ -712,7 +712,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to sell the ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} Electro-Ducats."
+				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} Electro-Ducats."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {
