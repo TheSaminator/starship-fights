@@ -120,7 +120,7 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 		if (shipTypes.isEmpty())
 			emptyList()
 		else
-			(0 until ((admiral.rank.maxShipWeightClass.rank - swc.rank) * 2 + 1).coerceAtLeast(0)).map { i ->
+			(0 until ((admiral.rank.maxShipWeightClass.rank - swc.rank + 1) * 2).coerceAtLeast(0)).map { i ->
 				shipTypes[i % shipTypes.size]
 			}
 	}
