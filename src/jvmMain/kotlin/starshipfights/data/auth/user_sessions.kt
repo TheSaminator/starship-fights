@@ -19,6 +19,7 @@ data class User(
 	val discordName: String,
 	val discordDiscriminator: String,
 	val discordAvatar: String?,
+	val showDiscordName: Boolean = false,
 	
 	val profileName: String,
 	val profileBio: String,

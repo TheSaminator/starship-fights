@@ -88,6 +88,7 @@ interface AuthProvider {
 					val form = call.receiveParameters()
 					
 					val newUser = currentUser.copy(
+						showDiscordName = form["showdiscord"] == "yes",
 						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters").formUrlEncode()),
 						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters").formUrlEncode())
 					)

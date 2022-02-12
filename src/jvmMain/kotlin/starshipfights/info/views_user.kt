@@ -39,10 +39,12 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 			img(src = user.discordAvatarUrl)
 			p {
 				style = "text-align:center"
-				+user.discordName
-				+"#"
-				+user.discordDiscriminator
-				br
+				if (user.showDiscordName) {
+					+user.discordName
+					+"#"
+					+user.discordDiscriminator
+					br
+				}
 				when (user.status) {
 					UserStatus.IN_BATTLE -> +"In Battle"
 					UserStatus.READY_FOR_BATTLE -> +"In Battle"
@@ -159,6 +161,18 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					maxLength = "$PROFILE_BIO_MAX_LENGTH"
 					
 					+currentUser.profileBio
+				}
+				h3 {
+					+"Privacy Settings"
+				}
+				label {
+					checkBoxInput {
+						name = "showdiscord"
+						checked = currentUser.showDiscordName
+						value = "yes"
+					}
+					+Entities.nbsp
+					+"Show Discord name"
 				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
