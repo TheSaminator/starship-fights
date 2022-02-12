@@ -557,6 +557,9 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		}
 		section {
 			h2 { +"Manage Fleet" }
+			p {
+				+"${admiral.fullName} currently owns ${admiral.money} Electro-Ducats, and earns ${admiral.rank.dailyWage} Electro-Ducats every day."
+			}
 			table {
 				tr {
 					th { +"Ship Name" }
