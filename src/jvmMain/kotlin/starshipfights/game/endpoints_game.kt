@@ -5,8 +5,6 @@ import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import org.litote.kmongo.setValue
 import starshipfights.auth.getUser
@@ -49,7 +47,7 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_MATCHMAKING)
 		User.put(user)
 		
-		currentCoroutineContext().job.invokeOnCompletion {
+		closeReason.invokeOnCompletion {
 			DocumentTable.launch {
 				val cancelUser = User.get(user.id)!!
 				if (cancelUser.status == UserStatus.IN_MATCHMAKING)
@@ -80,7 +78,7 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_BATTLE)
 		User.put(user)
 		
-		currentCoroutineContext().job.invokeOnCompletion {
+		closeReason.invokeOnCompletion {
 			DocumentTable.launch {
 				User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
 			}
