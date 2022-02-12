@@ -26,13 +26,15 @@ import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.createNonce
-import starshipfights.game.Faction
-import starshipfights.game.ShipType
-import starshipfights.game.buyPrice
-import starshipfights.game.toUrlSlug
+import starshipfights.game.*
 import starshipfights.info.*
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+
+const val PROFILE_NAME_MAX_LENGTH = 32
+const val PROFILE_BIO_MAX_LENGTH = 240
+const val ADMIRAL_NAME_MAX_LENGTH = 48
+const val SHIP_NAME_MAX_LENGTH = 48
 
 interface AuthProvider {
 	fun installApplication(app: Application) = Unit
@@ -86,8 +88,8 @@ interface AuthProvider {
 					val form = call.receiveParameters()
 					
 					val newUser = currentUser.copy(
-						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= 32 } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most 32 characters").formUrlEncode()),
-						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= 240 } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most 240 characters").formUrlEncode())
+						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters").formUrlEncode()),
+						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters").formUrlEncode())
 					)
 					User.put(newUser)
 					redirect("/user/${newUser.id}")
@@ -107,7 +109,7 @@ interface AuthProvider {
 					
 					val newAdmiral = Admiral(
 						owningUser = currentUser,
-						name = form["name"]?.takeIf { it.isNotBlank() } ?: throw MissingRequestParameterException("name"),
+						name = form["name"]?.takeIf { it.isNotBlank() && it.length < ADMIRAL_NAME_MAX_LENGTH } ?: throw MissingRequestParameterException("name"),
 						isFemale = form.getOrFail("sex") == "female",
 						faction = Faction.valueOf(form.getOrFail("faction")),
 						acumen = 0,
@@ -148,6 +150,56 @@ interface AuthProvider {
 					
 					Admiral.put(newAdmiral)
 					redirect("/admiral/$admiralId")
+				}
+				
+				get("/admiral/{id}/rename/{ship}") {
+					call.respondHtml(HttpStatusCode.OK, call.renameShipPage())
+				}
+				
+				post("/admiral/{id}/rename/{ship}") {
+					val currentUser = call.getUserSession()?.user
+					
+					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
+					val shipId = call.parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
+					
+					val (admiral, ship) = coroutineScope {
+						Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+					}
+					
+					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+					
+					val newName = call.receiveParameters()["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
+					ShipInDrydock.set(shipId, setValue(ShipInDrydock::name, newName))
+					redirect("/admiral/${admiralId}/manage")
+				}
+				
+				get("/admiral/{id}/sell/{ship}") {
+					call.respondHtml(HttpStatusCode.OK, call.sellShipConfirmPage())
+				}
+				
+				post("/admiral/{id}/sell/{ship}") {
+					val currentUser = call.getUserSession()?.user
+					
+					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
+					val shipId = call.parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
+					
+					val (admiral, ship) = coroutineScope {
+						Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+					}
+					
+					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+					
+					if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
+					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
+					
+					launch { ShipInDrydock.del(shipId) }
+					launch {
+						Admiral.set(admiralId, inc(Admiral::money, ship.shipType.weightClass.sellPrice))
+					}
+					
+					redirect("/admiral/${admiralId}/manage")
 				}
 				
 				get("/admiral/{id}/buy/{ship}") {

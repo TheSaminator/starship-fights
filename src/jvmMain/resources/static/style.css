@@ -302,3 +302,8 @@ input[type=submit].evil:hover {
 input[type=submit].evil:active {
 	background-color: #844;
 }
+
+input[type=submit]:disabled,
+input[type=submit].evil:disabled {
+	background-color: #444;
+}

@@ -13,8 +13,7 @@ import org.litote.kmongo.gt
 import org.litote.kmongo.or
 import starshipfights.CurrentConfiguration
 import starshipfights.ForbiddenException
-import starshipfights.auth.getUser
-import starshipfights.auth.getUserSession
+import starshipfights.auth.*
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
@@ -137,14 +136,14 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				}
 				textInput(name = "name") {
 					required = true
-					maxLength = "32"
+					maxLength = "$PROFILE_NAME_MAX_LENGTH"
 					
 					value = currentUser.profileName
 					autoComplete = false
 				}
 				p {
 					style = "font-style:italic;font-size:0.8em;color:#555"
-					+"Max length 32 characters"
+					+"Max length $PROFILE_NAME_MAX_LENGTH characters"
 				}
 				h3 {
 					label {
@@ -157,7 +156,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					style = "width: 100%;height:5em"
 					
 					required = true
-					maxLength = "240"
+					maxLength = "$PROFILE_BIO_MAX_LENGTH"
 					
 					+currentUser.profileBio
 				}
@@ -278,6 +277,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 					
 					autoComplete = false
 					required = true
+					maxLength = "$ADMIRAL_NAME_MAX_LENGTH"
 				}
 				p {
 					label {
@@ -481,8 +481,6 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	
 	val ownedShips = ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList()
 	
-	//val sellableShips = ownedShips.filter { it.status == DrydockStatus.Ready }.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }
-	
 	val buyableShips = ShipType.values().filter { type ->
 		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.weightClass.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)
 	}.sortedBy { it.name }.sortedBy { it.weightClass.rank }
@@ -509,6 +507,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					
 					required = true
 					value = admiral.name
+					maxLength = "$ADMIRAL_NAME_MAX_LENGTH"
 				}
 				p {
 					label {
@@ -558,6 +557,50 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		}
 		section {
 			h2 { +"Manage Fleet" }
+			table {
+				tr {
+					th { +"Ship Name" }
+					th { +"Ship Class" }
+					th { +"Ship Status" }
+					th { +"Ship Value" }
+				}
+				ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }.forEach { ship ->
+					tr {
+						td {
+							+ship.shipData.fullName
+							br
+							a(href = "/admiral/${admiralId}/rename/${ship.id}") { +"Rename" }
+						}
+						td {
+							a(href = "/info/${ship.shipData.shipType.toUrlSlug()}") {
+								+ship.shipData.shipType.fullDisplayName
+							}
+						}
+						td {
+							when (ship.status) {
+								DrydockStatus.Ready -> +"Ready"
+								is DrydockStatus.InRepair -> {
+									+"Repairing"
+									br
+									+"Will be ready at "
+									span(classes = "moment") {
+										style = "display:none"
+										+ship.status.until.toEpochMilli().toString()
+									}
+								}
+							}
+						}
+						td {
+							+ship.shipType.weightClass.sellPrice.toString()
+							+" Electro-Ducats"
+							if (ship.status == DrydockStatus.Ready && !ship.shipType.weightClass.isUnique) {
+								br
+								a(href = "/admiral/${admiralId}/sell/${ship.id}") { +"Sell" }
+							}
+						}
+					}
+				}
+			}
 			h3 { +"Buy New Ship" }
 			table {
 				tr {
@@ -573,13 +616,94 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+" Electro-Ducats"
 						}
 						td {
-							form(action = "/admiral/${admiralId}/buy/${st.toUrlSlug()}", method = FormMethod.get) {
-								submitInput {
-									value = "Buy"
-								}
+							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") {
+								+"Buy"
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+}
+
+suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
+	val currentUser = getUserSession()?.user
+	
+	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
+	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
+	
+	val (admiral, ship) = coroutineScope {
+		Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+	}
+	
+	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+	
+	return page("Renaming Ship", null, null) {
+		section {
+			h1 { +"Renaming Ship" }
+			p {
+				+"${admiral.fullName} is about to rename the ${ship.shipData.fullName}. Choose a name here:"
+			}
+			form(method = FormMethod.post, action = "/admiral/${admiral.id}/rename/${ship.id}") {
+				textInput(name = "name") {
+					id = "name"
+					
+					autoComplete = false
+					required = true
+					
+					maxLength = "$SHIP_NAME_MAX_LENGTH"
+				}
+				p {
+					style = "font-style:italic;font-size:0.8em;color:#555"
+					+"Max length $SHIP_NAME_MAX_LENGTH characters"
+				}
+				submitInput {
+					value = "Rename"
+				}
+			}
+			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
+				submitInput {
+					value = "Cancel"
+				}
+			}
+		}
+	}
+}
+
+suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
+	val currentUser = getUserSession()?.user
+	
+	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
+	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
+	
+	val (admiral, ship) = coroutineScope {
+		Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+	}
+	
+	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+	
+	if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
+	if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
+	
+	return page(
+		"Are You Sure?", null, null
+	) {
+		section {
+			h1 { +"Are You Sure?" }
+			p {
+				+"${admiral.fullName} is about to sell the ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} Electro-Ducats."
+			}
+			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
+				submitInput {
+					value = "Cancel"
+				}
+			}
+			form(method = FormMethod.post, action = "/admiral/${admiral.id}/sell/${ship.id}") {
+				submitInput {
+					value = "Sell"
 				}
 			}
 		}
