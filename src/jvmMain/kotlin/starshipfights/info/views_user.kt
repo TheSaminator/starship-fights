@@ -623,7 +623,6 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 				tr {
 					th { +"Ship Class" }
 					th { +"Ship Cost" }
-					th { +Entities.nbsp }
 				}
 				buyableShips.forEach { st ->
 					tr {
@@ -633,8 +632,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 						td {
 							+st.weightClass.buyPrice.toString()
 							+" Electro-Ducats"
-						}
-						td {
+							br
 							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") {
 								+"Buy"
 							}
