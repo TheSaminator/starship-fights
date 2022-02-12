@@ -1,7 +1,11 @@
 package starshipfights.info
 
 import io.ktor.application.*
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
+import org.litote.kmongo.descending
+import starshipfights.data.auth.User
 
 suspend fun ApplicationCall.mainPage(): HTML.() -> Unit {
 	return page(null, standardNavBar(), IndexSidebar) {
@@ -32,6 +36,31 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit = page("About", standar
 			+". He can be reached by telegram on NationStates, or by his "
 			a(href = "https://discord.id/?prefill=307880116715913217") { +"Discord account" }
 			+"."
+		}
+	}
+}
+
+suspend fun ApplicationCall.newUsersPage(): HTML.() -> Unit {
+	val newUsers = User.sorted(descending(User::registeredAt)).take(20).toList()
+	
+	return page("New Users", standardNavBar(), IndexSidebar) {
+		section {
+			h1 { +"New Users" }
+		}
+		div {
+			style = "text-align:center"
+			newUsers.forEach { newUser ->
+				div {
+					style = "display:inline-block;width:24%"
+					img(src = newUser.discordAvatarUrl) { style = "width:100%" }
+					p {
+						style = "text-align:center"
+						a(href = "/user/${newUser.id}") {
+							+newUser.profileName
+						}
+					}
+				}
+			}
 		}
 	}
 }

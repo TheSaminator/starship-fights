@@ -33,6 +33,7 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 	NavLink("/", "Main Page"),
 	NavLink("/info", "Read Manual"),
 	NavLink("/about", "About Starship Fights"),
+	NavLink("/users", "New Users"),
 	NavHead("Your Account"),
 ) + when (val user = getUser()) {
 	null -> listOf(

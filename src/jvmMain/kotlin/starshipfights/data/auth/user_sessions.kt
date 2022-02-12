@@ -35,6 +35,7 @@ data class User(
 	
 	companion object Table : DocumentTable<User> by DocumentTable.create({
 		unique(User::discordId)
+		index(User::registeredAt)
 	})
 }
 

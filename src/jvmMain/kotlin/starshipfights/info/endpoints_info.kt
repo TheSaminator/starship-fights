@@ -28,6 +28,10 @@ fun Routing.installPages() {
 		call.respondHtml(HttpStatusCode.OK, call.aboutPage())
 	}
 	
+	get("/users") {
+		call.respondHtml(HttpStatusCode.OK, call.newUsersPage())
+	}
+	
 	// Random name generation
 	get("/generate-name/{flavor}/{gender}") {
 		val flavor = call.parameters["flavor"]?.let { flavor -> AdmiralNameFlavor.values().singleOrNull { it.toUrlSlug() == flavor.lowercase() } }!!
