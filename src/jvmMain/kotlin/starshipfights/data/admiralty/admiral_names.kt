@@ -111,11 +111,28 @@ object AdmiralNames {
 		"Velga" to "Velgas",
 	)
 	
+	private val tylanFamilyNames = listOf(
+		"Kalevkar" to "Kalevka",
+		"Merku" to "Merkussa",
+		"Telet" to "Telet",
+		"Eutokar" to "Eutoka",
+		"Vsocha" to "Vsochessa",
+		"Vilar" to "Vilakauva",
+		"Nikasrar" to "Nika",
+		"Vlegamakar" to "Vlegamaka",
+		"Vtokassar" to "Vtoka",
+		"Theiar" to "Theia",
+		"Aretar" to "Areta",
+		"Derkas" to "Derkata",
+		"Vinsennas" to "Vinsennata",
+		"Kleio" to "Kleona"
+	)
+	
 	// Tylans use matronymics for both sons and daughters
 	private fun randomTylanName(isFemale: Boolean) = if (isFemale)
-		tylanFemaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nahra"
+		tylanFemaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nahra " + tylanFamilyNames.random().second
 	else
-		tylanMaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nensar"
+		tylanMaleNames.random().first + " " + tylanFemaleNames.random().second + "-Nensar " + tylanFamilyNames.random().first
 	
 	private val caliboreseNames = listOf(
 		"Jathee",
