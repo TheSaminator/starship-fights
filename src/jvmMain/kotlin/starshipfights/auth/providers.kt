@@ -260,6 +260,7 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) throw ForbiddenException()
 					
 					Admiral.del(admiralId)
+					ShipInDrydock.remove(ShipInDrydock::owningAdmiral eq admiralId)
 					redirect("/me")
 				}
 				
