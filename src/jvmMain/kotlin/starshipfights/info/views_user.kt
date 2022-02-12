@@ -627,7 +627,9 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 				}
 				buyableShips.forEach { st ->
 					tr {
-						td { +st.fullDisplayName }
+						td {
+							a(href = "/info/${st.toUrlSlug()}") { +st.fullDisplayName }
+						}
 						td {
 							+st.weightClass.buyPrice.toString()
 							+" Electro-Ducats"
