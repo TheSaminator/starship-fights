@@ -46,17 +46,17 @@ suspend fun ApplicationCall.newUsersPage(): HTML.() -> Unit {
 	return page("New Users", standardNavBar(), IndexSidebar) {
 		section {
 			h1 { +"New Users" }
-		}
-		div {
-			style = "text-align:center"
-			newUsers.forEach { newUser ->
-				div {
-					style = "display:inline-block;width:24%"
-					img(src = newUser.discordAvatarUrl) { style = "width:100%" }
-					p {
-						style = "text-align:center"
-						a(href = "/user/${newUser.id}") {
-							+newUser.profileName
+			div {
+				style = "text-align:center"
+				newUsers.forEach { newUser ->
+					div {
+						style = "display:inline-block;width:24%"
+						img(src = newUser.discordAvatarUrl) { style = "width:100%" }
+						p {
+							style = "text-align:center"
+							a(href = "/user/${newUser.id}") {
+								+newUser.profileName
+							}
 						}
 					}
 				}
