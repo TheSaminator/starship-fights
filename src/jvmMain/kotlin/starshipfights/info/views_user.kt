@@ -200,7 +200,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 			}
 		}
 		section {
-			h2 { +"Other Sessions" }
+			h2 { +"Logged-In Sessions" }
 			table {
 				tr {
 					th { +"User-Agent" }
@@ -253,7 +253,15 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 								style = "display:none"
 								+session.expiration.toEpochMilli().toString()
 							}
+							br
+							a(href = "/clear-expired/${session.id}") { +"Clear" }
 						}
+					}
+				}
+				tr {
+					td {
+						colSpan = "3"
+						a(href = "/clear-all-expired") { +"Clear All Expired Sessions" }
 					}
 				}
 			}

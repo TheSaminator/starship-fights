@@ -300,6 +300,29 @@ interface AuthProvider {
 					redirect("/me/manage")
 				}
 				
+				get("/clear-expired/{id}") {
+					val id = Id<UserSession>(call.parameters.getOrFail("id"))
+					call.getUserSession()?.let { sess ->
+						launch {
+							val now = Instant.now()
+							UserSession.remove(and(UserSession::id eq id, UserSession::user eq sess.user, UserSession::expiration lte now))
+						}
+					}
+					
+					redirect("/me/manage")
+				}
+				
+				get("/clear-all-expired/") {
+					call.getUserSession()?.let { sess ->
+						launch {
+							val now = Instant.now()
+							UserSession.remove(and(UserSession::user eq sess.user, UserSession::expiration lte now))
+						}
+					}
+					
+					redirect("/me/manage")
+				}
+				
 				currentProvider.installRouting(this)
 			}
 		}
