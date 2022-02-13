@@ -35,7 +35,7 @@ fun Routing.installPages() {
 	// Random name generation
 	get("/generate-name/{flavor}/{gender}") {
 		val flavor = call.parameters["flavor"]?.let { flavor -> AdmiralNameFlavor.values().singleOrNull { it.toUrlSlug() == flavor.lowercase() } }!!
-		val isFemale = call.parameters["gender"]?.lowercase()?.startsWith('f') ?: false
+		val isFemale = call.parameters["gender"]?.startsWith('f', ignoreCase = true) ?: false
 		
 		call.respondText(AdmiralNames.randomName(flavor, isFemale), ContentType.Text.Plain)
 	}
