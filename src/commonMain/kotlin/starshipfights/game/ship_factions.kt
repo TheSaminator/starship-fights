@@ -9,6 +9,7 @@ enum class Faction(
 	val navyName: String,
 	val polityName: String,
 	val demonymSingular: String,
+	val currencyName: String,
 	val shipPrefix: String,
 	val blurbDesc: TagConsumer<*>.() -> Unit,
 ) {
@@ -18,6 +19,7 @@ enum class Faction(
 		navyName = "Mechyrdian Star Fleet",
 		polityName = "Empire of Mechyrdia",
 		demonymSingular = "Mechyrdian",
+		currencyName = "throne",
 		shipPrefix = "CMS ", // Ciarstuos Mehurdiasi Štelnau
 		blurbDesc = {
 			p {
@@ -34,6 +36,7 @@ enum class Faction(
 		navyName = "Masra Draetsen Khoy'qan",
 		polityName = "Diadochus Masra Draetsen",
 		demonymSingular = "Diadochi",
+		currencyName = "sylaph",
 		shipPrefix = "", // The Diadochi don't use ship prefixes
 		blurbDesc = {
 			p {
@@ -50,6 +53,7 @@ enum class Faction(
 		navyName = "Isarnareyksk Styurnamariyn",
 		polityName = "Isarnareyksk Iunta",
 		demonymSingular = "Isarnareyksk",
+		currencyName = "mark",
 		shipPrefix = "ISMS ", // Isarnareyksk StyurnaMariyn nu Skyf
 		blurbDesc = {
 			p {
@@ -66,6 +70,7 @@ enum class Faction(
 		navyName = "Imperial States Space Force",
 		polityName = "Imperial States of America",
 		demonymSingular = "American",
+		currencyName = "dollar",
 		shipPrefix = "ISFC ", // Imperial Space Force Craft
 		blurbDesc = {
 			p {

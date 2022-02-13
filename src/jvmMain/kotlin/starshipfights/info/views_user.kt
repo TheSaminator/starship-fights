@@ -468,7 +468,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 						td {
 							val opponent = recordOpponents[record.id]
 							if (opponent == null)
-								+"(Deleted Admiral)"
+								i { +"(Deleted Admiral)" }
 							else
 								a(href = "/admiral/${opponent.id}") {
 									+opponent.fullName
@@ -574,7 +574,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		section {
 			h2 { +"Manage Fleet" }
 			p {
-				+"${admiral.fullName} currently owns ${admiral.money} Electro-Ducats, and earns ${admiral.rank.dailyWage} Electro-Ducats every day."
+				+"${admiral.fullName} currently owns ${admiral.money} ${admiral.faction.currencyName}s, and earns ${admiral.rank.dailyWage} ${admiral.faction.currencyName}s every day."
 			}
 			table {
 				tr {
@@ -611,7 +611,9 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 						}
 						td {
 							+ship.shipType.weightClass.sellPrice.toString()
-							+" Electro-Ducats"
+							+" "
+							+admiral.faction.currencyName
+							+"s"
 							if (ship.status == DrydockStatus.Ready && !ship.shipType.weightClass.isUnique) {
 								br
 								a(href = "/admiral/${admiralId}/sell/${ship.id}") { +"Sell" }
@@ -633,7 +635,9 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 						}
 						td {
 							+st.weightClass.buyPrice.toString()
-							+" Electro-Ducats"
+							+" "
+							+admiral.faction.currencyName
+							+"s"
 							br
 							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") {
 								+"Buy"
@@ -714,7 +718,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} Electro-Ducats."
+				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} ${admiral.faction.currencyName}s."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {
@@ -749,7 +753,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 			section {
 				h1 { +"Too Expensive" }
 				p {
-					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} Electro-Ducats, and ${admiral.name} only has ${admiral.money} Electro-Ducats."
+					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}s, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}s."
 				}
 				form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 					submitInput {
@@ -766,7 +770,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} Electro-Ducats."
+				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}s."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {

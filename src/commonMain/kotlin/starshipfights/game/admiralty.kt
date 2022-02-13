@@ -68,11 +68,11 @@ fun AdmiralRank.getDisplayName(faction: Faction) = when (faction) {
 		AdmiralRank.LORD_ADMIRAL -> "Hokst Fletsleydar"
 	}
 	Faction.VESTIGIUM -> when (this) {
-		AdmiralRank.REAR_ADMIRAL -> "Lieutenant Colonel"
-		AdmiralRank.VICE_ADMIRAL -> "Colonel"
-		AdmiralRank.ADMIRAL -> "Brigadier General"
-		AdmiralRank.HIGH_ADMIRAL -> "Major General"
-		AdmiralRank.LORD_ADMIRAL -> "Lieutenant General"
+		AdmiralRank.REAR_ADMIRAL -> "Rear Marshal"
+		AdmiralRank.VICE_ADMIRAL -> "Vice Marshal"
+		AdmiralRank.ADMIRAL -> "Marshal"
+		AdmiralRank.HIGH_ADMIRAL -> "Grand Marshal"
+		AdmiralRank.LORD_ADMIRAL -> "Chief Marshal"
 	}
 }
 
