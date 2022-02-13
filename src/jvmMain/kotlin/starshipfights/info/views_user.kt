@@ -258,12 +258,13 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						}
 					}
 				}
-				tr {
-					td {
-						colSpan = "3"
-						a(href = "/clear-all-expired") { +"Clear All Expired Sessions" }
+				if (expiredSessions.isNotEmpty())
+					tr {
+						td {
+							colSpan = "3"
+							a(href = "/clear-all-expired") { +"Clear All Expired Sessions" }
+						}
 					}
-				}
 			}
 		}
 	}
