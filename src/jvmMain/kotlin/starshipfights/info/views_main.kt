@@ -75,7 +75,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				dd {
 					+"This is kept so that you have the option of showing what your Discord account is on your profile page. It's optional to display to other users, with the choice being in the "
 					a(href = "/me/manage") { +"User Preferences" }
-					+"page. Note that we do "
+					+" page. Note that we do "
 					strong { +"not" }
 					+" request or track email addresses."
 				}
