@@ -113,7 +113,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 			}
 			h2 { +"Who Can't See It" }
 			p {
-				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and not allowing public access to the database; it's accessible only by the localhost network adapter. The database is accessed by the database administrator via SSH tunnelling secured by a private key, making it also infeasible to break in to."
+				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and keeping the database's port only open on 127.0.0.1, i.e. no one outside of the server's local machine can even connect to the database, much less access the data on it."
 			}
 			h2 { +"When Was This Written" }
 			dl {
