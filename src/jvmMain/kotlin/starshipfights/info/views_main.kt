@@ -113,7 +113,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 			}
 			h2 { +"Who Can't See It" }
 			p {
-				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and keeping the database's port only open on 127.0.0.1, i.e. no one outside of the server's local machine can even connect to the database, much less access the data on it."
+				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and keeping the database's port only open on 127.0.0.1, i.e. no one outside of the server's local machine can even connect to the database, much less access the data stored inside of it."
 			}
 			h2 { +"When Was This Written" }
 			dl {
