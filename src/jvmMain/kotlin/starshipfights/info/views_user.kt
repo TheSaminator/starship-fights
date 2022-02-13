@@ -177,6 +177,16 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					+Entities.nbsp
 					+"Show Discord name"
 				}
+				br
+				label {
+					checkBoxInput {
+						name = "showstatus"
+						checked = currentUser.showUserStatus
+						value = "yes"
+					}
+					+Entities.nbsp
+					+"Show Online Status"
+				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
 						style = "color:#d22"
