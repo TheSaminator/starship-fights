@@ -312,7 +312,7 @@ interface AuthProvider {
 					redirect("/me/manage")
 				}
 				
-				get("/clear-all-expired/") {
+				get("/clear-all-expired") {
 					call.getUserSession()?.let { sess ->
 						launch {
 							val now = Instant.now()
