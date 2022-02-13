@@ -468,7 +468,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 						td {
 							val opponent = recordOpponents[record.id]
 							if (opponent == null)
-								+"N/A"
+								+"(Deleted Admiral)"
 							else
 								a(href = "/admiral/${opponent.id}") {
 									+opponent.fullName
