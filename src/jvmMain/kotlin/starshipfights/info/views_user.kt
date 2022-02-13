@@ -39,41 +39,42 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 			img(src = user.discordAvatarUrl) {
 				style = "border-radius:50%"
 			}
-			p {
-				style = "text-align:center"
-				if (user.showDiscordName) {
+			if (user.showDiscordName)
+				p {
+					style = "text-align:center"
 					+user.discordName
 					+"#"
 					+user.discordDiscriminator
-					br
 				}
-				when (user.status) {
-					UserStatus.IN_BATTLE -> +"In Battle"
-					UserStatus.READY_FOR_BATTLE -> +"In Battle"
-					UserStatus.IN_MATCHMAKING -> +"In Matchmaking"
-					UserStatus.AVAILABLE -> if (hasOpenSessions) +"Online" else +"Offline"
+			if (user.showUserStatus)
+				p {
+					+when (user.status) {
+						UserStatus.IN_BATTLE -> "In Battle"
+						UserStatus.READY_FOR_BATTLE -> "In Battle"
+						UserStatus.IN_MATCHMAKING -> "In Matchmaking"
+						UserStatus.AVAILABLE -> if (hasOpenSessions) "Online" else "Offline"
+					}
 				}
-			}
 			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
 				p {
 					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
 					+"Site Owner"
 				}
-			hr { style = "border-color:#036" }
-			p {
-				style = "text-align:center"
-				+"Registered at "
-				span(classes = "moment") {
-					style = "display:none"
-					+user.registeredAt.toEpochMilli().toString()
+			if (user.showUserStatus)
+				p {
+					style = "text-align:center"
+					+"Registered at "
+					span(classes = "moment") {
+						style = "display:none"
+						+user.registeredAt.toEpochMilli().toString()
+					}
+					br
+					+"Last active at "
+					span(classes = "moment") {
+						style = "display:none"
+						+user.lastActivity.toEpochMilli().toString()
+					}
 				}
-				br
-				+"Last active at "
-				span(classes = "moment") {
-					style = "display:none"
-					+user.lastActivity.toEpochMilli().toString()
-				}
-			}
 			if (isCurrentUser) {
 				hr { style = "border-color:#036" }
 				div(classes = "list") {
@@ -188,7 +189,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 			}
 		}
 		section {
-			h1 { +"Other Sessions" }
+			h2 { +"Other Sessions" }
 			table {
 				tr {
 					th { +"User-Agent" }

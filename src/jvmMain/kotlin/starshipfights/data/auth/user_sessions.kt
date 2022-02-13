@@ -26,13 +26,17 @@ data class User(
 	
 	val registeredAt: @Contextual Instant,
 	val lastActivity: @Contextual Instant,
+	val showUserStatus: Boolean,
 	
 	val status: UserStatus = UserStatus.AVAILABLE,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String
-		get() = discordAvatar?.let {
+		get() = discordAvatar?.takeIf { showDiscordName }?.let {
 			"https://cdn.discordapp.com/avatars/$discordId/$it." + (if (it.startsWith("a_")) "gif" else "png") + "?size=256"
-		} ?: "https://cdn.discordapp.com/embed/avatars/${(discordDiscriminator.lastOrNull()?.digitToInt() ?: 0) % 5}.png"
+		} ?: anonymousAvatarUrl
+	
+	private val anonymousAvatarUrl: String
+		get() = "https://cdn.discordapp.com/embed/avatars/${(discordDiscriminator.lastOrNull()?.digitToInt() ?: 0) % 5}.png"
 	
 	companion object Table : DocumentTable<User> by DocumentTable.create({
 		unique(User::discordId)

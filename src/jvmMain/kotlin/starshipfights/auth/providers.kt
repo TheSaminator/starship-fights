@@ -335,6 +335,7 @@ object TestAuthProvider : AuthProvider {
 								profileBio = "BEEP BOOP I EXIST ONLY FOR TESTING BLOP BLARP.",
 								registeredAt = Instant.now(),
 								lastActivity = Instant.now(),
+								showUserStatus = false,
 							).also {
 								User.put(it)
 							}
@@ -455,6 +456,12 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 				
 				call.respondHtml(HttpStatusCode.OK, page("Login with Discord", call.standardNavBar(), null) {
 					section {
+						p {
+							style = "text-align:center"
+							+"By logging in, you indicate your agreement to the "
+							a(href = "/about#pp") { +"Privacy Policy" }
+							+"."
+						}
 						if (errorMsg != null)
 							p {
 								style = "color:#d22"
@@ -502,6 +509,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						profileBio = "Hi, I'm new here!",
 						registeredAt = Instant.now(),
 						lastActivity = Instant.now(),
+						showUserStatus = false,
 					)
 					
 					val userSession = UserSession(

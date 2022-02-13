@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
 import org.litote.kmongo.descending
+import org.litote.kmongo.eq
+import starshipfights.CurrentConfiguration
 import starshipfights.data.auth.User
 
 suspend fun ApplicationCall.mainPage(): HTML.() -> Unit {
@@ -25,17 +27,99 @@ suspend fun ApplicationCall.mainPage(): HTML.() -> Unit {
 	}
 }
 
-suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit = page("About", standardNavBar(), IndexSidebar) {
-	section {
-		img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
-			style = "width:100%"
+suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
+	val owner = CurrentConfiguration.discordClient?.ownerId?.let {
+		User.locate(User::discordId eq it)
+	} ?: return page(
+		"About", standardNavBar(), null
+	) {
+		section {
+			img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
+				style = "width:100%"
+			}
+			p {
+				+"This is a test instance of Starship Fights."
+			}
 		}
-		p {
-			+"Starship Fights is designed and programmed by the person behind "
-			a(href = "https://nationstates.net/mechyrdia") { +"Mechyrdia" }
-			+". He can be reached by telegram on NationStates, or by his "
-			a(href = "https://discord.id/?prefill=307880116715913217") { +"Discord account" }
-			+"."
+	}
+	
+	return page(
+		"About", standardNavBar(), PageNavSidebar(
+			listOf(
+				NavHead("Jump To"),
+				NavLink("#pp", "Privacy Policy")
+			)
+		)
+	) {
+		section {
+			img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
+				style = "width:100%"
+			}
+			p {
+				+"Starship Fights is designed and programmed by the person behind "
+				a(href = "https://nationstates.net/mechyrdia") { +"Mechyrdia" }
+				+". He can be reached by telegram on NationStates, or by his "
+				a(href = "/user/${owner.id}") { +"account on this site" }
+				+"."
+			}
+		}
+		section {
+			id = "pp"
+			h1 { +"Privacy Policy" }
+			h2 { +"What Data Do We Collect" }
+			p { +"Starship Fights does not collect very much personal data; the only data it collects is relevant to either user authentication or user authorization. The following data is collected by the game:" }
+			dl {
+				dt { +"Discord ID" }
+				dd { +"This is needed to keep your Starship Fights user account associated with your Discord login, so that you can keep your admirals and ships when you log in." }
+				dt { +"Discord Profile Data (Name, Discriminator, Avatar)" }
+				dd {
+					+"This is kept so that you have the option of showing what your Discord account is on your profile page. It's optional to display to other users, with the choice being in the "
+					a(href = "/me/manage") { +"User Preferences" }
+					+"page. Note that we do "
+					strong { +"not" }
+					+" request or track email addresses."
+				}
+				dt { +"Your browser's User-Agent" }
+				dd {
+					+"This is associated with your session data as a layer of security, so that if someone were to (somehow) steal your session token and put it into their browser, that person wouldn't be logged in as you, since the User-Agent would probably be different."
+				}
+				dt { +"Your public-facing IP address" }
+				dd {
+					+"This is associated with your sessions, so that it may be displayed to you when you look at your currently logged-in sessions on your "
+					a(href = "/me/manage") { +"User Preferences" }
+					+" page, so that you can log out of a session if you don't recognize its IP address."
+				}
+				dt { +"The date and time of your last activity" }
+				dd {
+					+"This is associated with your user account as a whole, so that your Online/Offline status can be displayed. It's optional to display your current status, and the choice is in your "
+					a(href = "/me/manage") { +"User Preferences" }
+					+" page."
+				}
+			}
+			h2 { +"How Do We Collect It" }
+			p {
+				+"Your Discord information is collected using the Discord API whenever you log in via Discord's OAuth2. Your User-Agent and IP address are collected using the HTTP requests that your browser sends to the website, and the date and time of your last activity is tracked using the system clock."
+			}
+			h2 { +"Who Can See It" }
+			p {
+				+"The only people who can see the data we collect are you and the system administrator. We do not sell data to advertisers. The site is hosted on "
+				a(href = "https://hetzner.com/") { +"Hetzner Cloud" }
+				+", who can "
+				em { +"in theory" }
+				+" access it."
+			}
+			p {
+				+"Privacy policies are nice and all, but they're only as strong as the staff that implements them. I have no interest in abusing others, just as I have no interest in doxing or otherwise revealing what locations people log in from. Nor have I any interest in being worshipped as some kind of programmer-god messiah. I am impervious to such corrupting ambitions."
+			}
+			h2 { +"Who Can't See It" }
+			p {
+				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and not allowing public access to the database; it's accessible only by the localhost network adapter. The database is accessed by the database administrator via SSH tunnelling secured by a private key, making it also infeasible to break in to."
+			}
+			h2 { +"When Was This Written" }
+			dl {
+				dt { +"February 13, 2022" }
+				dd { +"Initial writing" }
+			}
 		}
 	}
 }
