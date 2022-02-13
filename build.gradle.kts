@@ -57,8 +57,8 @@ kotlin {
 				implementation("io.ktor:ktor-client-apache:1.6.7")
 				
 				implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3")
-				implementation("org.slf4j:slf4j-api:1.7.31")
-				implementation("ch.qos.logback:logback-classic:1.2.5")
+				implementation("org.slf4j:slf4j-api:1.7.32")
+				implementation("ch.qos.logback:logback-classic:1.2.10")
 				
 				implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.4.0") {
 					exclude("org.jetbrains.kotlin", "kotlin-reflect")
