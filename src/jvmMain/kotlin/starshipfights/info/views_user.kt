@@ -48,6 +48,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 				}
 			if (user.showUserStatus)
 				p {
+					style = "text-align:center"
 					+when (user.status) {
 						UserStatus.IN_BATTLE -> "In Battle"
 						UserStatus.READY_FOR_BATTLE -> "In Battle"
