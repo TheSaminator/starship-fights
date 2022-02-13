@@ -36,7 +36,9 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	
 	return page(
 		user.profileName, standardNavBar(), CustomSidebar {
-			img(src = user.discordAvatarUrl)
+			img(src = user.discordAvatarUrl) {
+				style = "border-radius:50%"
+			}
 			p {
 				style = "text-align:center"
 				if (user.showDiscordName) {
