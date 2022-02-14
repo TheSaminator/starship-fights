@@ -12,13 +12,14 @@ import starshipfights.game.AdmiralRank
 import starshipfights.sfLogger
 import java.time.Instant
 import java.time.ZoneId
-import kotlin.coroutines.CoroutineContext
 
-object DataRoutines : CoroutineScope {
-	override val coroutineContext: CoroutineContext = SupervisorJob() + CoroutineExceptionHandler { ctx, ex ->
-		val coroutine = ctx[CoroutineName]?.name?.let { "coroutine $it" } ?: "unnamed coroutine"
-		sfLogger.error("Caught unhandled exception in $coroutine", ex)
-	}
+object DataRoutines {
+	private val scope: CoroutineScope = CoroutineScope(
+		SupervisorJob() + CoroutineExceptionHandler { ctx, ex ->
+			val coroutine = ctx[CoroutineName]?.name?.let { "coroutine $it" } ?: "unnamed coroutine"
+			sfLogger.error("Caught unhandled exception in $coroutine", ex)
+		}
+	)
 	
 	fun initializeRoutines(): Job {
 		// Initialize tables
@@ -28,7 +29,7 @@ object DataRoutines : CoroutineScope {
 		User.initialize()
 		UserSession.initialize()
 		
-		return launch {
+		return scope.launch {
 			// Repair ships
 			launch {
 				while (currentCoroutineContext().isActive) {

@@ -117,10 +117,12 @@ fun main() {
 							call.response.header(HttpHeaders.ContentEncoding, CompressedFileType.GZIP.encoding)
 							
 							call.respondBytes(gzipContent.readBytes(), contentType)
-						} else
-							ResourceLoader.getResource(contentPath)?.let { call.respondBytes(it.readBytes(), contentType) }
-					} else
-						ResourceLoader.getResource(contentPath)?.let { call.respondBytes(it.readBytes(), contentType) }
+							
+							return@get
+						}
+					}
+					
+					ResourceLoader.getResource(contentPath)?.let { call.respondBytes(it.readBytes(), contentType) }
 				}
 			}
 		}
