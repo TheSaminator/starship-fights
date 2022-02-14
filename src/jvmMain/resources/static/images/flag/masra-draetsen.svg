@@ -3,13 +3,12 @@
 		xmlns="http://www.w3.org/2000/svg"
 		version="1.1"
 		viewBox="0 0 128 80"
-		height="320px"
-		width="512px">
+		height="160px"
+		width="256px">
 	<defs
 			id="defs2">
 		<clipPath
-				id="clipPath983"
-				clipPathUnits="userSpaceOnUse">
+				id="clipPath983">
 			<rect
 					ry="96"
 					rx="96"
