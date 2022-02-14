@@ -124,7 +124,7 @@ object AdmiralNames {
 		"Theiar" to "Theia",
 		"Aretar" to "Areta",
 		"Derkas" to "Derkata",
-		"Vinsennas" to "Vinsennata",
+		"Vinsennas" to "Vinsenatta",
 		"Kleio" to "Kleona"
 	)
 	
