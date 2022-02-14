@@ -37,6 +37,11 @@ fun main() {
 			RenderResources.load(clientMode !is ClientMode.InGame)
 		}.display()
 		
+		window.addEventListener("beforeunload", {e ->
+			e.preventDefault()
+			e.asDynamic().returnValue = ""
+		})
+		
 		when (clientMode) {
 			is ClientMode.MatchmakingMenu -> matchmakingMain(clientMode.admirals)
 			is ClientMode.InGame -> gameMain(clientMode.playerSide, clientMode.connectToken, clientMode.initialState)
