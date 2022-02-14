@@ -135,8 +135,10 @@ suspend fun ApplicationCall.newUsersPage(): HTML.() -> Unit {
 				newUsers.forEach { newUser ->
 					div {
 						style = "display:inline-block;width:20%;padding:2%"
-						img(src = newUser.discordAvatarUrl) {
-							style = "width:100%;border-radius:50%"
+						a(href = "/user/${newUser.id}") {
+							img(src = newUser.discordAvatarUrl) {
+								style = "width:100%;border-radius:50%"
+							}
 						}
 						p {
 							style = "text-align:center"
