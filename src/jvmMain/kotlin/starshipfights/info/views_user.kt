@@ -214,7 +214,8 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 			table {
 				tr {
 					th { +"User-Agent" }
-					th { +"Client IPs" }
+					if (currentUser.logIpAddresses)
+						th { +"Client IPs" }
 					th { +Entities.nbsp }
 				}
 				val now = Instant.now()
@@ -227,12 +228,13 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					
 					tr {
 						td { +session.userAgent }
-						td {
-							session.clientAddresses.forEachIndexed { i, clientAddress ->
-								if (i != 0) br
-								+clientAddress
+						if (currentUser.logIpAddresses)
+							td {
+								session.clientAddresses.forEachIndexed { i, clientAddress ->
+									if (i != 0) br
+									+clientAddress
+								}
 							}
-						}
 						td {
 							if (session.id == currentSession.id) {
 								+"Current Session"
@@ -244,19 +246,20 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				}
 				tr {
 					td {
-						colSpan = "3"
+						colSpan = if (currentUser.logIpAddresses) "3" else "2"
 						a(href = "/logout-all") { +"Logout All" }
 					}
 				}
 				expiredSessions.forEach { session ->
 					tr {
 						td { +session.userAgent }
-						td {
-							session.clientAddresses.forEachIndexed { i, clientAddress ->
-								if (i != 0) br
-								+clientAddress
+						if (currentUser.logIpAddresses)
+							td {
+								session.clientAddresses.forEachIndexed { i, clientAddress ->
+									if (i != 0) br
+									+clientAddress
+								}
 							}
-						}
 						td {
 							+"Expired at "
 							span(classes = "moment") {
@@ -271,7 +274,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				if (expiredSessions.isNotEmpty())
 					tr {
 						td {
-							colSpan = "3"
+							colSpan = if (currentUser.logIpAddresses) "3" else "2"
 							a(href = "/clear-all-expired") { +"Clear All Expired Sessions" }
 						}
 					}
