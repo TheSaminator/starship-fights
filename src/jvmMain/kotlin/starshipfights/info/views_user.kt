@@ -188,6 +188,16 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					+Entities.nbsp
 					+"Show Online Status"
 				}
+				br
+				label {
+					checkBoxInput {
+						name = "logaddress"
+						checked = currentUser.logIpAddresses
+						value = "yes"
+					}
+					+Entities.nbsp
+					+"Log Session IP Addresses"
+				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
 						style = "color:#d22"

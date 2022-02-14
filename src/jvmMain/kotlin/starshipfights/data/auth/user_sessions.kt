@@ -28,6 +28,8 @@ data class User(
 	val lastActivity: @Contextual Instant,
 	val showUserStatus: Boolean,
 	
+	val logIpAddresses: Boolean,
+	
 	val status: UserStatus = UserStatus.AVAILABLE,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String

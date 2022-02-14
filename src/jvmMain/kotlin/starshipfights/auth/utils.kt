@@ -16,7 +16,12 @@ suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.
 
 suspend fun UserSession.renewed(clientAddress: String) = copy(
 	expiration = Instant.now().plus(1, ChronoUnit.HOURS),
-	clientAddresses = if (clientAddresses.last() != clientAddress) clientAddresses + clientAddress else clientAddresses
+	clientAddresses = if (User.get(user)?.logIpAddresses != true)
+		emptyList()
+	else if (clientAddresses.lastOrNull() != clientAddress)
+		clientAddresses + clientAddress
+	else
+		clientAddresses
 ).also { UserSession.put(it) }
 
 suspend fun User.updated() = copy(

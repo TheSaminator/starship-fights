@@ -91,10 +91,20 @@ interface AuthProvider {
 					val newUser = currentUser.copy(
 						showDiscordName = form["showdiscord"] == "yes",
 						showUserStatus = form["showstatus"] == "yes",
+						logIpAddresses = form["logaddress"] == "yes",
 						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters").formUrlEncode()),
 						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters").formUrlEncode())
 					)
 					User.put(newUser)
+					
+					if (!newUser.logIpAddresses)
+						launch {
+							UserSession.update(
+								UserSession::user eq currentUser.id,
+								setValue(UserSession::clientAddresses, emptyList())
+							)
+						}
+					
 					redirect("/user/${newUser.id}")
 				}
 				
@@ -365,6 +375,7 @@ object TestAuthProvider : AuthProvider {
 								registeredAt = Instant.now(),
 								lastActivity = Instant.now(),
 								showUserStatus = false,
+								logIpAddresses = false,
 							).also {
 								User.put(it)
 							}
@@ -539,6 +550,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						registeredAt = Instant.now(),
 						lastActivity = Instant.now(),
 						showUserStatus = false,
+						logIpAddresses = false,
 					)
 					
 					val userSession = UserSession(
