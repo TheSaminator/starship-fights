@@ -11,9 +11,10 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.html.FormEncType
 import kotlinx.html.FormMethod
-import kotlinx.html.dom.create
+import kotlinx.html.dom.append
 import kotlinx.html.hiddenInput
 import kotlinx.html.js.form
+import kotlinx.html.style
 
 suspend fun setupBackground() {
 	val camera = PerspectiveCamera(69, window.aspectRatio, 0.01, 1_000)
@@ -44,7 +45,8 @@ suspend fun setupBackground() {
 }
 
 private suspend fun enterGame(connectToken: String): Nothing {
-	document.create.form(action = "/play", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
+	document.body!!.append.form(action = "/play", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
+		style = "display:none"
 		hiddenInput {
 			name = "token"
 			value = connectToken

@@ -21,9 +21,11 @@ data class NavHead(val label: String) : NavItem() {
 	}
 }
 
-data class NavLink(val to: String, val text: String) : NavItem() {
+data class NavLink(val to: String, val text: String, val isPost: Boolean = false) : NavItem() {
 	override fun DIV.display() {
 		a(href = to) {
+			if (isPost)
+				method = "post"
 			+text
 		}
 	}
@@ -43,7 +45,7 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 		NavLink("/me", user.profileName),
 		NavLink("/me/manage", "User Preferences"),
 		NavLink("/lobby", "Enter Game Lobby"),
-		NavLink("/logout", "Log Out"),
+		NavLink("/logout", "Log Out", isPost = true),
 	)
 } + listOf(
 	NavHead("External Information"),

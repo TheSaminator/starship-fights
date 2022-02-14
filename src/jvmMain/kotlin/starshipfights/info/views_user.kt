@@ -240,14 +240,20 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 								+"Current Session"
 								br
 							}
-							a(href = "/logout/${session.id}") { +"Logout" }
+							a(href = "/logout/${session.id}") {
+								method = "post"
+								+"Logout"
+							}
 						}
 					}
 				}
 				tr {
 					td {
 						colSpan = if (currentUser.logIpAddresses) "3" else "2"
-						a(href = "/logout-all") { +"Logout All" }
+						a(href = "/logout-all") {
+							method = "post"
+							+"Logout All"
+						}
 					}
 				}
 				expiredSessions.forEach { session ->
@@ -267,7 +273,10 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 								+session.expiration.toEpochMilli().toString()
 							}
 							br
-							a(href = "/clear-expired/${session.id}") { +"Clear" }
+							a(href = "/clear-expired/${session.id}") {
+								method = "post"
+								+"Clear"
+							}
 						}
 					}
 				}
@@ -275,7 +284,10 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					tr {
 						td {
 							colSpan = if (currentUser.logIpAddresses) "3" else "2"
-							a(href = "/clear-all-expired") { +"Clear All Expired Sessions" }
+							a(href = "/clear-all-expired") {
+								method = "post"
+								+"Clear All Expired Sessions"
+							}
 						}
 					}
 			}
@@ -673,9 +685,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+admiral.faction.currencyName
 							+"s"
 							br
-							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") {
-								+"Buy"
-							}
+							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") { +"Buy" }
 						}
 					}
 				}

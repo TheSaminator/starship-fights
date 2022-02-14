@@ -1,4 +1,5 @@
 window.addEventListener("load", function () {
+	// Load and render OBJ meshes
 	if (!window.sfShipMeshViewer) return;
 
 	const canvases = document.getElementsByTagName("canvas");
@@ -67,6 +68,7 @@ window.addEventListener("load", function () {
 });
 
 window.addEventListener("load", function () {
+	// Localize dates and times
 	const moments = document.getElementsByClassName("moment");
 	for (let moment of moments) {
 		let date = new Date(Number(moment.innerHTML.trim()));
@@ -76,6 +78,7 @@ window.addEventListener("load", function () {
 });
 
 window.addEventListener("load", function () {
+	// Generate random admiral names
 	if (!window.sfAdmiralNameGen) return;
 
 	const nameBox = document.getElementById("name");
@@ -93,6 +96,7 @@ window.addEventListener("load", function () {
 });
 
 window.addEventListener("load", function () {
+	// Indicate maximum and used length of <textarea>s
 	const textareas = document.getElementsByTagName("textarea");
 	for (let textarea of textareas) {
 		if (!textarea.hasAttribute("maxLength")) continue;
@@ -117,5 +121,26 @@ window.addEventListener("load", function () {
 		});
 
 		updateIndicator();
+	}
+});
+
+window.addEventListener("load", function () {
+	// Allow POSTing with <a>s
+	const anchors = document.getElementsByTagName("a");
+	for (let anchor of anchors) {
+		const method = anchor.getAttribute("data-method");
+		if (method == null) continue;
+
+		anchor.onclick = e => {
+			e.preventDefault();
+
+			let form = document.createElement("form");
+			form.style.display = "none";
+			form.action = anchor.href;
+			form.method = method;
+
+			document.body.append(form);
+			form.submit();
+		};
 	}
 });

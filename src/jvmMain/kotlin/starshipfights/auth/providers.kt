@@ -280,7 +280,7 @@ interface AuthProvider {
 					redirect("/me")
 				}
 				
-				get("/logout") {
+				post("/logout") {
 					call.getUserSession()?.let { sess ->
 						launch {
 							val newTime = Instant.now().minusMillis(100)
@@ -292,7 +292,7 @@ interface AuthProvider {
 					redirect("/")
 				}
 				
-				get("/logout/{id}") {
+				post("/logout/{id}") {
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
@@ -304,7 +304,7 @@ interface AuthProvider {
 					redirect("/me/manage")
 				}
 				
-				get("/logout-all") {
+				post("/logout-all") {
 					call.getUserSession()?.let { sess ->
 						launch {
 							val newTime = Instant.now().minusMillis(100)
@@ -315,7 +315,7 @@ interface AuthProvider {
 					redirect("/me/manage")
 				}
 				
-				get("/clear-expired/{id}") {
+				post("/clear-expired/{id}") {
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
@@ -327,7 +327,7 @@ interface AuthProvider {
 					redirect("/me/manage")
 				}
 				
-				get("/clear-all-expired") {
+				post("/clear-all-expired") {
 					call.getUserSession()?.let { sess ->
 						launch {
 							val now = Instant.now()
