@@ -1,6 +1,11 @@
 package starshipfights.info
 
 import kotlinx.html.A
+import kotlinx.html.FORM
+import kotlinx.html.hiddenInput
+import starshipfights.auth.CsrfProtector
+import starshipfights.data.Id
+import starshipfights.data.auth.UserSession
 
 var A.method: String?
 	get() = attributes["data-method"]
@@ -10,3 +15,8 @@ var A.method: String?
 		else
 			attributes.remove("data-method")
 	}
+
+fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
+	name = CsrfProtector.csrfInputName
+	value = CsrfProtector.newNonce(cookie, formAction)
+}

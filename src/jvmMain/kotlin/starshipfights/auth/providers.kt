@@ -85,8 +85,8 @@ interface AuthProvider {
 				}
 				
 				post("/me/manage") {
+					val form = call.receiveValidatedParameters()
 					val currentUser = call.getUser() ?: redirect("/login")
-					val form = call.receiveParameters()
 					
 					val newUser = currentUser.copy(
 						showDiscordName = form["showdiscord"] == "yes",
@@ -117,8 +117,8 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/new") {
+					val form = call.receiveValidatedParameters()
 					val currentUser = call.getUserSession()?.user ?: redirect("/login")
-					val form = call.receiveParameters()
 					
 					val newAdmiral = Admiral(
 						owningUser = currentUser,
@@ -149,13 +149,14 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/{id}/manage") {
+					val form = call.receiveValidatedParameters()
+					
 					val currentUser = call.getUserSession()?.user
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!
 					
 					if (admiral.owningUser != currentUser) throw ForbiddenException()
 					
-					val form = call.receiveParameters()
 					val newAdmiral = admiral.copy(
 						name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
 						isFemale = form["sex"] == "female"
@@ -170,6 +171,7 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/{id}/rename/{ship}") {
+					val formParams = call.receiveValidatedParameters()
 					val currentUser = call.getUserSession()?.user
 					
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
@@ -184,7 +186,7 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) throw ForbiddenException()
 					if (ship.owningAdmiral != admiralId) throw ForbiddenException()
 					
-					val newName = call.receiveParameters()["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
+					val newName = formParams["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
 					ShipInDrydock.set(shipId, setValue(ShipInDrydock::name, newName))
 					redirect("/admiral/${admiralId}/manage")
 				}
@@ -194,6 +196,8 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/{id}/sell/{ship}") {
+					call.receiveValidatedParameters()
+					
 					val currentUser = call.getUserSession()?.user
 					
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
@@ -224,6 +228,8 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/{id}/buy/{ship}") {
+					call.receiveValidatedParameters()
+					
 					val currentUser = call.getUserSession()?.user
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!
@@ -269,6 +275,8 @@ interface AuthProvider {
 				}
 				
 				post("/admiral/{id}/delete") {
+					call.receiveValidatedParameters()
+					
 					val currentUser = call.getUserSession()?.user
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!

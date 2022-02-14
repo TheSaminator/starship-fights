@@ -131,6 +131,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 		section {
 			h1 { +"User Preferences" }
 			form(method = FormMethod.post, action = "/me/manage") {
+				csrfToken(currentSession.id)
 				h2 {
 					+"Profile"
 				}
@@ -296,7 +297,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
-	getUser() ?: redirect("/login")
+	val sessionId = getUserSession()?.id ?: redirect("/login")
 	
 	return page(
 		"Creating Admiral", standardNavBar(), null
@@ -304,6 +305,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Creating Admiral" }
 			form(method = FormMethod.post, action = "/admiral/new") {
+				csrfToken(sessionId)
 				h3 {
 					label {
 						htmlFor = "faction"
@@ -535,7 +537,9 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
-	val currentUser = getUserSession()?.user
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = currentSession.user
+	
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
@@ -557,6 +561,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Managing ${admiral.name}" }
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/manage") {
+				csrfToken(currentSession.id)
 				h3 {
 					label {
 						htmlFor = "name"
@@ -695,7 +700,8 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
-	val currentUser = getUserSession()?.user
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = currentSession.user
 	
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
@@ -716,6 +722,7 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 				+"${admiral.fullName} is about to rename the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName}. Choose a name here:"
 			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/rename/${ship.id}") {
+				csrfToken(currentSession.id)
 				textInput(name = "name") {
 					id = "name"
 					value = ship.name
@@ -743,7 +750,8 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
-	val currentUser = getUserSession()?.user
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = currentSession.user
 	
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
@@ -774,6 +782,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 				}
 			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/sell/${ship.id}") {
+				csrfToken(currentSession.id)
 				submitInput {
 					value = "Sell"
 				}
@@ -783,7 +792,9 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
-	val currentUser = getUserSession()?.user
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = currentSession.user
+	
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
@@ -826,6 +837,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 				}
 			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/buy/${shipType.toUrlSlug()}") {
+				csrfToken(currentSession.id)
 				submitInput {
 					value = "Checkout"
 				}
@@ -835,7 +847,9 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 }
 
 suspend fun ApplicationCall.deleteAdmiralConfirmPage(): HTML.() -> Unit {
-	val currentUser = getUserSession()?.user
+	val currentSession = getUserSession() ?: redirect("/login")
+	val currentUser = currentSession.user
+	
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
@@ -857,6 +871,7 @@ suspend fun ApplicationCall.deleteAdmiralConfirmPage(): HTML.() -> Unit {
 				}
 			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/delete") {
+				csrfToken(currentSession.id)
 				submitInput(classes = "evil") {
 					value = "Yes"
 				}

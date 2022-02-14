@@ -2,11 +2,16 @@ package starshipfights.auth
 
 import io.ktor.application.*
 import io.ktor.features.*
+import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.sessions.*
+import io.ktor.util.*
+import starshipfights.ForbiddenException
 import starshipfights.data.Id
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
+import starshipfights.data.createNonce
+import starshipfights.redirect
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -40,4 +45,31 @@ object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
 	override fun deserialize(text: String): Id<UserSession> {
 		return Id(text)
 	}
+}
+
+data class CsrfInput(val cookie: Id<UserSession>, val target: String)
+
+object CsrfProtector {
+	private val nonces = mutableMapOf<String, CsrfInput>()
+	
+	const val csrfInputName = "csrf-token"
+	
+	fun newNonce(token: Id<UserSession>, action: String): String {
+		return createNonce().also { nonces[it] = CsrfInput(token, action) }
+	}
+	
+	fun verifyNonce(nonce: String, token: Id<UserSession>, action: String): Boolean {
+		return nonces.remove(nonce) == CsrfInput(token, action)
+	}
+}
+
+suspend fun ApplicationCall.receiveValidatedParameters(): Parameters {
+	val formInput = receiveParameters()
+	val sessionId = sessions.get<Id<UserSession>>() ?: redirect("/login")
+	val csrfToken = formInput.getOrFail(CsrfProtector.csrfInputName)
+	
+	if (CsrfProtector.verifyNonce(csrfToken, sessionId, request.uri))
+		return formInput
+	else
+		throw ForbiddenException()
 }
