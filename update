@@ -3,4 +3,4 @@
 screen -S starshipfights -X quit
 git pull
 gradle shadowJar
-./run
+screen -dmS starshipfights gradle runShadow
