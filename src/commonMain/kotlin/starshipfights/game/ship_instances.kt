@@ -59,7 +59,7 @@ data class ShipPosition(
 }
 
 enum class ShipSubsystem {
-	WEAPONS, SHIELDS, ENGINES, BATTERY;
+	WEAPONS, SHIELDS, ENGINES;
 	
 	val displayName: String
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
@@ -69,7 +69,6 @@ enum class ShipSubsystem {
 			WEAPONS -> "#FF6633"
 			SHIELDS -> "#6699FF"
 			ENGINES -> "#FFCC33"
-			BATTERY -> "#33FF66"
 		}
 	
 	val imageUrl: String
@@ -86,13 +85,11 @@ data class ShipPowerMode(
 	val weapons: Int,
 	val shields: Int,
 	val engines: Int,
-	val battery: Int,
 ) {
 	operator fun plus(delta: Map<ShipSubsystem, Int>) = copy(
 		weapons = weapons + (delta[ShipSubsystem.WEAPONS] ?: 0),
 		shields = shields + (delta[ShipSubsystem.SHIELDS] ?: 0),
 		engines = engines + (delta[ShipSubsystem.ENGINES] ?: 0),
-		battery = battery + (delta[ShipSubsystem.BATTERY] ?: 0),
 	)
 	
 	operator fun minus(delta: Map<ShipSubsystem, Int>) = this + delta.mapValues { (_, d) -> -d }
@@ -101,11 +98,10 @@ data class ShipPowerMode(
 		ShipSubsystem.WEAPONS -> weapons
 		ShipSubsystem.SHIELDS -> shields
 		ShipSubsystem.ENGINES -> engines
-		ShipSubsystem.BATTERY -> battery
 	}
 	
 	val total: Int
-		get() = weapons + shields + engines + battery
+		get() = weapons + shields + engines
 	
 	infix fun distanceTo(other: ShipPowerMode) = ShipSubsystem.values().sumOf { subsystem -> abs(this[subsystem] - other[subsystem]) }
 }
@@ -123,7 +119,7 @@ val ShipInstance.movement: ShipMovement
 
 fun Ship.defaultPowerMode(): ShipPowerMode {
 	val amount = reactor.subsystemAmount
-	return ShipPowerMode(amount, amount, amount, amount)
+	return ShipPowerMode(amount, amount, amount)
 }
 
 enum class ShipRenderMode {

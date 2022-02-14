@@ -32,29 +32,29 @@ data class Ship(
 
 @Serializable
 data class ShipReactor(
-	val powerOutput: Int,
+	val subsystemAmount: Int,
 	val gridEfficiency: Int
 ) {
-	val subsystemAmount: Int
-		get() = powerOutput / 4
+	val powerOutput: Int
+		get() = subsystemAmount * 3
 }
 
 val ShipWeightClass.reactor: ShipReactor
 	get() = when (this) {
-		ShipWeightClass.ESCORT -> ShipReactor(8, 1)
-		ShipWeightClass.DESTROYER -> ShipReactor(12, 2)
-		ShipWeightClass.CRUISER -> ShipReactor(16, 3)
-		ShipWeightClass.BATTLECRUISER -> ShipReactor(16, 4)
-		ShipWeightClass.BATTLESHIP -> ShipReactor(20, 4)
+		ShipWeightClass.ESCORT -> ShipReactor(2, 1)
+		ShipWeightClass.DESTROYER -> ShipReactor(3, 1)
+		ShipWeightClass.CRUISER -> ShipReactor(4, 2)
+		ShipWeightClass.BATTLECRUISER -> ShipReactor(5, 3)
+		ShipWeightClass.BATTLESHIP -> ShipReactor(7, 4)
 		
-		ShipWeightClass.GRAND_CRUISER -> ShipReactor(20, 3)
-		ShipWeightClass.COLOSSUS -> ShipReactor(36, 7)
+		ShipWeightClass.GRAND_CRUISER -> ShipReactor(6, 4)
+		ShipWeightClass.COLOSSUS -> ShipReactor(9, 6)
 		
-		ShipWeightClass.HEAVY_CRUISER -> ShipReactor(24, 3)
+		ShipWeightClass.HEAVY_CRUISER -> ShipReactor(6, 3)
 		
-		ShipWeightClass.FRIGATE -> ShipReactor(12, 1)
-		ShipWeightClass.LINE_SHIP -> ShipReactor(20, 3)
-		ShipWeightClass.DREADNOUGHT -> ShipReactor(28, 5)
+		ShipWeightClass.FRIGATE -> ShipReactor(4, 1)
+		ShipWeightClass.LINE_SHIP -> ShipReactor(6, 3)
+		ShipWeightClass.DREADNOUGHT -> ShipReactor(8, 5)
 	}
 
 @Serializable
