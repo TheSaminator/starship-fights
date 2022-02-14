@@ -18,5 +18,5 @@ var A.method: String?
 
 fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
 	name = CsrfProtector.csrfInputName
-	value = CsrfProtector.newNonce(cookie, formAction)
+	value = CsrfProtector.newNonce(cookie, this@csrfToken.action)
 }
