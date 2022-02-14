@@ -11,8 +11,7 @@ import kotlinx.coroutines.plus
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.decodeFromDynamic
 
-val rootPath = window.location.origin
-val rootPathWs = "ws" + rootPath.removePrefix("http")
+val rootPathWs = "ws" + window.location.origin.removePrefix("http")
 
 @OptIn(ExperimentalSerializationApi::class)
 val clientMode: ClientMode = try {
