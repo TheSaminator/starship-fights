@@ -13,6 +13,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.util.*
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -165,7 +166,9 @@ interface AuthProvider {
 					val shipId = call.parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
 					
 					val (admiral, ship) = coroutineScope {
-						Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+						val admiral = async { Admiral.get(admiralId)!! }
+						val ship = async { ShipInDrydock.get(shipId)!! }
+						admiral.await() to ship.await()
 					}
 					
 					if (admiral.owningUser != currentUser) throw ForbiddenException()
@@ -187,7 +190,9 @@ interface AuthProvider {
 					val shipId = call.parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
 					
 					val (admiral, ship) = coroutineScope {
-						Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+						val admiral = async { Admiral.get(admiralId)!! }
+						val ship = async { ShipInDrydock.get(shipId)!! }
+						admiral.await() to ship.await()
 					}
 					
 					if (admiral.owningUser != currentUser) throw ForbiddenException()

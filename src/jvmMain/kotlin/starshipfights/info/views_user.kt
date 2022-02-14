@@ -678,7 +678,9 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
 	
 	val (admiral, ship) = coroutineScope {
-		Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+		val admiral = async { Admiral.get(admiralId)!! }
+		val ship = async { ShipInDrydock.get(shipId)!! }
+		admiral.await() to ship.await()
 	}
 	
 	if (admiral.owningUser != currentUser) throw ForbiddenException()
@@ -724,7 +726,9 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 	val shipId = parameters["ship"]?.let { Id<ShipInDrydock>(it) }!!
 	
 	val (admiral, ship) = coroutineScope {
-		Admiral.get(admiralId)!! to ShipInDrydock.get(shipId)!!
+		val admiral = async { Admiral.get(admiralId)!! }
+		val ship = async { ShipInDrydock.get(shipId)!! }
+		admiral.await() to ship.await()
 	}
 	
 	if (admiral.owningUser != currentUser) throw ForbiddenException()
