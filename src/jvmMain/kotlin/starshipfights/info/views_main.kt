@@ -120,7 +120,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				dt { +"February 13, 2022" }
 				dd { +"Initial writing" }
 				dt { +"February 15, 2022" }
-				dd { +"Indicate that IP storage can be opted out of" }
+				dd { +"Indicate that IP storage is an opt-in-only feature" }
 			}
 		}
 	}
