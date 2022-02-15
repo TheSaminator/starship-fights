@@ -83,11 +83,11 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				dd {
 					+"This is associated with your session data as a layer of security, so that if someone were to (somehow) steal your session token and put it into their browser, that person wouldn't be logged in as you, since the User-Agent would probably be different."
 				}
-				dt { +"Your public-facing IP address" }
+				dt { +"Your public-facing IP address (opt-in)" }
 				dd {
 					+"This is associated with your sessions, so that it may be displayed to you when you look at your currently logged-in sessions on your "
 					a(href = "/me/manage") { +"User Preferences" }
-					+" page, so that you can log out of a session if you don't recognize its IP address. You may opt out of the site's collection and storage of your IP address on that same page."
+					+" page, so that you can log out of a session if you don't recognize its IP address. You may opt in to the site's collection and storage of your IP address on that same page."
 				}
 				dt { +"The date and time of your last activity" }
 				dd {
