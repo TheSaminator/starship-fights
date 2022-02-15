@@ -48,6 +48,13 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 			
 			h2 { +faction.shortName }
 			
+			p {
+				style = "text-align:center"
+				img(src = faction.flagUrl, alt = "Flag of ${faction.getDefiniteShortName()}") {
+					style = "width:40%"
+				}
+			}
+			
 			faction.blurbDesc(consumer)
 			
 			factionShipTypes.groupBy { it.weightClass }.toSortedMap(Comparator.comparingInt(ShipWeightClass::rank)).forEach { (weightClass, weightedShipTypes) ->
