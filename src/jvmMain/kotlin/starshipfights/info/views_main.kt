@@ -87,7 +87,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				dd {
 					+"This is associated with your sessions, so that it may be displayed to you when you look at your currently logged-in sessions on your "
 					a(href = "/me/manage") { +"User Preferences" }
-					+" page, so that you can log out of a session if you don't recognize its IP address."
+					+" page, so that you can log out of a session if you don't recognize its IP address. You may opt out of the site's collection and storage of your IP address on that same page."
 				}
 				dt { +"The date and time of your last activity" }
 				dd {
@@ -98,7 +98,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 			}
 			h2 { +"How Do We Collect It" }
 			p {
-				+"Your Discord information is collected using the Discord API whenever you log in via Discord's OAuth2. Your User-Agent and IP address are collected using the HTTP requests that your browser sends to the website, and the date and time of your last activity is tracked using the system clock."
+				+"Your Discord information is collected using the Discord API whenever you log in via Discord's OAuth2. Your User-Agent and IP address are collected using the HTTP requests that your browser sends to the website, and the date and time of your last activity is tracked using the server's system clock."
 			}
 			h2 { +"Who Can See It" }
 			p {
@@ -119,6 +119,8 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 			dl {
 				dt { +"February 13, 2022" }
 				dd { +"Initial writing" }
+				dt { +"February 15, 2022" }
+				dd { +"Indicate that IP storage can be opted out of" }
 			}
 		}
 	}
