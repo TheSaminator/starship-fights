@@ -102,7 +102,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					+"This user has the following admirals:"
 				}
 				ul {
-					admirals.forEach { admiral ->
+					admirals.sortedBy { it.name }.sortedBy { it.rank }.sortedBy { it.faction }.forEach { admiral ->
 						li {
 							a("/admiral/${admiral.id}") { +admiral.fullName }
 						}
