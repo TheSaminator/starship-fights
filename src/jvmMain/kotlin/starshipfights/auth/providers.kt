@@ -543,6 +543,8 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 					val discordDiscriminator = (userInfo["discriminator"] as? JsonPrimitive)?.content ?: redirect("/login")
 					val discordAvatar = (userInfo["avatar"] as? JsonPrimitive)?.content
 					
+					var redirectTo = "/me"
+					
 					val user = User.locate(User::discordId eq discordId)?.copy(
 						discordName = discordUsername,
 						discordDiscriminator = discordDiscriminator,
@@ -559,7 +561,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						lastActivity = Instant.now(),
 						showUserStatus = false,
 						logIpAddresses = false,
-					)
+					).also { redirectTo = "/me/manage" }
 					
 					val userSession = UserSession(
 						user = user.id,
@@ -572,7 +574,7 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 					launch { UserSession.put(userSession) }
 					
 					call.sessions.set(userSession.id)
-					redirect("/me")
+					redirect(redirectTo)
 				}
 			}
 		}
