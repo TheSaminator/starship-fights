@@ -188,6 +188,7 @@ interface AuthProvider {
 					
 					val newName = formParams["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
 					ShipInDrydock.set(shipId, setValue(ShipInDrydock::name, newName))
+					
 					redirect("/admiral/${admiralId}/manage")
 				}
 				
@@ -215,9 +216,9 @@ interface AuthProvider {
 					if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
 					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
 					
-					launch { ShipInDrydock.del(shipId) }
-					launch {
-						Admiral.set(admiralId, inc(Admiral::money, ship.shipType.weightClass.sellPrice))
+					coroutineScope {
+						launch { ShipInDrydock.del(shipId) }
+						launch { Admiral.set(admiralId, inc(Admiral::money, ship.shipType.weightClass.sellPrice)) }
 					}
 					
 					redirect("/admiral/${admiralId}/manage")
@@ -262,9 +263,9 @@ interface AuthProvider {
 						owningAdmiral = admiralId
 					)
 					
-					launch { ShipInDrydock.put(newShip) }
-					launch {
-						Admiral.set(admiralId, inc(Admiral::money, -shipType.weightClass.buyPrice))
+					coroutineScope {
+						launch { ShipInDrydock.put(newShip) }
+						launch { Admiral.set(admiralId, inc(Admiral::money, -shipType.weightClass.buyPrice)) }
 					}
 					
 					redirect("/admiral/${admiralId}/manage")
@@ -283,8 +284,11 @@ interface AuthProvider {
 					
 					if (admiral.owningUser != currentUser) throw ForbiddenException()
 					
-					Admiral.del(admiralId)
-					ShipInDrydock.remove(ShipInDrydock::owningAdmiral eq admiralId)
+					coroutineScope {
+						launch { Admiral.del(admiralId) }
+						launch { ShipInDrydock.remove(ShipInDrydock::owningAdmiral eq admiralId) }
+					}
+					
 					redirect("/me")
 				}
 				
@@ -570,8 +574,10 @@ class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
 						expiration = Instant.now().plus(1, ChronoUnit.HOURS)
 					)
 					
-					launch { User.put(user) }
-					launch { UserSession.put(userSession) }
+					coroutineScope {
+						launch { User.put(user) }
+						launch { UserSession.put(userSession) }
+					}
 					
 					call.sessions.set(userSession.id)
 					redirect(redirectTo)
