@@ -62,7 +62,7 @@ data class SiteJanitorTrophy(val isSenior: Boolean) : UserTrophy() {
 data class SiteSupporterTrophy(val amountInUsCents: Int) : UserTrophy() {
 	override fun ASIDE.render() {
 		p {
-			style = "text-align:center;border:2px solid #696;padding:3px;background-color:#afa;color:#232;font-variant:small-caps;font-family:'Orbitron',sans-serif"
+			style = "text-align:center;border:2px solid #694;padding:3px;background-color:#af7;color:#231;font-variant:small-caps;font-family:'Orbitron',sans-serif"
 			title = "\"I spent money on an online game and all I got was this lousy trophy!\""
 			+"Site Supporter:"
 			br
