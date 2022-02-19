@@ -37,6 +37,8 @@ suspend fun ApplicationCall.getUserSession() = request.userAgent()?.let { sessio
 
 suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }?.updated()
 
+suspend fun ApplicationCall.getUserAndSession() = getUserSession()?.let { it to User.get(it.user)?.updated() } ?: (null to null)
+
 object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
 	override fun serialize(session: Id<UserSession>): String {
 		return session.id

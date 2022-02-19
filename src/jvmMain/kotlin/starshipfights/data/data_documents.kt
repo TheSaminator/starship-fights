@@ -45,8 +45,10 @@ interface DocumentTable<T : DataDocument<T>> {
 	suspend fun del(id: Id<T>)
 	suspend fun all(): Flow<T>
 	
-	suspend fun select(where: Bson): Flow<T>
+	suspend fun filter(where: Bson): Flow<T>
 	suspend fun sorted(order: Bson): Flow<T>
+	suspend fun select(where: Bson, order: Bson): Flow<T>
+	suspend fun number(where: Bson): Long
 	suspend fun locate(where: Bson): T?
 	suspend fun update(where: Bson, set: Bson)
 	suspend fun remove(where: Bson)
@@ -106,12 +108,20 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 		return collection().find().toFlow()
 	}
 	
-	override suspend fun select(where: Bson): Flow<T> {
+	override suspend fun filter(where: Bson): Flow<T> {
 		return collection().find(where).toFlow()
 	}
 	
 	override suspend fun sorted(order: Bson): Flow<T> {
 		return collection().find().sort(order).toFlow()
+	}
+	
+	override suspend fun select(where: Bson, order: Bson): Flow<T> {
+		return collection().find(where).sort(order).toFlow()
+	}
+	
+	override suspend fun number(where: Bson): Long {
+		return collection().countDocuments(where)
 	}
 	
 	override suspend fun locate(where: Bson): T? {

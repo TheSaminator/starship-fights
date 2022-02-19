@@ -5,7 +5,9 @@ import kotlinx.html.DIV
 import kotlinx.html.a
 import kotlinx.html.span
 import kotlinx.html.style
-import starshipfights.auth.getUser
+import starshipfights.auth.getUserAndSession
+import starshipfights.data.Id
+import starshipfights.data.auth.UserSession
 
 sealed class NavItem {
 	protected abstract fun DIV.display()
@@ -21,11 +23,13 @@ data class NavHead(val label: String) : NavItem() {
 	}
 }
 
-data class NavLink(val to: String, val text: String, val isPost: Boolean = false) : NavItem() {
+data class NavLink(val to: String, val text: String, val isPost: Boolean = false, val csrfUserCookie: Id<UserSession>? = null) : NavItem() {
 	override fun DIV.display() {
 		a(href = to) {
 			if (isPost)
 				method = "post"
+			csrfUserCookie?.let { csrfToken(it) }
+			
 			+text
 		}
 	}
@@ -37,16 +41,28 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 	NavLink("/about", "About Starship Fights"),
 	NavLink("/users", "New Users"),
 	NavHead("Your Account"),
-) + when (val user = getUser()) {
-	null -> listOf(
-		NavLink("/login", "Login with Discord"),
-	)
-	else -> listOf(
-		NavLink("/me", user.profileName),
-		NavLink("/me/manage", "User Preferences"),
-		NavLink("/lobby", "Enter Game Lobby"),
-		NavLink("/logout", "Log Out", isPost = true),
-	)
+) + getUserAndSession().let { (session, user) ->
+	if (session == null || user == null)
+		listOf(
+			NavLink("/login", "Login with Discord"),
+		)
+	else
+		listOf(
+			NavLink("/me", user.profileName),
+			NavLink("/me/manage", "User Preferences"),
+			/*NavLink(
+				"/me/inbox", "Inbox (${
+					PrivateMessage.number(
+						and(
+							PrivateMessage::receiver eq user.id,
+							PrivateMessage::isRead eq false
+						)
+					)
+				})"
+			),*/
+			NavLink("/lobby", "Enter Game Lobby"),
+			NavLink("/logout", "Log Out", isPost = true, csrfUserCookie = session.id),
+		)
 } + listOf(
 	NavHead("External Information"),
 	NavLink("https://mechyrdia.netlify.app/", "Mechyrdia Infobase"),

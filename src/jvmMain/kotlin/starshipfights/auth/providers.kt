@@ -245,7 +245,7 @@ interface AuthProvider {
 					if (shipType.weightClass.buyPrice > admiral.money)
 						redirect("/admiral/${admiralId}/manage")
 					
-					val ownedShips = ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList()
+					val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 					
 					if (shipType.weightClass.isUnique) {
 						val hasSameWeightClass = ownedShips.any { it.shipType.weightClass == shipType.weightClass }
@@ -293,6 +293,8 @@ interface AuthProvider {
 				}
 				
 				post("/logout") {
+					call.receiveValidatedParameters()
+					
 					call.getUserSession()?.let { sess ->
 						launch {
 							val newTime = Instant.now().minusMillis(100)
@@ -305,6 +307,8 @@ interface AuthProvider {
 				}
 				
 				post("/logout/{id}") {
+					call.receiveValidatedParameters()
+					
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
@@ -317,6 +321,8 @@ interface AuthProvider {
 				}
 				
 				post("/logout-all") {
+					call.receiveValidatedParameters()
+					
 					call.getUserSession()?.let { sess ->
 						launch {
 							val newTime = Instant.now().minusMillis(100)
@@ -328,6 +334,8 @@ interface AuthProvider {
 				}
 				
 				post("/clear-expired/{id}") {
+					call.receiveValidatedParameters()
+					
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
@@ -340,6 +348,8 @@ interface AuthProvider {
 				}
 				
 				post("/clear-all-expired") {
+					call.receiveValidatedParameters()
+					
 					call.getUserSession()?.let { sess ->
 						launch {
 							val now = Instant.now()
@@ -479,7 +489,7 @@ object TestAuthProvider : AuthProvider {
 	}
 }
 
-class ProductionAuthProvider(val discordLogin: DiscordLogin) : AuthProvider {
+class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvider {
 	private val httpClient = HttpClient(Apache)
 	
 	override fun installAuth(conf: Authentication.Configuration) {

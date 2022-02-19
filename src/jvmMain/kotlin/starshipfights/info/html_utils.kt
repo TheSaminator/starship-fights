@@ -16,6 +16,10 @@ var A.method: String?
 			attributes.remove("data-method")
 	}
 
+fun A.csrfToken(cookie: Id<UserSession>) {
+	attributes["data-csrf-token"] = CsrfProtector.newNonce(cookie, this.href)
+}
+
 fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
 	name = CsrfProtector.csrfInputName
 	value = CsrfProtector.newNonce(cookie, this@csrfToken.action)

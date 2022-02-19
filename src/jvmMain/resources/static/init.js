@@ -139,6 +139,15 @@ window.addEventListener("load", function () {
 			form.action = anchor.href;
 			form.method = method;
 
+			const csrfToken = anchor.getAttribute("data-csrf-token");
+			if (csrfToken != null) {
+				let csrfInput = document.createElement("input");
+				csrfInput.name = "csrf-token";
+				csrfInput.type = "hidden";
+				csrfInput.value = csrfToken;
+				form.append(csrfInput);
+			}
+
 			document.body.append(form);
 			form.submit();
 		};

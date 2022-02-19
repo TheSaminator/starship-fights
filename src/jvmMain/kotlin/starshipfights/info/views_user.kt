@@ -4,49 +4,58 @@ import io.ktor.application.*
 import io.ktor.features.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.gt
 import org.litote.kmongo.or
-import starshipfights.CurrentConfiguration
 import starshipfights.ForbiddenException
 import starshipfights.auth.*
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
-import starshipfights.data.auth.User
-import starshipfights.data.auth.UserSession
-import starshipfights.data.auth.UserStatus
+import starshipfights.data.auth.*
 import starshipfights.game.*
 import starshipfights.redirect
 import java.time.Instant
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
-	val username = Id<User>(parameters["id"]!!)
-	val user = User.get(username)!!
+	val userId = Id<User>(parameters["id"]!!)
+	val user = User.get(userId)!!
+	val currentUser = getUserSession()
 	
-	val isCurrentUser = user.id == getUserSession()?.user
-	val hasOpenSessions = UserSession.select(
-		and(UserSession::user eq username, UserSession::expiration gt Instant.now())
-	).firstOrNull() != null
+	val isCurrentUser = user.id == currentUser?.id
+	val hasOpenSessions = UserSession.locate(
+		and(UserSession::user eq userId, UserSession::expiration gt Instant.now())
+	) != null
 	
-	val admirals = Admiral.select(Admiral::owningUser eq user.id).toList()
+	val admirals = Admiral.filter(Admiral::owningUser eq user.id).toList()
 	
 	return page(
 		user.profileName, standardNavBar(), CustomSidebar {
-			img(src = user.discordAvatarUrl) {
-				style = "border-radius:50%"
-			}
-			if (user.showDiscordName)
+			if (user.showDiscordName) {
+				img(src = user.discordAvatarUrl) {
+					style = "border-radius:50%"
+				}
 				p {
 					style = "text-align:center"
 					+user.discordName
 					+"#"
 					+user.discordDiscriminator
 				}
-			if (user.showUserStatus)
+			} else {
+				img(src = user.anonymousAvatarUrl) {
+					style = "border-radius:50%"
+				}
+				p {
+					style = "text-align:center"
+					+"Anonymous User#0000"
+				}
+			}
+			user.getTrophies().forEach { trophy ->
+				renderTrophy(trophy)
+			}
+			if (user.showUserStatus) {
 				p {
 					style = "text-align:center"
 					+when (user.status) {
@@ -56,12 +65,6 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 						UserStatus.AVAILABLE -> if (hasOpenSessions) "Online" else "Offline"
 					}
 				}
-			if (user.discordId == CurrentConfiguration.discordClient?.ownerId)
-				p {
-					style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#a82;font-variant:small-caps;font-family:'Orbitron',sans-serif"
-					+"Site Owner"
-				}
-			if (user.showUserStatus)
 				p {
 					style = "text-align:center"
 					+"Registered at "
@@ -76,6 +79,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 						+user.lastActivity.toEpochMilli().toString()
 					}
 				}
+			}
 			if (isCurrentUser) {
 				hr { style = "border-color:#036" }
 				div(classes = "list") {
@@ -86,7 +90,14 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 						a(href = "/me/manage") { +"Edit Profile" }
 					}
 				}
-			}
+			} /*else if (currentUser != null) {
+				hr { style = "border-color:#036" }
+				div(classes = "list") {
+					div(classes = "item") {
+						a(href = "/user/${userId}/send") { +"Send Message" }
+					}
+				}
+			}*/
 		}
 	) {
 		section {
@@ -119,7 +130,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 	val currentSession = getUserSession() ?: redirect("/login")
 	val currentUser = User.get(currentSession.user) ?: redirect("/login")
-	val allUserSessions = UserSession.select(and(UserSession::user eq currentUser.id)).toList()
+	val allUserSessions = UserSession.filter(and(UserSession::user eq currentUser.id)).toList()
 	
 	return page(
 		"User Preferences", standardNavBar(), PageNavSidebar(
@@ -243,6 +254,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							}
 							a(href = "/logout/${session.id}") {
 								method = "post"
+								csrfToken(session.id)
 								+"Logout"
 							}
 						}
@@ -253,6 +265,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						colSpan = if (currentUser.logIpAddresses) "3" else "2"
 						a(href = "/logout-all") {
 							method = "post"
+							csrfToken(currentSession.id)
 							+"Logout All"
 						}
 					}
@@ -276,6 +289,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							br
 							a(href = "/clear-expired/${session.id}") {
 								method = "post"
+								csrfToken(currentSession.id)
 								+"Clear"
 							}
 						}
@@ -287,6 +301,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							colSpan = if (currentUser.logIpAddresses) "3" else "2"
 							a(href = "/clear-all-expired") {
 								method = "post"
+								csrfToken(currentSession.id)
 								+"Clear All Expired Sessions"
 							}
 						}
@@ -390,8 +405,8 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val (admiral, ships, records) = coroutineScope {
 		val admiral = async { Admiral.get(admiralId)!! }
-		val ships = async { ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList() }
-		val records = async { BattleRecord.select(or(BattleRecord::hostAdmiral eq admiralId, BattleRecord::guestAdmiral eq admiralId)).toList() }
+		val ships = async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList() }
+		val records = async { BattleRecord.filter(or(BattleRecord::hostAdmiral eq admiralId, BattleRecord::guestAdmiral eq admiralId)).toList() }
 		
 		Triple(admiral.await(), ships.await(), records.await())
 	}
@@ -545,7 +560,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	
 	if (admiral.owningUser != currentUser) throw ForbiddenException()
 	
-	val ownedShips = ShipInDrydock.select(ShipInDrydock::owningAdmiral eq admiralId).toList()
+	val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 	
 	val buyableShips = ShipType.values().filter { type ->
 		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.weightClass.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)

@@ -31,13 +31,15 @@ data class User(
 	val logIpAddresses: Boolean,
 	
 	val status: UserStatus = UserStatus.AVAILABLE,
+	
+	val amountDonatedInUsCents: Int = 0,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String
 		get() = discordAvatar?.takeIf { showDiscordName }?.let {
 			"https://cdn.discordapp.com/avatars/$discordId/$it." + (if (it.startsWith("a_")) "gif" else "png") + "?size=256"
 		} ?: anonymousAvatarUrl
 	
-	private val anonymousAvatarUrl: String
+	val anonymousAvatarUrl: String
 		get() = "https://cdn.discordapp.com/embed/avatars/${(discordDiscriminator.lastOrNull()?.digitToInt() ?: 0) % 5}.png"
 	
 	companion object Table : DocumentTable<User> by DocumentTable.create({
@@ -63,3 +65,23 @@ data class UserSession(
 		index(UserSession::user)
 	})
 }
+
+/*
+@Serializable
+data class PrivateMessage(
+	@SerialName("_id")
+	override val id: Id<PrivateMessage> = Id(),
+	val sender: Id<User>,
+	val receiver: Id<User>,
+	val subject: String,
+	val message: String,
+	val sentAt: @Contextual Instant,
+	val isRead: Boolean
+) : DataDocument<PrivateMessage> {
+	companion object Table : DocumentTable<PrivateMessage> by DocumentTable.create({
+		index(PrivateMessage::sender)
+		index(PrivateMessage::receiver)
+		index(PrivateMessage::sentAt)
+	})
+}
+*/

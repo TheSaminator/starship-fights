@@ -81,7 +81,7 @@ data class ShipInDrydock(
 	})
 }
 
-suspend fun getAllInGameAdmirals(user: User) = Admiral.select(Admiral::owningUser eq user.id).map { admiral ->
+suspend fun getAllInGameAdmirals(user: User) = Admiral.filter(Admiral::owningUser eq user.id).map { admiral ->
 	InGameAdmiral(
 		admiral.id.reinterpret(),
 		InGameUser(user.id.reinterpret(), user.profileName),
@@ -106,7 +106,7 @@ suspend fun getInGameAdmiral(admiralId: Id<InGameAdmiral>) = Admiral.get(admiral
 }
 
 suspend fun getAdmiralsShips(admiralId: Id<Admiral>) = ShipInDrydock
-	.select(ShipInDrydock::owningAdmiral eq admiralId)
+	.filter(ShipInDrydock::owningAdmiral eq admiralId)
 	.toList()
 	.filter { it.isReady }
 	.associate { it.shipData.id to it.shipData }
