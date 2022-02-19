@@ -21,7 +21,7 @@ suspend fun ApplicationCall.mainPage(): HTML.() -> Unit {
 			p {
 				+"Set in the galaxy-wide "
 				a(href = "https://nationstates.net/mechyrdia") { +"Mechyrdiaverse" }
-				+", Starship Fights is about the grand struggle between four major political powers. Fight for liberty and justice with the Empire of Mechyrdia, conquer for glory and honor with the Diadochus Masra Draetsen, preserve your homeland and decide its fate with the Isarnareyksk Iunta, or reclaim your people's rightful dominion with the American Vestigium!"
+				+", Starship Fights is about the grand struggle between four major political powers. Fight for liberty and justice with the Empire of Mechyrdia, conquer for glory and honor with the Diadochus Masra Draetsen, preserve your homeland and decide its fate with the Isarnareyksk Federation, or reclaim your people's rightful dominion with the American Vestigium!"
 			}
 		}
 	}

@@ -64,13 +64,13 @@ enum class Faction(
 		shortName = "Isarnareykk",
 		shortNameIsDefinite = false,
 		navyName = "Isarnareyksk Styurnamariyn",
-		polityName = "Isarnareyksk Iunta",
+		polityName = "Isarnareyksk Federation",
 		demonymSingular = "Isarnareyksk",
 		currencyName = "mark",
 		shipPrefix = "ISMS ", // Isarnareyksk StyurnaMariyn nu Skyf
 		blurbDesc = {
 			p {
-				+"The Isarnareyksk Iunta is the largest and most populous successor state to the Fulkreyksk Authoritariat. A shadow of its former glory, Isarnareykk is led by Faurasitand Demeter Ursalia and ruled by dissenting factions such as the tech barons and the revanchist military, that hate each other more than they hate Ursalia."
+				+"The Isarnareyksk Federation is the largest and most populous successor state to the Fulkreyksk Authoritariat. A shadow of its former glory, Isarnareykk is led by Faurasitand Demeter Ursalia and ruled by dissenting factions such as the tech barons and the revanchist military, that hate each other more than they hate Ursalia."
 			}
 			p {
 				+"The Fulkreyksk Authoritariat was one of the oldest civilizations in galactic history, second (within the current cycle, at least) to only the Drakhassi Federation. Early on in Fulkreyksk history, their first Forarr, Vrankenn Kassck, developed the ideology that would characterize the Authoritariat for the rest of its existence: entire cadres of the population would be genetically modified to fit into a randomly-chosen caste: leaders, speakers, bureaucrats, enforcers, warriors, and laborers - families were assigned at random to one of these, and then would receive a retroviral injection to enhance the traits relevant to that caste's work."
@@ -82,7 +82,7 @@ enum class Faction(
 				+"Fulkreykk returned to galactic politics during the Great Galactic War between the Empire of Mechyrdia and the Ilkhan Commune. The Second Authoritariat invaded the Commune from the north, opening another front that allowed the Mechyrdians to counterattack into the eastern Tylan space. Fulkreyksk and Mechyrdian fleets met at the Ilkhai system, and the space of the Commune was partitioned into a northern, Fulkreykk-aligned Ilkhan Potentate, and a southern Mechyrdia-aligned Ilkhan Republic. A cold war ensued between Fulkreykk and Mechyrdia, resulting in the collapse of the Second Authoritariat. Now, Isarnareykk is left to either pick up the pieces, or forge its own legacy independent of the Fulkreyksk shadow."
 			}
 			p {
-				+"Isarnareykk is at a crossroads now. Shall they embrace democracy and join forces with Mechyrdia? Shall they give the Faurasitand a perpetual dictatorship to end the crisis? Or shall one of the Iunta's factions win out: the military reclaiming the former glory of Fulkreykk, or the tech barons to gain fatter and fatter profits?"
+				+"Isarnareykk is at a crossroads now. Shall they embrace democracy and join forces with Mechyrdia? Shall they give the Faurasitand a perpetual dictatorship to end the crisis? Or shall one of the Federation's factions win out: the military reclaiming the former glory of Fulkreykk, or the tech barons to gain fatter and fatter profits?"
 			}
 		},
 	),
