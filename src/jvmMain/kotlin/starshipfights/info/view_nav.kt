@@ -5,6 +5,7 @@ import kotlinx.html.DIV
 import kotlinx.html.a
 import kotlinx.html.span
 import kotlinx.html.style
+import starshipfights.CurrentConfiguration
 import starshipfights.auth.getUserAndSession
 import starshipfights.data.Id
 import starshipfights.data.auth.UserSession
@@ -64,7 +65,12 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 			NavLink("/logout", "Log Out", isPost = true, csrfUserCookie = session.id),
 		)
 } + listOf(
-	NavHead("External Information"),
+	NavHead("External Information")
+) + (CurrentConfiguration.discordClient?.serverInvite?.let {
+	listOf<NavItem>(
+		NavLink("https://discord.gg/$it", "Official Discord")
+	)
+} ?: emptyList()) + listOf(
 	NavLink("https://mechyrdia.netlify.app/", "Mechyrdia Infobase"),
 	NavLink("https://nationstates.net/mechyrdia", "Multiverse Access"),
 )

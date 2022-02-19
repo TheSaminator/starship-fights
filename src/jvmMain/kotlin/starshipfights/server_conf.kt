@@ -27,6 +27,7 @@ data class DiscordLogin(
 	val clientSecret: String,
 	
 	val ownerId: String,
+	val serverInvite: String,
 )
 
 private val DEFAULT_CONFIG = Configuration(
