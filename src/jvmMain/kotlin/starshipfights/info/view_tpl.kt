@@ -8,7 +8,7 @@ fun ApplicationCall.page(pageTitle: String? = null, navBar: List<NavItem>? = nul
 	head {
 		meta(charset = "utf-8")
 		
-		metadata(pageData, url())
+		metadata(pageData, url { host = "starshipfights.net" })
 		
 		link(rel = "icon", type = "image/svg+xml", href = "/static/images/icon.svg")
 		link(rel = "preconnect", href = "https://fonts.googleapis.com")

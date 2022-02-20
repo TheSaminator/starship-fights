@@ -494,7 +494,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 	
 	override fun installAuth(conf: Authentication.Configuration) {
 		conf.oauth("auth-oauth-discord") {
-			urlProvider = { discordLogin.redirectUrlOrigin.removeSuffix("/") + "/login/discord/callback" }
+			urlProvider = { "https://starshipfights.net/login/discord/callback" }
 			providerLookup = {
 				OAuthServerSettings.OAuth2ServerSettings(
 					name = "discord",

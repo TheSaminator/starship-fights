@@ -21,8 +21,6 @@ data class Configuration(
 
 @Serializable
 data class DiscordLogin(
-	val redirectUrlOrigin: String,
-	
 	val clientId: String,
 	//val clientPubKey: String,
 	val clientSecret: String,
