@@ -98,11 +98,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					}
 				}
 			}*/
-		},
-		PageMetadata(
-			user.profileName,
-			user.profileBio
-		)
+		}
 	) {
 		section {
 			h1 { +user.profileName }
@@ -446,10 +442,6 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 					NavLink("/admiral/${admiral.id}/manage", "Manage Admiral")
 				)
 			else emptyList()
-		),
-		PageMetadata(
-			admiral.name,
-			"${admiral.rank.getDisplayName(admiral.faction)} of the ${admiral.faction.navyName}"
 		)
 	) {
 		section {

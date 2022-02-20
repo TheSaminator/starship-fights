@@ -74,11 +74,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page(
 	shipType.fullerDisplayName,
 	standardNavBar(),
-	ShipViewSidebar(shipType),
-	PageMetadata(
-		shipType.displayName + "-class Starship",
-		"A ${shipType.weightClass.displayName} of the ${shipType.faction.navyName}"
-	)
+	ShipViewSidebar(shipType)
 ) {
 	section {
 		h1 { +shipType.fullDisplayName }

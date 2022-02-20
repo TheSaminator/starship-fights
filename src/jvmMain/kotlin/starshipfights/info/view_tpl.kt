@@ -1,19 +1,10 @@
 package starshipfights.info
 
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.util.*
 import kotlinx.html.*
 
-fun ApplicationCall.page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Sidebar? = null, pageData: PageMetadata = PageMetadata.default, content: MAIN.() -> Unit): HTML.() -> Unit = {
+fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Sidebar? = null, content: MAIN.() -> Unit): HTML.() -> Unit = {
 	head {
 		meta(charset = "utf-8")
-		
-		metadata(pageData, url {
-			host = "starshipfights.net"
-			protocol = URLProtocol.HTTPS
-			port = 443
-		})
 		
 		link(rel = "icon", type = "image/svg+xml", href = "/static/images/icon.svg")
 		link(rel = "preconnect", href = "https://fonts.googleapis.com")
