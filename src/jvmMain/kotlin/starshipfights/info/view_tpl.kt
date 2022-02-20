@@ -10,8 +10,9 @@ fun ApplicationCall.page(pageTitle: String? = null, navBar: List<NavItem>? = nul
 		meta(charset = "utf-8")
 		
 		metadata(pageData, url {
-			protocol = URLProtocol.HTTPS
 			host = "starshipfights.net"
+			protocol = URLProtocol.HTTPS
+			port = 443
 		})
 		
 		link(rel = "icon", type = "image/svg+xml", href = "/static/images/icon.svg")
