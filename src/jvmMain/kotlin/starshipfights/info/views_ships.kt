@@ -77,8 +77,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 	ShipViewSidebar(shipType),
 	PageMetadata(
 		shipType.displayName + "-class Starship",
-		"A ${shipType.weightClass.displayName} of the ${shipType.faction.navyName}",
-		PageMetadataType.Website
+		"A ${shipType.weightClass.displayName} of the ${shipType.faction.navyName}"
 	)
 ) {
 	section {

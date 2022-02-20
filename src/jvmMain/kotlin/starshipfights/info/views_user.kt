@@ -101,11 +101,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 		},
 		PageMetadata(
 			user.profileName,
-			user.profileBio,
-			PageMetadataType.Profile(
-				user.profileName,
-				null
-			)
+			user.profileBio
 		)
 	) {
 		section {
@@ -453,11 +449,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 		),
 		PageMetadata(
 			admiral.name,
-			"${admiral.rank.getDisplayName(admiral.faction)} of the ${admiral.faction.navyName}",
-			PageMetadataType.Profile(
-				admiral.name,
-				admiral.isFemale
-			)
+			"${admiral.rank.getDisplayName(admiral.faction)} of the ${admiral.faction.navyName}"
 		)
 	) {
 		section {
