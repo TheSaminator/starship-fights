@@ -16,7 +16,7 @@ private fun MAIN.devModeCallId(callId: String?) {
 	}
 }
 
-suspend fun ApplicationCall.error400(): HTML.() -> Unit = page("Bad Request", standardNavBar(), IndexSidebar) {
+suspend fun ApplicationCall.error400(): HTML.() -> Unit = page("Bad Request", standardNavBar()) {
 	section {
 		h1 { +"Bad Request" }
 		p { +"The request your browser sent was improperly formatted." }
@@ -24,7 +24,7 @@ suspend fun ApplicationCall.error400(): HTML.() -> Unit = page("Bad Request", st
 	devModeCallId(callId)
 }
 
-suspend fun ApplicationCall.error403(): HTML.() -> Unit = page("Not Allowed", standardNavBar(), IndexSidebar) {
+suspend fun ApplicationCall.error403(): HTML.() -> Unit = page("Not Allowed", standardNavBar()) {
 	section {
 		h1 { +"Not Allowed" }
 		p { +"You are not allowed to do that." }
@@ -32,7 +32,7 @@ suspend fun ApplicationCall.error403(): HTML.() -> Unit = page("Not Allowed", st
 	devModeCallId(callId)
 }
 
-suspend fun ApplicationCall.error404(): HTML.() -> Unit = page("Not Found", standardNavBar(), IndexSidebar) {
+suspend fun ApplicationCall.error404(): HTML.() -> Unit = page("Not Found", standardNavBar()) {
 	section {
 		h1 { +"Not Found" }
 		p { +"Unfortunately, we could not find what you were looking for." }
@@ -40,7 +40,7 @@ suspend fun ApplicationCall.error404(): HTML.() -> Unit = page("Not Found", stan
 	devModeCallId(callId)
 }
 
-suspend fun ApplicationCall.error503(): HTML.() -> Unit = page("Internal Error", standardNavBar(), IndexSidebar) {
+suspend fun ApplicationCall.error503(): HTML.() -> Unit = page("Internal Error", standardNavBar()) {
 	section {
 		h1 { +"Internal Error" }
 		p { +"The servers made a bit of a mistake. Please be patient while we fix our mess." }

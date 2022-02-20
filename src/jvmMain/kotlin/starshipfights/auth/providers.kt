@@ -438,9 +438,9 @@ object TestAuthProvider : AuthProvider {
 				
 				val errorMsg = call.request.queryParameters["error"]
 				
-				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
+				call.respondHtml(HttpStatusCode.OK, call.page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
-						+"This instance does not have Discord OAuth login set up. As a fallback, this authentication mode is used for testing."
+						+"This instance does not have Discord OAuth login set up. As a fallback, this authentication mode is used for testing only."
 					}
 				}) {
 					section {
@@ -516,7 +516,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 			get("/login") {
 				val errorMsg = call.request.queryParameters["error"]
 				
-				call.respondHtml(HttpStatusCode.OK, page("Login with Discord", call.standardNavBar(), null) {
+				call.respondHtml(HttpStatusCode.OK, call.page("Login with Discord", call.standardNavBar()) {
 					section {
 						p {
 							style = "text-align:center"

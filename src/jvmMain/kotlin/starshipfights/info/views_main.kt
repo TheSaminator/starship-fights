@@ -129,7 +129,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 suspend fun ApplicationCall.newUsersPage(): HTML.() -> Unit {
 	val newUsers = User.sorted(descending(User::registeredAt)).take(20).toList()
 	
-	return page("New Users", standardNavBar(), IndexSidebar) {
+	return page("New Users", standardNavBar()) {
 		section {
 			h1 { +"New Users" }
 			div {

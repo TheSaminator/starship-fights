@@ -1,8 +1,6 @@
 package starshipfights.info
 
-import kotlinx.html.A
-import kotlinx.html.FORM
-import kotlinx.html.hiddenInput
+import kotlinx.html.*
 import starshipfights.auth.CsrfProtector
 import starshipfights.data.Id
 import starshipfights.data.auth.UserSession
@@ -23,4 +21,18 @@ fun A.csrfToken(cookie: Id<UserSession>) {
 fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
 	name = CsrfProtector.csrfInputName
 	value = CsrfProtector.newNonce(cookie, this@csrfToken.action)
+}
+
+var META.property: String?
+	get() = attributes["property"]
+	set(value) {
+		if (value != null)
+			attributes["property"] = value
+		else
+			attributes.remove("property")
+	}
+
+fun HEAD.metaOG(property: String, content: String) = meta {
+	this.property = property
+	this.content = content
 }
