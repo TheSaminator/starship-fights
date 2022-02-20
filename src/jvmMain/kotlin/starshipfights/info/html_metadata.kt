@@ -17,8 +17,8 @@ data class PageMetadata(
 fun HEAD.metadata(pageMetadata: PageMetadata, url: String) {
 	metaOG("og:title", pageMetadata.title)
 	metaOG("og:description", pageMetadata.description)
-	metaOG("og:url", url)
+	metaOG("og:image", "https://starshipfights.net/static/images/embed-logo.png")
 	metaOG("og:type", "website")
 	metaOG("og:site_name", "Starship Fights")
-	metaOG("og:image", "https://starshipfights.net/static/images/embed-logo.png")
+	metaOG("og:url", url)
 }
