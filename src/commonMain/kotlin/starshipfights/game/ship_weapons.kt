@@ -112,7 +112,7 @@ sealed class ShipWeapon {
 			get() = 7_000.0
 		
 		override val areaRadius: Double
-			get() = 600.0
+			get() = 450.0
 		
 		override val firingArcs: Set<FiringArc>
 			get() = setOf(FiringArc.BOW)
@@ -132,7 +132,7 @@ sealed class ShipWeapon {
 			get() = 1
 		
 		override val maxRange: Double
-			get() = 2_500.0
+			get() = 2_000.0
 		
 		override val areaRadius: Double
 			get() = SHIP_BASE_SIZE
@@ -149,30 +149,30 @@ sealed class ShipWeapon {
 		override val groupLabel: String
 			get() = "Revelation Gun"
 		
-		override fun instantiate() = ShipWeaponInstance.RevelationGun(false)
+		override fun instantiate() = ShipWeaponInstance.RevelationGun(numShots)
 	}
 	
 	@Serializable
-	object PulseBeam : ShipWeapon(), AreaWeapon {
+	object EmpAntenna : ShipWeapon(), AreaWeapon {
 		override val numShots: Int
-			get() = 1
+			get() = 4
 		
 		override val maxRange: Double
-			get() = 3_500.0
+			get() = 3_000.0
 		
 		override val areaRadius: Double
-			get() = 900.0
+			get() = 650.0
 		
 		override val firingArcs: Set<FiringArc>
-			get() = FiringArc.FIRE_360
+			get() = setOf(FiringArc.BOW)
 		
 		override val isNormal: Boolean
 			get() = false
 		
 		override val groupLabel: String
-			get() = "Small Craft Disruptor"
+			get() = "EMP Emitter"
 		
-		override fun instantiate() = ShipWeaponInstance.PulseBeam(0)
+		override fun instantiate() = ShipWeaponInstance.EmpAntenna(numShots)
 	}
 }
 
@@ -184,11 +184,6 @@ enum class StrikeCraftWing {
 	
 	val iconUrl: String
 		get() = "/static/game/images/strike-craft-${toUrlSlug()}.svg"
-	
-	companion object {
-		val disruptedIconUrl: String
-			get() = "/static/game/images/small-craft-disrupted.svg"
-	}
 }
 
 @Serializable
@@ -219,15 +214,15 @@ sealed class ShipWeaponInstance {
 	}
 	
 	@Serializable
-	data class RevelationGun(val hasBeenUsed: Boolean) : ShipWeaponInstance() {
+	data class RevelationGun(val remainingShots: Int) : ShipWeaponInstance() {
 		override val weapon: ShipWeapon
 			get() = ShipWeapon.RevelationGun
 	}
 	
 	@Serializable
-	data class PulseBeam(val cooldown: Int) : ShipWeaponInstance() {
+	data class EmpAntenna(val remainingShots: Int) : ShipWeaponInstance() {
 		override val weapon: ShipWeapon
-			get() = ShipWeapon.PulseBeam
+			get() = ShipWeapon.EmpAntenna
 	}
 }
 
@@ -287,7 +282,14 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 	}
 	is ShipWeaponInstance.RevelationGun -> {
 		val newWeapons = armaments.weaponInstances + mapOf(
-			weaponId to weapon.copy(hasBeenUsed = true)
+			weaponId to weapon.copy(remainingShots = weapon.remainingShots - 1)
+		)
+		
+		copy(armaments = ShipInstanceArmaments(newWeapons), usedArmaments = usedArmaments + setOf(weaponId))
+	}
+	is ShipWeaponInstance.EmpAntenna -> {
+		val newWeapons = armaments.weaponInstances + mapOf(
+			weaponId to weapon.copy(remainingShots = weapon.remainingShots - 1)
 		)
 		
 		copy(armaments = ShipInstanceArmaments(newWeapons), usedArmaments = usedArmaments + setOf(weaponId))
@@ -339,9 +341,12 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 	is ShipWeaponInstance.RevelationGun -> {
 		ImpactResult.Destroyed(ShipWreck(ship, owner))
 	}
-	is ShipWeaponInstance.PulseBeam -> {
+	is ShipWeaponInstance.EmpAntenna -> {
 		ImpactResult.Damaged(
-			copy(strikeCraftDisrupted = true)
+			copy(
+				weaponAmount = (0..weaponAmount).random(),
+				shieldAmount = (0..shieldAmount).random(),
+			)
 		)
 	}
 }
@@ -352,8 +357,8 @@ fun canWeaponBeUsed(shipInstance: ShipInstance, shipWeapon: ShipWeaponInstance):
 	is ShipWeaponInstance.Lance -> shipWeapon.numCharges > 0
 	is ShipWeaponInstance.Torpedo -> true
 	is ShipWeaponInstance.MegaCannon -> shipWeapon.remainingShots > 0
-	is ShipWeaponInstance.RevelationGun -> !shipWeapon.hasBeenUsed
-	is ShipWeaponInstance.PulseBeam -> shipWeapon.cooldown == 0
+	is ShipWeaponInstance.RevelationGun -> shipWeapon.remainingShots > 0
+	is ShipWeaponInstance.EmpAntenna -> shipWeapon.remainingShots > 0
 }
 
 fun getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: GlobalSide): PickRequest = when (weapon) {

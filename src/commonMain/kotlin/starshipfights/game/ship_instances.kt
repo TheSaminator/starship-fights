@@ -26,7 +26,6 @@ data class ShipInstance(
 	
 	val fighterWings: List<ShipHangarWing> = emptyList(),
 	val bomberWings: List<ShipHangarWing> = emptyList(),
-	val strikeCraftDisrupted: Boolean = false
 ) {
 	val id: Id<ShipInstance>
 		get() = ship.id.reinterpret()

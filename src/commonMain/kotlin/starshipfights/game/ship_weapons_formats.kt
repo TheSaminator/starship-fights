@@ -128,7 +128,7 @@ fun fulkreykkShipWeapons(
 	}
 	
 	if (hasPulseBeam)
-		idCounter.add(weapons, ShipWeapon.PulseBeam)
+		idCounter.add(weapons, ShipWeapon.EmpAntenna)
 	
 	repeat(cannonSections) {
 		idCounter.add(weapons, ShipWeapon.Cannon(3, setOf(FiringArc.ABEAM_PORT), "Port cannon battery"))

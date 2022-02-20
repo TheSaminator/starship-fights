@@ -72,15 +72,6 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 				if (ship.bomberWings.isEmpty())
 					return@strikeBombard id to ship
 				
-				if (ship.strikeCraftDisrupted) {
-					(ship.fighterWings + ship.bomberWings).forEach {
-						val (carrierId, wingId) = it
-						val maxDamage = (newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-						strikeWingDamage[it] = Random.nextDouble() * maxDamage
-					}
-					return@strikeBombard id to ship
-				}
-				
 				val totalFighterHealth = ship.fighterWings.sumOf { (carrierId, wingId) ->
 					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
 				}

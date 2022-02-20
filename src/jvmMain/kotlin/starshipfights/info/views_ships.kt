@@ -25,7 +25,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 			+"The four main types of weapons in Starship Fights are cannons, lances, torpedoes, and strike craft. Cannons fire bolts of massive particles that have a chance to miss their target; this chance increases with distance and relative velocity. Lances fire a beam of massless particles that strike their target instantly, however lances also need to be charged by spending Weapons Power. Torpedoes are strong against unshielded hulls, guaranteed to deal two impacts, but are weak against shields, with only a 50% chance to hit if the target has its shields up. Strike craft come in two flavors: fighters and bombers. Fighters are used to defend your ships from bombers, while bombers are used to attack hostile ships."
 		}
 		p {
-			+"There are also three types of special weapons: the Mechyrdians' Mega Giga Cannon, the Masra Draetsen Revelation Gun, and the Isarnareyksk Small Craft Disruptor. The Mega Giga Cannon fires a long-range projectile that deals severe damage to enemy ships, but has a limited number of shots. The Revelation Gun instantly vaporizes an enemy ship, but can only be used once in a battle. The Small Craft Disruptor destroys all small craft within a certain targeted range."
+			+"There are also three types of special weapons: the Mechyrdians' Mega Giga Cannon, the Masra Draetsen Revelation Gun, and the Isarnareyksk EMP Emitter. The Mega Giga Cannon fires a long-range projectile that deals severe damage to enemy ships, but has a limited number of shots. The Revelation Gun instantly vaporizes an enemy ship, but can only be used once in a battle. The EMP Antenna depletes by a random amount the targeted ships' subsystem powers."
 		}
 		h3 { +"Subsystem Powering" }
 		p {
@@ -146,7 +146,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 						}
 					}
 					td {
-						weapon.minRange.takeIf { it != SHIP_BASE_SIZE }?.roundToInt()?.let { +"$it-" }
+						weapon.minRange.takeIf { it != SHIP_BASE_SIZE }?.let { +"${it.roundToInt()}-" }
 						+"${weapon.maxRange.roundToInt()} meters"
 						if (weapon is AreaWeapon) {
 							br
@@ -159,9 +159,9 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 							is ShipWeapon.Lance -> "$numShots lance" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.Torpedo -> "$numShots launcher" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.Hangar -> "$numShots strike wing" + (if (numShots == 1) "" else "s")
-							ShipWeapon.MegaCannon -> "Severe"
-							ShipWeapon.PulseBeam -> "Disables strike craft"
+							ShipWeapon.MegaCannon -> "Severely damages targets"
 							ShipWeapon.RevelationGun -> "Vaporizes target"
+							ShipWeapon.EmpAntenna -> "Randomly depletes targets' subsystems"
 						}
 					}
 				}

@@ -134,7 +134,7 @@ object GameUI {
 	suspend fun displayErrorMessage(message: String) {
 		errorMessages.textContent = message
 		
-		delay(3750)
+		delay(5000)
 		
 		errorMessages.textContent = ""
 	}
@@ -454,23 +454,6 @@ object GameUI {
 						}.toPercent()
 					}
 				}
-				
-				+Entities.nbsp
-				
-				if (ship.strikeCraftDisrupted) {
-					span {
-						val (borderColor, fillColor) = when (ship.owner.relativeTo(mySide)) {
-							LocalSide.BLUE -> "#39F" to "#135"
-							LocalSide.RED -> "#F66" to "#522"
-						}
-						
-						style = "display:inline-block;border:5px solid $borderColor;border-radius:15px;background-color:$fillColor;color:#fff"
-						
-						img(src = StrikeCraftWing.disruptedIconUrl, alt = "Strike Craft Disrupted") {
-							style = "width:1.125em"
-						}
-					}
-				}
 			}
 		}
 	}
@@ -736,8 +719,8 @@ object GameUI {
 							} + " (${weaponInstance.wingHealth.toPercent()})"
 							is ShipWeaponInstance.Torpedo -> "Torpedo" + (if (weaponIsPlural) "es" else "")
 							is ShipWeaponInstance.MegaCannon -> "Mega Giga Cannon (" + weaponInstance.remainingShots + ")"
-							is ShipWeaponInstance.RevelationGun -> "Revelation Gun"
-							is ShipWeaponInstance.PulseBeam -> "Small Craft Disruptor"
+							is ShipWeaponInstance.RevelationGun -> "Revelation Gun (" + weaponInstance.remainingShots + ")"
+							is ShipWeaponInstance.EmpAntenna -> "EMP Antenna (" + weaponInstance.remainingShots + ")"
 						}
 						
 						when (ability) {
