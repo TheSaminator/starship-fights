@@ -1,6 +1,7 @@
 package starshipfights.info
 
 import io.ktor.application.*
+import io.ktor.http.*
 import io.ktor.util.*
 import kotlinx.html.*
 
@@ -8,7 +9,10 @@ fun ApplicationCall.page(pageTitle: String? = null, navBar: List<NavItem>? = nul
 	head {
 		meta(charset = "utf-8")
 		
-		metadata(pageData, url { host = "starshipfights.net" })
+		metadata(pageData, url {
+			protocol = URLProtocol.HTTPS
+			host = "starshipfights.net"
+		})
 		
 		link(rel = "icon", type = "image/svg+xml", href = "/static/images/icon.svg")
 		link(rel = "preconnect", href = "https://fonts.googleapis.com")
