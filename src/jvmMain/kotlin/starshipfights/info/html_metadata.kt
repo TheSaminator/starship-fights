@@ -26,6 +26,10 @@ sealed class PageMetadataType {
 }
 
 fun HEAD.metadata(pageMetadata: PageMetadata, url: String) {
+	metaOG("og:title", pageMetadata.title)
+	metaOG("og:description", pageMetadata.description)
+	metaOG("og:url", url)
+	
 	when (pageMetadata.type) {
 		is PageMetadataType.Profile -> {
 			metaOG("og:type", "profile")
@@ -39,9 +43,6 @@ fun HEAD.metadata(pageMetadata: PageMetadata, url: String) {
 		}
 	}
 	
-	metaOG("og:title", pageMetadata.title)
-	metaOG("og:description", pageMetadata.description)
 	metaOG("og:site_name", "Starship Fights")
-	metaOG("og:url", url)
 	metaOG("og:image", "https://starshipfights.net/static/images/embed-logo.png")
 }
