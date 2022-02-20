@@ -84,7 +84,9 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 			while (true) {
 				val openGames = openSessions.use {
 					var index = 0
-					it.associateBy { "${++index}" }
+					it.filter { sess ->
+						sess.joinable.battleInfo.size <= inGameAdmiral.rank.maxBattleSize
+					}.associateBy { "${++index}" }
 				}
 				val joinListing = JoinListing(openGames.mapValues { (_, invitation) -> invitation.joinable })
 				sendObject(JoinListing.serializer(), joinListing)
