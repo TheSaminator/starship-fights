@@ -4,6 +4,7 @@ import io.ktor.application.*
 import io.ktor.auth.*
 import io.ktor.client.*
 import io.ktor.client.engine.apache.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.features.*
 import io.ktor.html.*
@@ -43,8 +44,13 @@ interface AuthProvider {
 	fun installRouting(conf: Routing)
 	
 	companion object Installer {
-		private val currentProvider: AuthProvider
+		private val newCurrentProvider: AuthProvider
 			get() = CurrentConfiguration.discordClient?.let { ProductionAuthProvider(it) } ?: TestAuthProvider
+		
+		private var cachedCurrentProvider: AuthProvider? = null
+		
+		val currentProvider: AuthProvider
+			get() = cachedCurrentProvider ?: newCurrentProvider.also { cachedCurrentProvider = it }
 		
 		fun install(into: Application) {
 			currentProvider.installApplication(into)
@@ -490,7 +496,13 @@ object TestAuthProvider : AuthProvider {
 }
 
 class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvider {
-	private val httpClient = HttpClient(Apache)
+	val httpClient = HttpClient(Apache) {
+		install(UserAgent) {
+			agent = discordLogin.userAgent
+		}
+		
+		install(RateLimit)
+	}
 	
 	override fun installAuth(conf: Authentication.Configuration) {
 		conf.oauth("auth-oauth-discord") {

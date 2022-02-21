@@ -21,8 +21,9 @@ data class Configuration(
 
 @Serializable
 data class DiscordLogin(
+	val userAgent: String,
+	
 	val clientId: String,
-	//val clientPubKey: String,
 	val clientSecret: String,
 	
 	val ownerId: String,
