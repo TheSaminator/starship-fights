@@ -60,8 +60,6 @@ kotlin {
 				implementation("org.slf4j:slf4j-api:1.7.32")
 				implementation("ch.qos.logback:logback-classic:1.2.10")
 				
-				implementation("io.github.instantwebp2p:tweetnacl-java:1.1.2")
-				
 				implementation("com.aventrix.jnanoid:jnanoid:2.0.0")
 				
 				implementation("org.litote.kmongo:kmongo-coroutine-serialization:4.4.0") {
