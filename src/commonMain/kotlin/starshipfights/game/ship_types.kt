@@ -49,12 +49,6 @@ enum class ShipWeightClass(
 		get() = this == COLOSSUS
 }
 
-val ShipWeightClass.buyPrice: Int
-	get() = basePointCost + 25
-
-val ShipWeightClass.sellPrice: Int
-	get() = basePointCost - 25
-
 enum class ShipType(
 	val faction: Faction,
 	val weightClass: ShipWeightClass,
