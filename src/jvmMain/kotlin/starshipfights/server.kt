@@ -73,6 +73,10 @@ fun main() {
 			exception<NullPointerException> {
 				call.respondHtml(HttpStatusCode.NotFound, call.error404())
 			}
+			exception<RateLimitException> {
+				call.respondHtml(HttpStatusCode.TooManyRequests, call.error429())
+			}
+			
 			exception<Throwable> {
 				call.respondHtml(HttpStatusCode.InternalServerError, call.error503())
 				throw it

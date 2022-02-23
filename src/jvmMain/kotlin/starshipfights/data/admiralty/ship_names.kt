@@ -253,6 +253,7 @@ object ShipNames {
 		"Catonsville",
 		"Ocean City",
 		"Philadelphia",
+		"Somerset",
 		"Pittsburgh",
 		
 		"Las Vegas",

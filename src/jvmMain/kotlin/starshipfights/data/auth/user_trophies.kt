@@ -36,7 +36,7 @@ object SiteDeveloperTrophy : UserTrophy() {
 	override fun ASIDE.render() {
 		p {
 			style = "text-align:center;border:2px solid #62a;padding:3px;background-color:#93f;color:#315;font-variant:small-caps;font-family:'Orbitron',sans-serif"
-			title = "This person helps with coding the site"
+			title = "This person helps with coding the game"
 			+"Site Developer"
 		}
 	}
@@ -80,9 +80,11 @@ data class SiteSupporterTrophy(val amountInUsCents: Int) : UserTrophy() {
 		get() = 3
 }
 
-fun User.getTrophies(): List<UserTrophy> =
+fun User.getTrophiesUnsorted(): Set<UserTrophy> =
 	(if (discordId == CurrentConfiguration.discordClient?.ownerId)
-		listOf(SiteOwnerTrophy)
-	else emptyList()) + (if (amountDonatedInUsCents > 0)
-		listOf(SiteSupporterTrophy(amountDonatedInUsCents))
-	else emptyList())
+		setOf(SiteOwnerTrophy)
+	else emptySet()) + (if (amountDonatedInUsCents > 0)
+		setOf(SiteSupporterTrophy(amountDonatedInUsCents))
+	else emptySet())
+
+fun User.getTrophies(): List<UserTrophy> = getTrophiesUnsorted().sorted()

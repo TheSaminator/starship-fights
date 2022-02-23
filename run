@@ -1,3 +1,0 @@
-#!/usr/bin/env sh
-
-screen -dmS starshipfights gradle runShadow

@@ -229,7 +229,7 @@ object AdmiralNames {
 	
 	private val caliboreseVowels = "aeiouy".toSet()
 	private fun randomCaliboreseName(isFemale: Boolean) = caliboreseNames.filter {
-		it.length < 8 && (if (isFemale) it.last() in caliboreseVowels else it.last() !in caliboreseVowels)
+		it.length < 8 && (isFemale == (it.last() in caliboreseVowels))
 	}.random() + " " + caliboreseNames.filter { it.length > 7 }.random()
 	
 	private val diadochiMaleNames = listOf(
@@ -294,13 +294,13 @@ object AdmiralNames {
 		"Murder",
 		"Gore",
 		"Daemon",
-		"Talon"
+		"Talon",
 	)
 	
 	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
 	
 	private val thedishMaleNames = listOf(
-		"Prethoris",
+		"Praethoris",
 		"Severus",
 		"Augast",
 		"Dagobar",
@@ -313,7 +313,9 @@ object AdmiralNames {
 		"Toval",
 		"Ivon",
 		"Belis",
-		"Jorh"
+		"Jorh",
+		"Svar",
+		"Alaric",
 	)
 	
 	private val thedishFemaleNames = listOf(
@@ -330,6 +332,7 @@ object AdmiralNames {
 		"Amberli",
 		"Alysia",
 		"Lenera",
+		"Demeter",
 	)
 	
 	private val thedishSurnames = listOf(
@@ -349,7 +352,10 @@ object AdmiralNames {
 		"Arvi",
 		"Galvus",
 		"Voss",
-		"Mandanof"
+		"Mandanof",
+		"Ursali",
+		"Vytunn",
+		"Quesrinn",
 	)
 	
 	private fun randomThedishName(isFemale: Boolean) = (if (isFemale) thedishFemaleNames else thedishMaleNames).random() + " " + thedishSurnames.random()

@@ -6,7 +6,7 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.sessions.*
 import io.ktor.util.*
-import starshipfights.ForbiddenException
+import starshipfights.forbid
 import starshipfights.data.Id
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
@@ -73,5 +73,5 @@ suspend fun ApplicationCall.receiveValidatedParameters(): Parameters {
 	if (CsrfProtector.verifyNonce(csrfToken, sessionId, request.uri))
 		return formInput
 	else
-		throw ForbiddenException()
+		forbid()
 }

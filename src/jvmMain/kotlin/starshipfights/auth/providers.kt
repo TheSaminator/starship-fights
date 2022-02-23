@@ -161,7 +161,7 @@ interface AuthProvider {
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!
 					
-					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					if (admiral.owningUser != currentUser) forbid()
 					
 					val newAdmiral = admiral.copy(
 						name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
@@ -189,8 +189,8 @@ interface AuthProvider {
 						admiral.await() to ship.await()
 					}
 					
-					if (admiral.owningUser != currentUser) throw ForbiddenException()
-					if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+					if (admiral.owningUser != currentUser) forbid()
+					if (ship.owningAdmiral != admiralId) forbid()
 					
 					val newName = formParams["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
 					ShipInDrydock.set(shipId, setValue(ShipInDrydock::name, newName))
@@ -216,8 +216,8 @@ interface AuthProvider {
 						admiral.await() to ship.await()
 					}
 					
-					if (admiral.owningUser != currentUser) throw ForbiddenException()
-					if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+					if (admiral.owningUser != currentUser) forbid()
+					if (ship.owningAdmiral != admiralId) forbid()
 					
 					if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
 					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
@@ -241,7 +241,7 @@ interface AuthProvider {
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!
 					
-					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					if (admiral.owningUser != currentUser) forbid()
 					
 					val shipType = call.parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
 					
@@ -288,7 +288,7 @@ interface AuthProvider {
 					val admiralId = call.parameters["id"]?.let { Id<Admiral>(it) }!!
 					val admiral = Admiral.get(admiralId)!!
 					
-					if (admiral.owningUser != currentUser) throw ForbiddenException()
+					if (admiral.owningUser != currentUser) forbid()
 					
 					coroutineScope {
 						launch { Admiral.del(admiralId) }
@@ -555,7 +555,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 				}
 				
 				get("/login/discord/callback") {
-					val userAgent = call.request.userAgent() ?: throw ForbiddenException()
+					val userAgent = call.request.userAgent() ?: forbid()
 					val principal: OAuthAccessTokenResponse.OAuth2 = call.principal() ?: redirect("/login")
 					val userInfoJson = httpClient.get<String>("https://discord.com/api/users/@me") {
 						headers {

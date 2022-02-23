@@ -20,7 +20,7 @@ enum class Faction(
 		navyName = "Mechyrdian Star Fleet",
 		polityName = "Empire of Mechyrdia",
 		demonymSingular = "Mechyrdian",
-		currencyName = "throne",
+		currencyName = "thrones",
 		shipPrefix = "CMS ", // Ciarstuos Mehurdiasi Štelnau
 		blurbDesc = {
 			p {
@@ -46,7 +46,7 @@ enum class Faction(
 		navyName = "Masra Draetsen Khoy'qan",
 		polityName = "Diadochus Masra Draetsen",
 		demonymSingular = "Diadochi",
-		currencyName = "sylaph",
+		currencyName = "sylaphs",
 		shipPrefix = "", // The Diadochi don't use ship prefixes
 		blurbDesc = {
 			p {
@@ -66,8 +66,8 @@ enum class Faction(
 		navyName = "Isarnareyksk Styurnamariyn",
 		polityName = "Isarnareyksk Federation",
 		demonymSingular = "Isarnareyksk",
-		currencyName = "mark",
-		shipPrefix = "ISMS ", // Isarnareyksk StyurnaMariyn nu Skyf
+		currencyName = "marks",
+		shipPrefix = "ISS ", // Isarnareyksk Styurnamariyn nu Skyf
 		blurbDesc = {
 			p {
 				+"The Isarnareyksk Federation is the largest and most populous successor state to the Fulkreyksk Authoritariat. A shadow of its former glory, Isarnareykk is led by Faurasitand Demeter Ursalia and ruled by dissenting factions such as the tech barons and the revanchist military, that hate each other more than they hate Ursalia."
@@ -92,8 +92,8 @@ enum class Faction(
 		navyName = "Imperial States Space Force",
 		polityName = "Imperial States of America",
 		demonymSingular = "American",
-		currencyName = "dollar",
-		shipPrefix = "ISFC ", // Imperial Space Force Craft
+		currencyName = "dollars",
+		shipPrefix = "ASC ", // American Space Craft
 		blurbDesc = {
 			p {
 				+"The Imperial States of America was once the political hyperpower of Earth and beyond, and the ideological bulwark of the Caesarism of its time. They were strong, they were proud... they were hated. Hated to the point that entire nations fled from Earth and colonized the stars just to escape American hegemony."

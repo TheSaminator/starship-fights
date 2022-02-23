@@ -10,7 +10,7 @@ import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.gt
 import org.litote.kmongo.or
-import starshipfights.ForbiddenException
+import starshipfights.forbid
 import starshipfights.auth.*
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
@@ -558,7 +558,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
-	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	if (admiral.owningUser != currentUser) forbid()
 	
 	val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 	
@@ -640,7 +640,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		section {
 			h2 { +"Manage Fleet" }
 			p {
-				+"${admiral.fullName} currently owns ${admiral.money} ${admiral.faction.currencyName}s, and earns ${admiral.rank.dailyWage} ${admiral.faction.currencyName}s every day."
+				+"${admiral.fullName} currently owns ${admiral.money} ${admiral.faction.currencyName}, and earns ${admiral.rank.dailyWage} ${admiral.faction.currencyName}s every day."
 			}
 			table {
 				tr {
@@ -679,7 +679,6 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+ship.shipType.weightClass.sellPrice.toString()
 							+" "
 							+admiral.faction.currencyName
-							+"s"
 							if (ship.status == DrydockStatus.Ready && !ship.shipType.weightClass.isUnique) {
 								br
 								a(href = "/admiral/${admiralId}/sell/${ship.id}") { +"Sell" }
@@ -703,7 +702,6 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+st.weightClass.buyPrice.toString()
 							+" "
 							+admiral.faction.currencyName
-							+"s"
 							br
 							a(href = "/admiral/${admiralId}/buy/${st.toUrlSlug()}") { +"Buy" }
 						}
@@ -727,8 +725,8 @@ suspend fun ApplicationCall.renameShipPage(): HTML.() -> Unit {
 		admiral.await() to ship.await()
 	}
 	
-	if (admiral.owningUser != currentUser) throw ForbiddenException()
-	if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+	if (admiral.owningUser != currentUser) forbid()
+	if (ship.owningAdmiral != admiralId) forbid()
 	
 	return page("Renaming Ship", null, null) {
 		section {
@@ -777,8 +775,8 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 		admiral.await() to ship.await()
 	}
 	
-	if (admiral.owningUser != currentUser) throw ForbiddenException()
-	if (ship.owningAdmiral != admiralId) throw ForbiddenException()
+	if (admiral.owningUser != currentUser) forbid()
+	if (ship.owningAdmiral != admiralId) forbid()
 	
 	if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
 	if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
@@ -789,7 +787,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} ${admiral.faction.currencyName}s."
+				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} ${admiral.faction.currencyName}."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {
@@ -813,7 +811,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
-	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	if (admiral.owningUser != currentUser) forbid()
 	
 	val shipType = parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
 	
@@ -827,7 +825,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 			section {
 				h1 { +"Too Expensive" }
 				p {
-					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}s, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}s."
+					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}s."
 				}
 				form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 					submitInput {
@@ -844,7 +842,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}s."
+				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {
@@ -868,7 +866,7 @@ suspend fun ApplicationCall.deleteAdmiralConfirmPage(): HTML.() -> Unit {
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
 	val admiral = Admiral.get(admiralId)!!
 	
-	if (admiral.owningUser != currentUser) throw ForbiddenException()
+	if (admiral.owningUser != currentUser) forbid()
 	
 	return page(
 		"Are You Sure?", null, null

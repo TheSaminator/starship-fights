@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import starshipfights.rateLimit
 import kotlin.math.roundToLong
 
 class RateLimit(
@@ -46,6 +47,8 @@ class RateLimit(
 					val jsonBody = context.response.receive<String>()
 					val rateLimitedResponse = feature.jsonCodec.decodeFromString(RateLimitedResponse.serializer(), jsonBody)
 					feature.resetAfter = rateLimitedResponse.retryAfter
+					
+					rateLimit()
 				} else {
 					context.response.headers[feature.remainingHeader]?.toIntOrNull()?.let {
 						feature.remainingRequests = it
