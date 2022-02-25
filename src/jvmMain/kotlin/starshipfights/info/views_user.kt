@@ -640,7 +640,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		section {
 			h2 { +"Manage Fleet" }
 			p {
-				+"${admiral.fullName} currently owns ${admiral.money} ${admiral.faction.currencyName}, and earns ${admiral.rank.dailyWage} ${admiral.faction.currencyName}s every day."
+				+"${admiral.fullName} currently owns ${admiral.money} ${admiral.faction.currencyName}, and earns ${admiral.rank.dailyWage} ${admiral.faction.currencyName} every day."
 			}
 			table {
 				tr {
@@ -825,7 +825,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 			section {
 				h1 { +"Too Expensive" }
 				p {
-					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}s."
+					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}."
 				}
 				form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 					submitInput {
