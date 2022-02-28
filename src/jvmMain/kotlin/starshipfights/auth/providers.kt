@@ -19,17 +19,21 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.html.*
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.Serializable
 import org.litote.kmongo.*
-import starshipfights.*
+import starshipfights.CurrentConfiguration
+import starshipfights.DiscordLogin
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.createNonce
-import starshipfights.game.*
+import starshipfights.forbid
+import starshipfights.game.Faction
+import starshipfights.game.ShipType
+import starshipfights.game.toUrlSlug
 import starshipfights.info.*
+import starshipfights.redirect
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
@@ -501,7 +505,9 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 			agent = discordLogin.userAgent
 		}
 		
-		install(RateLimit)
+		install(RateLimit) {
+			jsonCodec = JsonClientCodec
+		}
 	}
 	
 	override fun installAuth(conf: Authentication.Configuration) {
@@ -563,11 +569,8 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 						}
 					}
 					
-					val userInfo = JsonConfigCodec.parseToJsonElement(userInfoJson) as? JsonObject ?: redirect("/login")
-					val discordId = (userInfo["id"] as? JsonPrimitive)?.content ?: redirect("/login")
-					val discordUsername = (userInfo["username"] as? JsonPrimitive)?.content ?: redirect("/login")
-					val discordDiscriminator = (userInfo["discriminator"] as? JsonPrimitive)?.content ?: redirect("/login")
-					val discordAvatar = (userInfo["avatar"] as? JsonPrimitive)?.content
+					val userInfo = JsonClientCodec.decodeFromString(DiscordUserInfo.serializer(), userInfoJson)
+					val (discordId, discordUsername, discordDiscriminator, discordAvatar) = userInfo
 					
 					var redirectTo = "/me"
 					
@@ -591,7 +594,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 					
 					val userSession = UserSession(
 						user = user.id,
-						clientAddresses = listOf(call.request.origin.remoteHost),
+						clientAddresses = if (user.logIpAddresses) listOf(call.request.origin.remoteHost) else emptyList(),
 						userAgent = userAgent,
 						expiration = Instant.now().plus(1, ChronoUnit.HOURS)
 					)
@@ -620,3 +623,11 @@ object StateParameterManager : NonceManager {
 		return nonces.remove(nonce)
 	}
 }
+
+@Serializable
+data class DiscordUserInfo(
+	val id: String,
+	val username: String,
+	val discriminator: String,
+	val avatar: String
+)

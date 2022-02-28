@@ -6,6 +6,7 @@ import io.ktor.http.*
 import io.ktor.request.*
 import io.ktor.sessions.*
 import io.ktor.util.*
+import kotlinx.serialization.json.Json
 import starshipfights.forbid
 import starshipfights.data.Id
 import starshipfights.data.auth.User
@@ -20,7 +21,7 @@ suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.
 }
 
 suspend fun UserSession.renewed(clientAddress: String) = copy(
-	expiration = Instant.now().plus(1, ChronoUnit.HOURS),
+	expiration = Instant.now().plus(2, ChronoUnit.HOURS),
 	clientAddresses = if (User.get(user)?.logIpAddresses != true)
 		emptyList()
 	else if (clientAddresses.lastOrNull() != clientAddress)
@@ -74,4 +75,8 @@ suspend fun ApplicationCall.receiveValidatedParameters(): Parameters {
 		return formInput
 	else
 		forbid()
+}
+
+val JsonClientCodec = Json {
+	ignoreUnknownKeys = true
 }

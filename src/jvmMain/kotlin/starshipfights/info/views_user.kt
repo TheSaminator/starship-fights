@@ -10,11 +10,11 @@ import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.gt
 import org.litote.kmongo.or
-import starshipfights.forbid
 import starshipfights.auth.*
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
 import starshipfights.data.auth.*
+import starshipfights.forbid
 import starshipfights.game.*
 import starshipfights.redirect
 import java.time.Instant
@@ -634,6 +634,32 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/delete") {
 				submitInput(classes = "evil") {
 					value = "Delete this Admiral"
+				}
+			}
+		}
+		section {
+			val currRank = admiral.rank
+			if (currRank.ordinal < AdmiralRank.values().size - 1) {
+				val nextRank = AdmiralRank.values()[currRank.ordinal + 1]
+				val reqAcumen = nextRank.minAcumen - currRank.minAcumen
+				val hasAcumen = admiral.acumen - currRank.minAcumen
+				
+				label {
+					h2 { +"Progress to Promotion" }
+					progress {
+						style = "width:100%;box-sizing:border-box"
+						max = "$reqAcumen"
+						value = "$hasAcumen"
+						+"$hasAcumen/$reqAcumen"
+					}
+				}
+				p {
+					+"${admiral.fullName} is $hasAcumen/$reqAcumen Acumen away from being promoted to ${nextRank.getDisplayName(admiral.faction)}"
+				}
+			} else {
+				h2 { +"Progress to Promotion" }
+				p {
+					+"${admiral.fullName} is at the maximum rank possible for the ${admiral.faction.navyName}."
 				}
 			}
 		}

@@ -67,6 +67,5 @@ class RateLimit(
 data class RateLimitedResponse(
 	val message: String,
 	@SerialName("retry_after")
-	val retryAfter: Double,
-	val global: Boolean
+	val retryAfter: Double
 )
