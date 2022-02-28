@@ -654,7 +654,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					}
 				}
 				p {
-					+"${admiral.fullName} is $hasAcumen/$reqAcumen Acumen away from being promoted to ${nextRank.getDisplayName(admiral.faction)}"
+					+"${admiral.fullName} is $hasAcumen/$reqAcumen Acumen away from being promoted to ${nextRank.getDisplayName(admiral.faction)}."
 				}
 			} else {
 				h2 { +"Progress to Promotion" }
