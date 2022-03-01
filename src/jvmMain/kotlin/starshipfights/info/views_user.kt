@@ -24,7 +24,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val user = User.get(userId)!!
 	val currentUser = getUserSession()
 	
-	val isCurrentUser = user.id == currentUser?.id
+	val isCurrentUser = user.id == currentUser?.user
 	val hasOpenSessions = UserSession.locate(
 		and(UserSession::user eq userId, UserSession::expiration gt Instant.now())
 	) != null
