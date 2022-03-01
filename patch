@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+screen -S starshipfights -X quit
+git pull
+gradle shadowJar
+screen -dmS starshipfights gradle runShadow
