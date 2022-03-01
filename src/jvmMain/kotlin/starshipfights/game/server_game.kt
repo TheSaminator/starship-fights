@@ -15,7 +15,6 @@ import starshipfights.data.DocumentTable
 import starshipfights.data.Id
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
-import starshipfights.data.admiralty.DrydockStatus
 import starshipfights.data.admiralty.ShipInDrydock
 import starshipfights.data.auth.User
 import starshipfights.data.createToken
@@ -124,6 +123,8 @@ class GameSession(gameState: GameState) {
 					errorMessageChannel(player).send(result.message)
 				}
 				is GameEvent.GameEnd -> {
+					if (_gameStart.isActive)
+						_gameStart.cancel()
 					_gameEnd.complete(result)
 				}
 			}
@@ -190,10 +191,10 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 private const val SHIP_POINTS_PER_ACUMEN = 5
 
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
-	val destroyedShipStatus = DrydockStatus.InRepair(endedAt.plus(12, ChronoUnit.HOURS))
-	val damagedShipStatus = DrydockStatus.InRepair(endedAt.plus(8, ChronoUnit.HOURS))
-	val intactShipStatus = DrydockStatus.InRepair(endedAt.plus(4, ChronoUnit.HOURS))
-	val escapedShipStatus = DrydockStatus.InRepair(endedAt.plus(4, ChronoUnit.HOURS))
+	val destroyedShipReadyAt = endedAt.plus(12, ChronoUnit.HOURS)
+	val damagedShipReadyAt = endedAt.plus(9, ChronoUnit.HOURS)
+	val intactShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
+	val escapedShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
 	
 	val shipWrecks = gameState.destroyedShips
 	val ships = gameState.ships
@@ -227,16 +228,16 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	
 	coroutineScope {
 		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` destroyedShips, setValue(ShipInDrydock::status, destroyedShipStatus))
+			ShipInDrydock.update(ShipInDrydock::id `in` destroyedShips, setValue(ShipInDrydock::readyAt, destroyedShipReadyAt))
 		}
 		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::status, damagedShipStatus))
+			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::readyAt, damagedShipReadyAt))
 		}
 		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` intactShips, setValue(ShipInDrydock::status, intactShipStatus))
+			ShipInDrydock.update(ShipInDrydock::id `in` intactShips, setValue(ShipInDrydock::readyAt, intactShipReadyAt))
 		}
 		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::status, escapedShipStatus))
+			ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::readyAt, escapedShipReadyAt))
 		}
 		
 		launch {

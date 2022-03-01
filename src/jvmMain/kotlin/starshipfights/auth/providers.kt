@@ -223,7 +223,7 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) forbid()
 					if (ship.owningAdmiral != admiralId) forbid()
 					
-					if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
+					if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage")
 					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
 					
 					coroutineScope {
@@ -269,7 +269,7 @@ interface AuthProvider {
 					val newShip = ShipInDrydock(
 						name = newShipName,
 						shipType = shipType,
-						status = DrydockStatus.Ready,
+						readyAt = Instant.now().plus(6, ChronoUnit.HOURS),
 						owningAdmiral = admiralId
 					)
 					

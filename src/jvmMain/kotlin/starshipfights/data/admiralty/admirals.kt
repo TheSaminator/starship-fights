@@ -6,10 +6,7 @@ import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import org.bson.conversions.Bson
-import org.litote.kmongo.and
-import org.litote.kmongo.eq
-import org.litote.kmongo.gte
-import org.litote.kmongo.lt
+import org.litote.kmongo.*
 import starshipfights.data.DataDocument
 import starshipfights.data.DocumentTable
 import starshipfights.data.Id
@@ -53,26 +50,14 @@ infix fun AdmiralRank.Companion.eq(rank: AdmiralRank): Bson = when (rank.ordinal
 }
 
 @Serializable
-sealed class DrydockStatus {
-	@Serializable
-	object Ready : DrydockStatus()
-	
-	@Serializable
-	data class InRepair(val until: @Contextual Instant) : DrydockStatus()
-}
-
-@Serializable
 data class ShipInDrydock(
 	@SerialName("_id")
 	override val id: Id<ShipInDrydock> = Id(),
 	val name: String,
 	val shipType: ShipType,
-	val status: DrydockStatus,
+	val readyAt: @Contextual Instant,
 	val owningAdmiral: Id<Admiral>
 ) : DataDocument<ShipInDrydock> {
-	val isReady: Boolean
-		get() = status == DrydockStatus.Ready
-	
 	val shipData: Ship
 		get() = Ship(id.reinterpret(), name, shipType)
 	
@@ -105,11 +90,14 @@ suspend fun getInGameAdmiral(admiralId: Id<InGameAdmiral>) = Admiral.get(admiral
 	}
 }
 
-suspend fun getAdmiralsShips(admiralId: Id<Admiral>) = ShipInDrydock
-	.filter(ShipInDrydock::owningAdmiral eq admiralId)
-	.toList()
-	.filter { it.isReady }
-	.associate { it.shipData.id to it.shipData }
+suspend fun getAdmiralsShips(admiralId: Id<Admiral>): Map<Id<Ship>, Ship> {
+	val now = Instant.now()
+	
+	return ShipInDrydock
+		.filter(and(ShipInDrydock::owningAdmiral eq admiralId, ShipInDrydock::readyAt lte now))
+		.toList()
+		.associate { it.shipData.id to it.shipData }
+}
 
 fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.values()
 	.flatMap { swc ->
@@ -125,6 +113,8 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 			}
 	}
 	.let { shipTypes ->
+		val now = Instant.now().minusMillis(100L)
+		
 		val shipNames = mutableSetOf<String>()
 		shipTypes.mapNotNull { st ->
 			newShipName(st.faction, st.weightClass, shipNames)?.let { name ->
@@ -132,7 +122,7 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 					id = Id(),
 					name = name,
 					shipType = st,
-					status = DrydockStatus.Ready,
+					readyAt = now,
 					owningAdmiral = admiral.id
 				)
 			}

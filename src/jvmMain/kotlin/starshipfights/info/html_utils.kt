@@ -22,17 +22,3 @@ fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
 	name = CsrfProtector.csrfInputName
 	value = CsrfProtector.newNonce(cookie, this@csrfToken.action)
 }
-
-var META.property: String?
-	get() = attributes["property"]
-	set(value) {
-		if (value != null)
-			attributes["property"] = value
-		else
-			attributes.remove("property")
-	}
-
-fun HEAD.metaOG(property: String, content: String) = meta {
-	this.property = property
-	this.content = content
-}

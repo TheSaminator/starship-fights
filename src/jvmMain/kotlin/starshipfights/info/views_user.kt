@@ -461,6 +461,8 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 					th { +"Ship Class" }
 					th { +"Ship Status" }
 				}
+				
+				val now = Instant.now()
 				ships.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }.forEach { ship ->
 					tr {
 						td { +ship.shipData.fullName }
@@ -470,16 +472,21 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 							}
 						}
 						td {
-							when (ship.status) {
-								DrydockStatus.Ready -> +"Ready"
-								is DrydockStatus.InRepair -> {
-									+"Repairing"
-									br
-									+"Will be ready at "
-									span(classes = "moment") {
-										style = "display:none"
-										+ship.status.until.toEpochMilli().toString()
-									}
+							val shipReadyAt = ship.readyAt
+							if (shipReadyAt <= now) {
+								+"Ready"
+								br
+								+"(since "
+								span(classes = "moment") {
+									style = "display:none"
+									+shipReadyAt.toEpochMilli().toString()
+								}
+								+")"
+							} else {
+								+"Will be ready at "
+								span(classes = "moment") {
+									style = "display:none"
+									+shipReadyAt.toEpochMilli().toString()
 								}
 							}
 						}
@@ -675,6 +682,8 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					th { +"Ship Status" }
 					th { +"Ship Value" }
 				}
+				
+				val now = Instant.now()
 				ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }.forEach { ship ->
 					tr {
 						td {
@@ -688,16 +697,21 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							}
 						}
 						td {
-							when (ship.status) {
-								DrydockStatus.Ready -> +"Ready"
-								is DrydockStatus.InRepair -> {
-									+"Repairing"
-									br
-									+"Will be ready at "
-									span(classes = "moment") {
-										style = "display:none"
-										+ship.status.until.toEpochMilli().toString()
-									}
+							val shipReadyAt = ship.readyAt
+							if (shipReadyAt <= now) {
+								+"Ready"
+								br
+								+"(since "
+								span(classes = "moment") {
+									style = "display:none"
+									+shipReadyAt.toEpochMilli().toString()
+								}
+								+")"
+							} else {
+								+"Will be ready at "
+								span(classes = "moment") {
+									style = "display:none"
+									+shipReadyAt.toEpochMilli().toString()
 								}
 							}
 						}
@@ -705,7 +719,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+ship.shipType.weightClass.sellPrice.toString()
 							+" "
 							+admiral.faction.currencyName
-							if (ship.status == DrydockStatus.Ready && !ship.shipType.weightClass.isUnique) {
+							if (ship.readyAt <= now && !ship.shipType.weightClass.isUnique) {
 								br
 								a(href = "/admiral/${admiralId}/sell/${ship.id}") { +"Sell" }
 							}
@@ -804,7 +818,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 	if (admiral.owningUser != currentUser) forbid()
 	if (ship.owningAdmiral != admiralId) forbid()
 	
-	if (ship.status != DrydockStatus.Ready) redirect("/admiral/${admiralId}/manage")
+	if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage")
 	if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
 	
 	return page(

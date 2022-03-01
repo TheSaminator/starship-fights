@@ -1,11 +1,11 @@
 package starshipfights.data
 
 import kotlinx.coroutines.*
-import org.litote.kmongo.div
 import org.litote.kmongo.inc
-import org.litote.kmongo.lt
-import org.litote.kmongo.setValue
-import starshipfights.data.admiralty.*
+import starshipfights.data.admiralty.Admiral
+import starshipfights.data.admiralty.BattleRecord
+import starshipfights.data.admiralty.ShipInDrydock
+import starshipfights.data.admiralty.eq
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.game.AdmiralRank
@@ -30,17 +30,6 @@ object DataRoutines {
 		UserSession.initialize()
 		
 		return scope.launch {
-			// Repair ships
-			launch {
-				while (currentCoroutineContext().isActive) {
-					launch {
-						val now = Instant.now()
-						ShipInDrydock.update(ShipInDrydock::status / DrydockStatus.InRepair::until lt now, setValue(ShipInDrydock::status, DrydockStatus.Ready))
-					}
-					delay(300_000)
-				}
-			}
-			
 			// Pay admirals
 			launch {
 				var prevTime = Instant.now().atZone(ZoneId.systemDefault())
