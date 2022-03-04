@@ -181,6 +181,8 @@ private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>, error
 }
 
 suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
+	interruptExit = true
+	
 	initializePicking()
 	
 	mySide = side
@@ -201,6 +203,7 @@ suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 		val finalMessage = connectionJob.await()
 		renderingJob.cancel()
 		
+		interruptExit = false
 		Popup.GameOver(finalMessage, gameState.value).display()
 	}
 }

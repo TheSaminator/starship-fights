@@ -45,6 +45,8 @@ suspend fun setupBackground() {
 }
 
 private suspend fun enterGame(connectToken: String): Nothing {
+	interruptExit = false
+	
 	document.body!!.append.form(action = "/play", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
 		style = "display:none"
 		hiddenInput {
@@ -116,6 +118,8 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 }
 
 suspend fun matchmakingMain(admirals: List<InGameAdmiral>) {
+	interruptExit = true
+	
 	coroutineScope {
 		launch { setupBackground() }
 		launch { usePlayerLogin(admirals) }

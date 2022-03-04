@@ -69,7 +69,6 @@ fun mechyrdiaShipWeapons(
 
 fun diadochiShipWeapons(
 	torpedoes: Int,
-	foreLances: Int,
 	hasRevelationGun: Boolean,
 	
 	cannonSections: Int,
@@ -83,8 +82,6 @@ fun diadochiShipWeapons(
 	repeat(torpedoes) {
 		idCounter.add(weapons, ShipWeapon.Torpedo(setOf(FiringArc.BOW), "Fore torpedo launchers"))
 	}
-	
-	idCounter.add(weapons, ShipWeapon.Lance(foreLances, setOf(FiringArc.BOW), "Fore lance battery"))
 	
 	if (hasRevelationGun)
 		idCounter.add(weapons, ShipWeapon.RevelationGun)
@@ -107,7 +104,7 @@ fun diadochiShipWeapons(
 	}
 	
 	repeat(dorsalLances) {
-		idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_BROADSIDE, "Dorsal lance turrets"))
+		idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_FORE_270, "Dorsal lance batteries"))
 	}
 	
 	return ShipArmaments(weapons)

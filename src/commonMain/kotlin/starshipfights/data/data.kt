@@ -10,7 +10,7 @@ import kotlin.jvm.JvmInline
 
 @JvmInline
 @Serializable(with = IdSerializer::class)
-value class Id<T>(val id: String) {
+value class Id<@Suppress("unused") T>(val id: String) {
 	override fun toString() = id
 	
 	fun <U> reinterpret() = Id<U>(id)

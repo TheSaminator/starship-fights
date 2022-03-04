@@ -50,6 +50,9 @@ val ShipWeightClass.reactor: ShipReactor
 		ShipWeightClass.GRAND_CRUISER -> ShipReactor(6, 4)
 		ShipWeightClass.COLOSSUS -> ShipReactor(9, 6)
 		
+		ShipWeightClass.AUXILIARY_SHIP -> ShipReactor(2, 1)
+		ShipWeightClass.LIGHT_CRUISER -> ShipReactor(3, 1)
+		ShipWeightClass.MEDIUM_CRUISER -> ShipReactor(4, 2)
 		ShipWeightClass.HEAVY_CRUISER -> ShipReactor(6, 3)
 		
 		ShipWeightClass.FRIGATE -> ShipReactor(4, 1)
@@ -74,6 +77,9 @@ val ShipWeightClass.movement: ShipMovement
 		ShipWeightClass.GRAND_CRUISER -> ShipMovement(PI / 4, 600.0)
 		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 400.0)
 		
+		ShipWeightClass.AUXILIARY_SHIP -> ShipMovement(PI / 2, 800.0)
+		ShipWeightClass.LIGHT_CRUISER -> ShipMovement(PI / 2, 700.0)
+		ShipWeightClass.MEDIUM_CRUISER -> ShipMovement(PI / 3, 600.0)
 		ShipWeightClass.HEAVY_CRUISER -> ShipMovement(PI / 3, 500.0)
 		
 		ShipWeightClass.FRIGATE -> ShipMovement(PI * 2 / 3, 1000.0)
@@ -84,22 +90,26 @@ val ShipWeightClass.movement: ShipMovement
 @Serializable
 data class ShipDurability(
 	val maxHullPoints: Int,
+	val turretDefense: Double,
 )
 
 val ShipWeightClass.durability: ShipDurability
 	get() = when (this) {
-		ShipWeightClass.ESCORT -> ShipDurability(2)
-		ShipWeightClass.DESTROYER -> ShipDurability(4)
-		ShipWeightClass.CRUISER -> ShipDurability(6)
-		ShipWeightClass.BATTLECRUISER -> ShipDurability(7)
-		ShipWeightClass.BATTLESHIP -> ShipDurability(9)
+		ShipWeightClass.ESCORT -> ShipDurability(2, 0.5)
+		ShipWeightClass.DESTROYER -> ShipDurability(4, 0.5)
+		ShipWeightClass.CRUISER -> ShipDurability(6, 1.0)
+		ShipWeightClass.BATTLECRUISER -> ShipDurability(7, 1.0)
+		ShipWeightClass.BATTLESHIP -> ShipDurability(9, 2.0)
 		
-		ShipWeightClass.GRAND_CRUISER -> ShipDurability(8)
-		ShipWeightClass.COLOSSUS -> ShipDurability(13)
+		ShipWeightClass.GRAND_CRUISER -> ShipDurability(8, 1.5)
+		ShipWeightClass.COLOSSUS -> ShipDurability(13, 3.0)
 		
-		ShipWeightClass.HEAVY_CRUISER -> ShipDurability(8)
+		ShipWeightClass.AUXILIARY_SHIP -> ShipDurability(2, 2.0)
+		ShipWeightClass.LIGHT_CRUISER -> ShipDurability(4, 3.0)
+		ShipWeightClass.MEDIUM_CRUISER -> ShipDurability(6, 3.5)
+		ShipWeightClass.HEAVY_CRUISER -> ShipDurability(8, 4.0)
 		
-		ShipWeightClass.FRIGATE -> ShipDurability(4)
-		ShipWeightClass.LINE_SHIP -> ShipDurability(7)
-		ShipWeightClass.DREADNOUGHT -> ShipDurability(10)
+		ShipWeightClass.FRIGATE -> ShipDurability(4, 1.5)
+		ShipWeightClass.LINE_SHIP -> ShipDurability(7, 2.0)
+		ShipWeightClass.DREADNOUGHT -> ShipDurability(10, 2.5)
 	}

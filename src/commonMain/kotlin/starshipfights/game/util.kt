@@ -5,6 +5,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
+import kotlin.math.exp
 import kotlin.math.roundToInt
 
 val jsonSerializer = Json {
@@ -38,3 +39,5 @@ else if (multiplier == 1) this
 else this + (this * (multiplier - 1))
 
 fun Double.toPercent() = "${(this * 100).roundToInt()}%"
+
+fun smoothNegative(x: Double) = if (x < 0) exp(x) else x + 1

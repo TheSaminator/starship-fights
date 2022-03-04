@@ -21,6 +21,7 @@ enum class FiringArc {
 	companion object {
 		val FIRE_360: Set<FiringArc> = setOf(BOW, ABEAM_PORT, ABEAM_STARBOARD, STERN)
 		val FIRE_BROADSIDE: Set<FiringArc> = setOf(ABEAM_PORT, ABEAM_STARBOARD)
+		val FIRE_FORE_270: Set<FiringArc> = setOf(BOW, ABEAM_PORT, ABEAM_STARBOARD)
 	}
 }
 
@@ -321,9 +322,9 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 	is ShipWeaponInstance.Hangar -> {
 		ImpactResult.Damaged(
 			if (weapon.weapon.wing == StrikeCraftWing.FIGHTERS)
-				copy(fighterWings = fighterWings + listOf(ShipHangarWing(by.id, weaponId)))
+				copy(fighterWings = fighterWings + setOf(ShipHangarWing(by.id, weaponId)))
 			else
-				copy(bomberWings = bomberWings + listOf(ShipHangarWing(by.id, weaponId)))
+				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId)))
 		)
 	}
 	is ShipWeaponInstance.Torpedo -> {
@@ -390,7 +391,14 @@ fun getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: Globa
 		
 		PickRequest(
 			PickType.Ship(targetSet),
-			PickBoundary.WeaponsFire(position.currentLocation, position.facingAngle, weapon.minRange, weapon.maxRange, weapon.firingArcs)
+			PickBoundary.WeaponsFire(
+				center = position.currentLocation,
+				facing = position.facingAngle,
+				minDistance = weapon.minRange,
+				maxDistance = weapon.maxRange,
+				firingArcs = weapon.firingArcs,
+				canSelfSelect = side in targetSet
+			)
 		)
 	}
 }

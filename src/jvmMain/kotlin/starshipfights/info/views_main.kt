@@ -34,9 +34,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 		"About", standardNavBar(), null
 	) {
 		section {
-			img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
-				style = "width:100%"
-			}
+			h1 { +"In Development" }
 			p {
 				+"This is a test instance of Starship Fights."
 			}
@@ -52,9 +50,7 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 		)
 	) {
 		section {
-			img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
-				style = "width:100%"
-			}
+			h1 { +"About Starship Fights" }
 			p {
 				+"Starship Fights is designed and programmed by the person behind "
 				a(href = "https://nationstates.net/mechyrdia") { +"Mechyrdia" }

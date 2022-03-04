@@ -45,10 +45,10 @@ fun ClientMode.view(): HTML.() -> Unit = {
 		}
 		
 		script {
+			attributes["id"] = "sf-client-mode"
+			type = "application/json"
 			unsafe {
-				+"window.sfClientMode = "
 				+jsonSerializer.encodeToString(ClientMode.serializer(), this@view)
-				+";"
 			}
 		}
 		

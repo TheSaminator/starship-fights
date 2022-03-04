@@ -116,9 +116,14 @@ sealed class PickBoundary {
 		val facing: Double,
 		val minDistance: Double,
 		val maxDistance: Double,
-		val firingArcs: Set<FiringArc>
+		val firingArcs: Set<FiringArc>,
+		
+		val canSelfSelect: Boolean = false
 	) : PickBoundary() {
 		override fun contains(point: Position): Boolean {
+			if (canSelfSelect && (point - center).length < EPSILON)
+				return true
+			
 			val r = point - center
 			if (r.length !in minDistance..maxDistance)
 				return false

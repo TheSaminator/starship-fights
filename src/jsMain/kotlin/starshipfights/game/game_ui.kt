@@ -699,6 +699,7 @@ object GameUI {
 						val firingArcsDesc = when (firingArcs) {
 							FiringArc.FIRE_360 -> "360-Degree"
 							FiringArc.FIRE_BROADSIDE -> "Broadside"
+							FiringArc.FIRE_FORE_270 -> "Dorsal"
 							setOf(FiringArc.ABEAM_PORT) -> "Port"
 							setOf(FiringArc.ABEAM_STARBOARD) -> "Starboard"
 							setOf(FiringArc.BOW) -> "Fore"
@@ -739,6 +740,18 @@ object GameUI {
 							is PlayerAbilityType.UseWeapon -> {
 								a(href = "#") {
 									+"$weaponVerb "
+									if (firingArcsDesc != null)
+										+"$firingArcsDesc "
+									+weaponDesc
+									onClickFunction = { e ->
+										e.preventDefault()
+										responder.useAbility(ability)
+									}
+								}
+							}
+							is PlayerAbilityType.RecallStrikeCraft -> {
+								a(href = "#") {
+									+"Recall "
 									if (firingArcsDesc != null)
 										+"$firingArcsDesc "
 									+weaponDesc

@@ -24,8 +24,8 @@ data class ShipInstance(
 	val armaments: ShipInstanceArmaments = ship.armaments.instantiate(),
 	val usedArmaments: Set<Id<ShipWeapon>> = emptySet(),
 	
-	val fighterWings: List<ShipHangarWing> = emptyList(),
-	val bomberWings: List<ShipHangarWing> = emptyList(),
+	val fighterWings: Set<ShipHangarWing> = emptySet(),
+	val bomberWings: Set<ShipHangarWing> = emptySet(),
 ) {
 	val id: Id<ShipInstance>
 		get() = ship.id.reinterpret()

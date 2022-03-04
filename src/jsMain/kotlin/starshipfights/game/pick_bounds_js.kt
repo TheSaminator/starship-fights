@@ -358,7 +358,7 @@ private fun PickBoundary.render(): List<Shape> {
 					.unsafeCast<Shape>()
 			)
 		}
-		is PickBoundary.AlongLine -> emptyList()
+		is PickBoundary.AlongLine -> emptyList() // Handled in a special case
 		is PickBoundary.Rectangle -> listOf(
 			Shape()
 				.moveTo(RenderScaling.toWorldLength(center.vector.x + width2), RenderScaling.toWorldLength(center.vector.y + length2))

@@ -3,7 +3,6 @@ package starshipfights.game
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 import kotlin.math.abs
-import kotlin.math.exp
 import kotlin.random.Random
 
 @Serializable
@@ -74,20 +73,20 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 				
 				val totalFighterHealth = ship.fighterWings.sumOf { (carrierId, wingId) ->
 					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-				}
+				} + ship.ship.durability.turretDefense
 				
 				val totalBomberHealth = ship.bomberWings.sumOf { (carrierId, wingId) ->
 					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
 				}
 				
-				val maxBomberWingOutput = exp(totalBomberHealth - totalFighterHealth)
-				val maxFighterWingOutput = exp(totalFighterHealth - totalBomberHealth)
+				val maxBomberWingOutput = smoothNegative(totalBomberHealth - totalFighterHealth)
+				val maxFighterWingOutput = smoothNegative(totalFighterHealth - totalBomberHealth)
 				
 				ship.fighterWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput }
 				ship.bomberWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxFighterWingOutput }
 				
 				var hits = 0
-				var chanceOfShipDamage = (maxBomberWingOutput - maxFighterWingOutput).coerceAtLeast(0.0) / 2
+				var chanceOfShipDamage = smoothNegative(maxBomberWingOutput - maxFighterWingOutput)
 				while (chanceOfShipDamage >= 1.0) {
 					hits++
 					chanceOfShipDamage -= 1.0
@@ -124,8 +123,8 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 					weaponAmount = ship.powerMode.weapons,
 					shieldAmount = (ship.shieldAmount..ship.powerMode.shields).random(),
 					
-					fighterWings = emptyList(),
-					bomberWings = emptyList(),
+					fighterWings = emptySet(),
+					bomberWings = emptySet(),
 					usedArmaments = emptySet(),
 				)
 			}

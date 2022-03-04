@@ -16,6 +16,9 @@ enum class ShipWeightClass(
 	COLOSSUS(5, 5),
 	
 	// Isarnareykk-specific
+	AUXILIARY_SHIP(1, 0),
+	LIGHT_CRUISER(2, 1),
+	MEDIUM_CRUISER(3, 2),
 	HEAVY_CRUISER(4, 4),
 	
 	// Vestigium-specific
@@ -38,6 +41,9 @@ enum class ShipWeightClass(
 			GRAND_CRUISER -> 300
 			COLOSSUS -> 500
 			
+			AUXILIARY_SHIP -> 50
+			LIGHT_CRUISER -> 100
+			MEDIUM_CRUISER -> 200
 			HEAVY_CRUISER -> 400
 			
 			FRIGATE -> 150
@@ -100,18 +106,18 @@ enum class ShipType(
 	AEDON(Faction.MASRA_DRAETSEN, ShipWeightClass.COLOSSUS),
 	
 	// Isarnareykk
-	GANNAN(Faction.ISARNAREYKK, ShipWeightClass.ESCORT),
-	LODOVIK(Faction.ISARNAREYKK, ShipWeightClass.ESCORT),
+	GANNAN(Faction.ISARNAREYKK, ShipWeightClass.AUXILIARY_SHIP),
+	LODOVIK(Faction.ISARNAREYKK, ShipWeightClass.AUXILIARY_SHIP),
 	
-	KARNAS(Faction.ISARNAREYKK, ShipWeightClass.DESTROYER),
-	PERTONA(Faction.ISARNAREYKK, ShipWeightClass.DESTROYER),
-	VOSS(Faction.ISARNAREYKK, ShipWeightClass.DESTROYER),
+	KARNAS(Faction.ISARNAREYKK, ShipWeightClass.LIGHT_CRUISER),
+	PERTONA(Faction.ISARNAREYKK, ShipWeightClass.LIGHT_CRUISER),
+	VOSS(Faction.ISARNAREYKK, ShipWeightClass.LIGHT_CRUISER),
 	
-	BREKORYN(Faction.ISARNAREYKK, ShipWeightClass.CRUISER),
-	FALK(Faction.ISARNAREYKK, ShipWeightClass.CRUISER),
-	LORUS(Faction.ISARNAREYKK, ShipWeightClass.CRUISER),
-	ORSH(Faction.ISARNAREYKK, ShipWeightClass.CRUISER),
-	TEFRAN(Faction.ISARNAREYKK, ShipWeightClass.CRUISER),
+	BREKORYN(Faction.ISARNAREYKK, ShipWeightClass.MEDIUM_CRUISER),
+	FALK(Faction.ISARNAREYKK, ShipWeightClass.MEDIUM_CRUISER),
+	LORUS(Faction.ISARNAREYKK, ShipWeightClass.MEDIUM_CRUISER),
+	ORSH(Faction.ISARNAREYKK, ShipWeightClass.MEDIUM_CRUISER),
+	TEFRAN(Faction.ISARNAREYKK, ShipWeightClass.MEDIUM_CRUISER),
 	
 	KASSCK(Faction.ISARNAREYKK, ShipWeightClass.HEAVY_CRUISER),
 	KHORR(Faction.ISARNAREYKK, ShipWeightClass.HEAVY_CRUISER),

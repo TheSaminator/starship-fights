@@ -83,42 +83,38 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 		
 		table {
 			tr {
-				th {
-					+"Weight Class"
-					br
-					+"(Point Cost)"
-				}
-				th {
-					+"Hull Integrity"
-				}
-				th { +"Max Acceleration" }
-				th { +"Max Rotation" }
-				th {
-					+"Reactor Power"
-					br
-					+"(Per Subsystem)"
-				}
-				th { +"Energy Flow" }
+				th { +"Weight Class" }
+				th { +"Hull Integrity" }
+				th { +"Defense Turrets" }
 			}
 			tr {
 				td {
 					+shipType.weightClass.displayName
 					br
-					+"(${shipType.weightClass.basePointCost})"
+					+"(${shipType.weightClass.basePointCost} points to deploy)"
 				}
 				td {
 					+"${shipType.weightClass.durability.maxHullPoints} impacts"
 				}
 				td {
-					+"${shipType.weightClass.movement.moveSpeed.roundToInt()} meters/turn"
+					+"${shipType.weightClass.durability.turretDefense.toPercent()} fighter-wing equivalent"
 				}
+			}
+			tr {
+				th { +"Max Movement" }
+				th { +"Reactor Power" }
+				th { +"Energy Flow" }
+			}
+			tr {
 				td {
-					+"${(shipType.weightClass.movement.turnAngle * 180.0 / PI).roundToInt()} degrees/turn"
+					+"Accelerate ${shipType.weightClass.movement.moveSpeed.roundToInt()} meters/turn"
+					br
+					+"Rotate ${(shipType.weightClass.movement.turnAngle * 180.0 / PI).roundToInt()} degrees/turn"
 				}
 				td {
 					+shipType.weightClass.reactor.powerOutput.toString()
 					br
-					+"(${shipType.weightClass.reactor.subsystemAmount})"
+					+"(${shipType.weightClass.reactor.subsystemAmount} per subsystem)"
 				}
 				td {
 					+shipType.weightClass.reactor.gridEfficiency.toString()

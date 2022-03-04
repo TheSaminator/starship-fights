@@ -289,6 +289,40 @@ sealed class PlayerAbilityType {
 			return gameState.useWeaponPickResponse(shipInstance, weapon, pickResponse)
 		}
 	}
+	
+	@Serializable
+	data class RecallStrikeCraft(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Attack) return null
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (weapon !in shipInstance.usedArmaments) return null
+			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
+			if (shipWeapon !is ShipWeaponInstance.Hangar) return null
+			
+			return PlayerAbilityData.RecallStrikeCraft
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only recall strike craft during Phase III")
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (weapon !in shipInstance.usedArmaments) return GameEvent.InvalidAction("Cannot recall unused strike craft")
+			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
+			if (shipWeapon !is ShipWeaponInstance.Hangar) return GameEvent.InvalidAction("Cannot recall non-hangar weapons")
+			
+			val hangarWing = ShipHangarWing(ship, weapon)
+			
+			return GameEvent.StateChange(
+				gameState.copy(
+					ships = gameState.ships.mapValues { (_, targetShip) ->
+						targetShip.copy(
+							fighterWings = targetShip.fighterWings - hangarWing,
+							bomberWings = targetShip.bomberWings - hangarWing,
+						)
+					}
+				)
+			)
+		}
+	}
 }
 
 @Serializable
@@ -313,6 +347,9 @@ sealed class PlayerAbilityData {
 	
 	@Serializable
 	data class UseWeapon(val target: PickResponse) : PlayerAbilityData()
+	
+	@Serializable
+	object RecallStrikeCraft : PlayerAbilityData()
 }
 
 fun GameState.getPossibleAbilities(forPlayer: GlobalSide): List<PlayerAbilityType> = if (ready == forPlayer)
@@ -362,10 +399,10 @@ else when (phase) {
 		val chargeableLances = ships
 			.filterValues { it.owner == forPlayer && it.weaponAmount > 0 }
 			.flatMap { (id, ship) ->
-				(ship.armaments.weaponInstances - ship.usedArmaments).mapNotNull { (weaponId, weapon) ->
+				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
 					PlayerAbilityType.ChargeLance(id, weaponId).takeIf {
 						when (weapon) {
-							is ShipWeaponInstance.Lance -> weapon.charge != 1.0
+							is ShipWeaponInstance.Lance -> weapon.charge != 1.0 && weaponId !in ship.usedArmaments
 							else -> false
 						}
 					}
@@ -375,16 +412,26 @@ else when (phase) {
 		val usableWeapons = ships
 			.filterValues { it.owner == forPlayer }
 			.flatMap { (id, ship) ->
-				(ship.armaments.weaponInstances - ship.usedArmaments).mapNotNull { (weaponId, weapon) ->
+				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
 					PlayerAbilityType.UseWeapon(id, weaponId).takeIf {
 						weaponId !in ship.usedArmaments && canWeaponBeUsed(ship, weapon)
 					}
 				}
 			}
 		
+		val recallableStrikeWings = ships
+			.filterValues { it.owner == forPlayer }
+			.flatMap { (id, ship) ->
+				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
+					PlayerAbilityType.RecallStrikeCraft(id, weaponId).takeIf {
+						weaponId in ship.usedArmaments && weapon is ShipWeaponInstance.Hangar
+					}
+				}
+			}
+		
 		val finishAttacking = listOf(PlayerAbilityType.DonePhase(GamePhase.Attack(phase.turn)))
 		
-		chargeableLances + usableWeapons + finishAttacking
+		chargeableLances + usableWeapons + recallableStrikeWings + finishAttacking
 	}
 }
 
