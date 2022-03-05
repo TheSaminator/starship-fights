@@ -26,7 +26,7 @@ object AdmiralNames {
 		"Bjarnarð" to "Bjarnarðówič",
 		"Carl" to "Carlówič",
 		"Þjutarix" to "Þjutarigówič",
-		"Friðurix" to "Friþurigówič",
+		"Friðurix" to "Friðurigówič",
 		"Iwan" to "Iwanówič",
 		"Wladimer" to "Wladimerówič",
 		"Giulius" to "Giuliówič",
