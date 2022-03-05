@@ -1,21 +1,26 @@
 package starshipfights
 
+import io.ktor.util.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import starshipfights.data.ConnectionType
 import java.io.File
+import java.security.SecureRandom
 
 @Serializable
 data class Configuration(
-	val isDevEnv: Boolean,
+	val isDevEnv: Boolean = true,
 	
-	val host: String,
-	val port: Int,
+	val host: String = "127.0.0.1",
+	val port: Int = 8080,
 	
-	val dbConn: ConnectionType,
-	val dbName: String,
+	val dbConn: ConnectionType = ConnectionType.Embedded(),
+	val dbName: String = "sf",
 	
+	val secretHashingKey: String = hex(
+		ByteArray(16).also { SecureRandom.getInstanceStrong().nextBytes(it) }
+	),
 	val discordClient: DiscordLogin? = null
 )
 
@@ -30,14 +35,7 @@ data class DiscordLogin(
 	val serverInvite: String,
 )
 
-private val DEFAULT_CONFIG = Configuration(
-	isDevEnv = true,
-	host = "127.0.0.1",
-	port = 8080,
-	dbConn = ConnectionType.Embedded(),
-	dbName = "sf",
-	discordClient = null
-)
+private val DEFAULT_CONFIG = Configuration()
 
 private var currentConfig: Configuration? = null
 

@@ -62,6 +62,7 @@ interface AuthProvider {
 			into.install(Sessions) {
 				cookie<Id<UserSession>>("sf_user_session") {
 					serializer = UserSessionIdSerializer
+					transform(SessionTransportTransformerMessageAuthentication(hex(CurrentConfiguration.secretHashingKey)))
 					
 					cookie.path = "/"
 					cookie.extensions["Secure"] = null
