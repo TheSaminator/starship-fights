@@ -325,7 +325,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 				copy(fighterWings = fighterWings + setOf(ShipHangarWing(by.id, weaponId)))
 			else
 				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId))),
-			amount = 0
+			amount = null
 		)
 	}
 	is ShipWeaponInstance.Torpedo -> {
