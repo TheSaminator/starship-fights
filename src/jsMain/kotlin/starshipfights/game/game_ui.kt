@@ -202,6 +202,55 @@ object GameUI {
 								+"disengaged from"
 							+" the battlefield!"
 						}
+						is ChatEntry.ShipAttacked -> {
+							val ship = state.getShipInfo(entry.ship)
+							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
+							+"The "
+							if (owner == LocalSide.RED)
+								+"enemy ship "
+							strong {
+								style = "color:${owner.htmlColor}"
+								+ship.fullName
+							}
+							+" has taken "
+							
+							if (entry.weapon is ShipWeapon.EmpAntenna)
+								+"subsystem-disabling"
+							else
+								+entry.damageInflicted.toString()
+							
+							+" damage from "
+							when (entry.attacker) {
+								ShipAttacker.Bombers -> {
+									if (owner == LocalSide.RED)
+										+"our "
+									else
+										+"enemy "
+									+"bombers"
+								}
+								is ShipAttacker.EnemyShip -> {
+									if (entry.weapon != null) {
+										+"the "
+										when (entry.weapon) {
+											is ShipWeapon.Cannon -> +"cannons"
+											is ShipWeapon.Lance -> +"lances"
+											is ShipWeapon.Hangar -> +"bombers"
+											is ShipWeapon.Torpedo -> +"torpedoes"
+											ShipWeapon.MegaCannon -> +"Mega Giga Cannon"
+											ShipWeapon.RevelationGun -> +"Revelation Gun"
+											ShipWeapon.EmpAntenna -> +"EMP antenna"
+										}
+										+" of "
+									}
+									+"the "
+									span {
+										style = "color:${owner.other.htmlColor}"
+										+state.getShipInfo(entry.attacker.id).fullName
+									}
+								}
+							}
+							+"."
+						}
 						is ChatEntry.ShipDestroyed -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -215,14 +264,14 @@ object GameUI {
 							}
 							+" has been destroyed by "
 							when (entry.destroyedBy) {
-								is ShipDestructionType.EnemyShip -> {
+								is ShipAttacker.EnemyShip -> {
 									+"the "
 									span {
-										style = "color:${state.getShipOwner(entry.destroyedBy.id).relativeTo(mySide).htmlColor}"
+										style = "color:${owner.other.htmlColor}"
 										+state.getShipInfo(entry.destroyedBy.id).fullName
 									}
 								}
-								ShipDestructionType.Bombers -> {
+								ShipAttacker.Bombers -> {
 									if (owner == LocalSide.RED)
 										+"our "
 									else

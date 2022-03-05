@@ -27,18 +27,27 @@ sealed class ChatEntry {
 	) : ChatEntry()
 	
 	@Serializable
+	data class ShipAttacked(
+		val ship: Id<ShipInstance>,
+		val attacker: ShipAttacker,
+		override val sentAt: Moment,
+		val damageInflicted: Int,
+		val weapon: ShipWeapon?,
+	) : ChatEntry()
+	
+	@Serializable
 	data class ShipDestroyed(
 		val ship: Id<ShipInstance>,
 		override val sentAt: Moment,
-		val destroyedBy: ShipDestructionType
+		val destroyedBy: ShipAttacker
 	) : ChatEntry()
 }
 
 @Serializable
-sealed class ShipDestructionType {
+sealed class ShipAttacker {
 	@Serializable
-	data class EnemyShip(val id: Id<ShipInstance>) : ShipDestructionType()
+	data class EnemyShip(val id: Id<ShipInstance>) : ShipAttacker()
 	
 	@Serializable
-	object Bombers : ShipDestructionType()
+	object Bombers : ShipAttacker()
 }

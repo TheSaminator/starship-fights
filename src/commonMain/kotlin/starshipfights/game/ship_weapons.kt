@@ -247,15 +247,15 @@ fun cannonChanceToHit(attacker: ShipInstance, targeted: ShipInstance): Double {
 }
 
 sealed class ImpactResult {
-	data class Damaged(val ship: ShipInstance) : ImpactResult()
+	data class Damaged(val ship: ShipInstance, val amount: Int?) : ImpactResult()
 	data class Destroyed(val ship: ShipWreck) : ImpactResult()
 }
 
 fun ShipInstance.impact(damage: Int) = if (damage > shieldAmount) {
 	if (damage - shieldAmount >= hullAmount)
 		ImpactResult.Destroyed(ShipWreck(ship, owner))
-	else ImpactResult.Damaged(copy(shieldAmount = 0, hullAmount = hullAmount - (damage - shieldAmount)))
-} else ImpactResult.Damaged(copy(shieldAmount = shieldAmount - damage))
+	else ImpactResult.Damaged(copy(shieldAmount = 0, hullAmount = hullAmount - (damage - shieldAmount)), amount = damage)
+} else ImpactResult.Damaged(copy(shieldAmount = shieldAmount - damage), amount = damage)
 
 @Serializable
 data class ShipHangarWing(
@@ -324,7 +324,8 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			if (weapon.weapon.wing == StrikeCraftWing.FIGHTERS)
 				copy(fighterWings = fighterWings + setOf(ShipHangarWing(by.id, weaponId)))
 			else
-				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId)))
+				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId))),
+			amount = 0
 		)
 	}
 	is ShipWeaponInstance.Torpedo -> {
@@ -332,7 +333,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			if (Random.nextBoolean())
 				impact(1)
 			else
-				ImpactResult.Damaged(this)
+				ImpactResult.Damaged(this, amount = 0)
 		} else
 			impact(2)
 	}
@@ -347,7 +348,8 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			copy(
 				weaponAmount = (0..weaponAmount).random(),
 				shieldAmount = (0..shieldAmount).random(),
-			)
+			),
+			amount = 0
 		)
 	}
 }
@@ -430,8 +432,23 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			}.toMap()
 			
 			val newChatMessages = chatBox + impacts.mapNotNull { (_, impact) ->
-				(impact as? ImpactResult.Destroyed)?.ship?.let {
-					ChatEntry.ShipDestroyed(it.id, Moment.now, ShipDestructionType.EnemyShip(newAttacker.id))
+				when (impact) {
+					is ImpactResult.Damaged -> impact.amount?.let { damage ->
+						ChatEntry.ShipAttacked(
+							impact.ship.id,
+							ShipAttacker.EnemyShip(newAttacker.id),
+							Moment.now,
+							damage,
+							weapon.weapon,
+						)
+					}
+					is ImpactResult.Destroyed -> {
+						ChatEntry.ShipDestroyed(
+							impact.ship.id,
+							Moment.now,
+							ShipAttacker.EnemyShip(newAttacker.id)
+						)
+					}
 				}
 			}
 			
@@ -443,20 +460,35 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			val targetedShipId = (target as? PickResponse.Ship)?.id ?: return GameEvent.InvalidAction("Invalid pick response type")
 			val targetedShip = ships[targetedShipId] ?: return GameEvent.InvalidAction("That ship does not exist")
 			
-			val newTarget = targetedShip.afterTargeted(attacker, weaponId)
+			val impact = targetedShip.afterTargeted(attacker, weaponId)
 			val newAttacker = attacker.afterUsing(weaponId)
 			
-			val newShips = (if (newTarget is ImpactResult.Damaged)
-				ships + mapOf(targetedShipId to newTarget.ship)
+			val newShips = (if (impact is ImpactResult.Damaged)
+				ships + mapOf(targetedShipId to impact.ship)
 			else ships - targetedShipId) + mapOf(attacker.id to newAttacker)
 			
-			val newWrecks = destroyedShips + if (newTarget is ImpactResult.Destroyed)
-				mapOf(targetedShipId to newTarget.ship)
+			val newWrecks = destroyedShips + if (impact is ImpactResult.Destroyed)
+				mapOf(targetedShipId to impact.ship)
 			else emptyMap()
 			
-			val newChatMessages = chatBox + if (newTarget is ImpactResult.Destroyed)
-				listOf(ChatEntry.ShipDestroyed(newTarget.ship.id, Moment.now, ShipDestructionType.EnemyShip(newAttacker.id)))
-			else emptyList()
+			val newChatMessages = chatBox + listOfNotNull(
+				when (impact) {
+					is ImpactResult.Destroyed -> ChatEntry.ShipDestroyed(
+						impact.ship.id,
+						Moment.now,
+						ShipAttacker.EnemyShip(newAttacker.id)
+					)
+					is ImpactResult.Damaged -> impact.amount?.let { damage ->
+						ChatEntry.ShipAttacked(
+							impact.ship.id,
+							ShipAttacker.EnemyShip(newAttacker.id),
+							Moment.now,
+							damage,
+							weapon.weapon,
+						)
+					}
+				}
+			)
 			
 			GameEvent.StateChange(
 				copy(ships = newShips, destroyedShips = newWrecks, chatBox = newChatMessages)

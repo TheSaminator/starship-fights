@@ -98,7 +98,7 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 					is ImpactResult.Damaged -> id to impactResult.ship
 					is ImpactResult.Destroyed -> {
 						newWrecks[id] = impactResult.ship
-						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipDestructionType.Bombers)
+						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Bombers)
 						null
 					}
 				}
@@ -179,7 +179,13 @@ enum class GlobalSide {
 fun GlobalSide.relativeTo(me: GlobalSide) = if (this == me) LocalSide.BLUE else LocalSide.RED
 
 enum class LocalSide {
-	BLUE, RED
+	BLUE, RED;
+	
+	val other: LocalSide
+		get() = when (this) {
+			BLUE -> RED
+			RED -> BLUE
+		}
 }
 
 val LocalSide.htmlColor: String
