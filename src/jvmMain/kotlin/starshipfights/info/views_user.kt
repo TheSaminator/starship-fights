@@ -254,7 +254,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 							}
 							a(href = "/logout/${session.id}") {
 								method = "post"
-								csrfToken(session.id)
+								csrfToken(currentSession.id)
 								+"Logout"
 							}
 						}
