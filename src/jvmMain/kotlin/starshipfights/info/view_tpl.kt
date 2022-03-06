@@ -12,10 +12,6 @@ fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Side
 		link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400;1,700&family=Orbitron:wght@500;700;900&display=swap")
 		link(rel = "stylesheet", href = "/static/style.css")
 		
-		script(src = "/static/game/three.js") {}
-		script(src = "/static/game/three-examples.js") {}
-		script(src = "/static/game/three-extras.js") {}
-		
 		title {
 			+"Starship Fights"
 			pageTitle?.let { +" | $it" }
