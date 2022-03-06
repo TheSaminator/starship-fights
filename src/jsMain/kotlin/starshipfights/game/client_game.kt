@@ -157,7 +157,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): String {
 	return gameEnd.await()
 }
 
-private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>, errors: SendChannel<String>) = object : GameUIResponder {
+private class GameUIResponderImpl(scope: CoroutineScope, private val actions: SendChannel<PlayerAction>, private val errors: SendChannel<String>) : GameUIResponder, CoroutineScope by scope {
 	override fun doAction(action: PlayerAction) {
 		launch {
 			actions.send(action)
@@ -179,6 +179,8 @@ private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>, error
 		}
 	}
 }
+
+private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>, errors: SendChannel<String>) = GameUIResponderImpl(this, actions, errors)
 
 suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 	interruptExit = true

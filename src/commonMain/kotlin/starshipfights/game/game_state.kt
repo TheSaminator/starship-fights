@@ -25,7 +25,7 @@ data class GameState(
 	fun getShipOwner(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships.getValue(id).owner
 }
 
-fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide.other) {
+private fun GameState.afterPhase(): GameState {
 	var newShips = ships
 	val newWrecks = destroyedShips.toMutableMap()
 	val newChatEntries = mutableListOf<ChatEntry>()
@@ -95,7 +95,10 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 					hits++
 				
 				when (val impactResult = ship.impact(hits)) {
-					is ImpactResult.Damaged -> id to impactResult.ship
+					is ImpactResult.Damaged -> {
+						newChatEntries += ChatEntry.ShipAttacked(id, ShipAttacker.Bombers, Moment.now, hits, null)
+						id to impactResult.ship
+					}
 					is ImpactResult.Destroyed -> {
 						newWrecks[id] = impactResult.ship
 						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Bombers)
@@ -134,7 +137,11 @@ fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide
 		}
 	}
 	
-	copy(phase = phase.next(), ready = null, ships = newShips.mapValues { (_, ship) -> ship.copy(isDoneCurrentPhase = false) }, chatBox = chatBox + newChatEntries)
+	return copy(phase = phase.next(), ships = newShips.mapValues { (_, ship) -> ship.copy(isDoneCurrentPhase = false) }, destroyedShips = newWrecks, chatBox = chatBox + newChatEntries)
+}
+
+fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide.other) {
+	afterPhase().copy(ready = null)
 } else
 	copy(ready = playerSide)
 

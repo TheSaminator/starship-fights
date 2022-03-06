@@ -187,37 +187,38 @@ object GameUI {
 						is ChatEntry.ShipEscaped -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
-							if (owner == LocalSide.RED)
-								+"The enemy ship "
+							+if (owner == LocalSide.RED)
+								"The enemy ship "
 							else
-								+"Our ship, the "
+								"Our ship, the "
 							strong {
 								style = "color:${owner.htmlColor}"
 								+ship.fullName
 							}
 							+" has "
-							if (owner == LocalSide.RED)
-								+"fled like a coward from"
+							+if (owner == LocalSide.RED)
+								"fled like a coward"
 							else
-								+"disengaged from"
-							+" the battlefield!"
+								"disengaged"
+							+" from the battlefield!"
 						}
 						is ChatEntry.ShipAttacked -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
-							+"The "
-							if (owner == LocalSide.RED)
-								+"enemy ship "
+							+if (owner == LocalSide.RED)
+								"The enemy ship "
+							else
+								"Our ship, the "
 							strong {
 								style = "color:${owner.htmlColor}"
 								+ship.fullName
 							}
 							+" has taken "
 							
-							if (entry.weapon is ShipWeapon.EmpAntenna)
-								+"subsystem-disabling"
+							+if (entry.weapon is ShipWeapon.EmpAntenna)
+								"subsystem-draining"
 							else
-								+entry.damageInflicted.toString()
+								entry.damageInflicted.toString()
 							
 							+" damage from "
 							when (entry.attacker) {
@@ -231,14 +232,14 @@ object GameUI {
 								is ShipAttacker.EnemyShip -> {
 									if (entry.weapon != null) {
 										+"the "
-										when (entry.weapon) {
-											is ShipWeapon.Cannon -> +"cannons"
-											is ShipWeapon.Lance -> +"lances"
-											is ShipWeapon.Hangar -> +"bombers"
-											is ShipWeapon.Torpedo -> +"torpedoes"
-											ShipWeapon.MegaCannon -> +"Mega Giga Cannon"
-											ShipWeapon.RevelationGun -> +"Revelation Gun"
-											ShipWeapon.EmpAntenna -> +"EMP antenna"
+										+when (entry.weapon) {
+											is ShipWeapon.Cannon -> "cannons"
+											is ShipWeapon.Lance -> "lances"
+											is ShipWeapon.Hangar -> "bombers"
+											is ShipWeapon.Torpedo -> "torpedoes"
+											ShipWeapon.MegaCannon -> "Mega Giga Cannon"
+											ShipWeapon.RevelationGun -> "Revelation Gun"
+											ShipWeapon.EmpAntenna -> "EMP antenna"
 										}
 										+" of "
 									}
@@ -254,10 +255,10 @@ object GameUI {
 						is ChatEntry.ShipDestroyed -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
-							if (owner == LocalSide.RED)
-								+"The enemy ship "
+							+if (owner == LocalSide.RED)
+								"The enemy ship "
 							else
-								+"Our ship, the "
+								"Our ship, the "
 							strong {
 								style = "color:${owner.htmlColor}"
 								+ship.fullName
@@ -272,10 +273,10 @@ object GameUI {
 									}
 								}
 								ShipAttacker.Bombers -> {
-									if (owner == LocalSide.RED)
-										+"our "
+									+if (owner == LocalSide.RED)
+										"our "
 									else
-										+"enemy "
+										"enemy "
 									+"bombers"
 								}
 							}
