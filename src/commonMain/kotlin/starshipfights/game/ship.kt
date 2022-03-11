@@ -75,7 +75,7 @@ val ShipWeightClass.movement: ShipMovement
 		ShipWeightClass.BATTLESHIP -> ShipMovement(PI / 4, 1600.0)
 		
 		ShipWeightClass.GRAND_CRUISER -> ShipMovement(PI / 4, 1750.0)
-		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 2800.0)
+		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 1300.0)
 		
 		ShipWeightClass.AUXILIARY_SHIP -> ShipMovement(PI / 2, 2500.0)
 		ShipWeightClass.LIGHT_CRUISER -> ShipMovement(PI / 2, 2250.0)
