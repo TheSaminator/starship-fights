@@ -293,6 +293,8 @@ private fun beginPick(context: PickContext, pickRequest: PickRequest, responseHa
 	}
 	
 	handleWindowEscapeKey = { responseHandler(null) }
+	
+	GameUI.currentHelpMessage = "Press Escape to cancel current action"
 }
 
 private fun endPick(scene: Scene) {
@@ -307,6 +309,8 @@ private fun endPick(scene: Scene) {
 	scene.getObjectByName("bound")?.removeFromParent()
 	scene.getObjectByName("pick-helper")?.removeFromParent()
 	scene.getObjectByName("pick-line")?.removeFromParent()
+	
+	GameUI.currentHelpMessage = ""
 }
 
 private val pickMutex = Mutex()

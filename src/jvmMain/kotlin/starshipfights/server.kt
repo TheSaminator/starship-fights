@@ -20,7 +20,6 @@ import starshipfights.data.DataRoutines
 import starshipfights.game.installGame
 import starshipfights.info.*
 import java.io.InputStream
-import java.lang.IllegalArgumentException
 import java.util.concurrent.atomic.AtomicLong
 
 object ResourceLoader {
@@ -69,6 +68,9 @@ fun main() {
 			}
 			exception<IllegalArgumentException> {
 				call.respondHtml(HttpStatusCode.Forbidden, call.error403())
+			}
+			exception<InvalidCsrfTokenException> {
+				call.respondHtml(HttpStatusCode.Forbidden, call.error403InvalidCsrf())
 			}
 			exception<NullPointerException> {
 				call.respondHtml(HttpStatusCode.NotFound, call.error404())

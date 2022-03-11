@@ -2,9 +2,7 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
-import kotlin.math.abs
 import kotlin.math.expm1
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 enum class FiringArc {
@@ -34,13 +32,15 @@ sealed interface AreaWeapon {
 @Serializable
 sealed class ShipWeapon {
 	abstract val numShots: Int
+	
 	open val minRange: Double
 		get() = SHIP_BASE_SIZE
 	abstract val maxRange: Double
 	abstract val firingArcs: Set<FiringArc>
-	open val isNormal: Boolean
-		get() = true
+	
 	abstract val groupLabel: String
+	
+	abstract val addsPointCost: Int
 	
 	abstract fun instantiate(): ShipWeaponInstance
 	
@@ -53,6 +53,9 @@ sealed class ShipWeapon {
 		override val maxRange: Double
 			get() = SHIP_CANNON_RANGE
 		
+		override val addsPointCost: Int
+			get() = numShots * 5
+		
 		override fun instantiate() = ShipWeaponInstance.Cannon(this)
 	}
 	
@@ -64,6 +67,9 @@ sealed class ShipWeapon {
 	) : ShipWeapon() {
 		override val maxRange: Double
 			get() = SHIP_LANCE_RANGE
+		
+		override val addsPointCost: Int
+			get() = numShots * 10
 		
 		override fun instantiate() = ShipWeaponInstance.Lance(this, 10)
 	}
@@ -78,6 +84,9 @@ sealed class ShipWeapon {
 		
 		override val maxRange: Double
 			get() = SHIP_TORPEDO_RANGE
+		
+		override val addsPointCost: Int
+			get() = 5
 		
 		override fun instantiate() = ShipWeaponInstance.Torpedo(this)
 	}
@@ -95,6 +104,12 @@ sealed class ShipWeapon {
 		
 		override val firingArcs: Set<FiringArc>
 			get() = FiringArc.FIRE_360
+		
+		override val addsPointCost: Int
+			get() = when (wing) {
+				StrikeCraftWing.FIGHTERS -> 5
+				StrikeCraftWing.BOMBERS -> 10
+			}
 		
 		override fun instantiate() = ShipWeaponInstance.Hangar(this, 1.0)
 	}
@@ -118,11 +133,11 @@ sealed class ShipWeapon {
 		override val firingArcs: Set<FiringArc>
 			get() = setOf(FiringArc.BOW)
 		
-		override val isNormal: Boolean
-			get() = false
-		
 		override val groupLabel: String
 			get() = "Mega Giga Cannon"
+		
+		override val addsPointCost: Int
+			get() = 50
 		
 		override fun instantiate() = ShipWeaponInstance.MegaCannon(numShots)
 	}
@@ -144,11 +159,11 @@ sealed class ShipWeapon {
 		override val firingArcs: Set<FiringArc>
 			get() = setOf(FiringArc.BOW)
 		
-		override val isNormal: Boolean
-			get() = false
-		
 		override val groupLabel: String
 			get() = "Revelation Gun"
+		
+		override val addsPointCost: Int
+			get() = 75
 		
 		override fun instantiate() = ShipWeaponInstance.RevelationGun(numShots)
 	}
@@ -167,11 +182,11 @@ sealed class ShipWeapon {
 		override val firingArcs: Set<FiringArc>
 			get() = setOf(FiringArc.BOW)
 		
-		override val isNormal: Boolean
-			get() = false
-		
 		override val groupLabel: String
 			get() = "EMP Emitter"
+		
+		override val addsPointCost: Int
+			get() = 40
 		
 		override fun instantiate() = ShipWeaponInstance.EmpAntenna(numShots)
 	}
@@ -240,14 +255,12 @@ data class ShipInstanceArmaments(
 )
 
 fun cannonChanceToHit(attacker: ShipInstance, targeted: ShipInstance): Double {
-	val relativeDistance = (attacker.position.currentLocation - targeted.position.currentLocation) / (SHIP_BASE_SIZE * 2)
-	val relativeVelocity = (attacker.position.currentVelocity - targeted.position.currentVelocity) / (SHIP_BASE_SIZE * 2)
-	
-	return sqrt(1 / abs(relativeDistance cross relativeVelocity))
+	val relativeDistance = attacker.position.location - targeted.position.location
+	return SHIP_BASE_SIZE / relativeDistance.length
 }
 
 sealed class ImpactResult {
-	data class Damaged(val ship: ShipInstance, val amount: Int?) : ImpactResult()
+	data class Damaged(val ship: ShipInstance, val amount: Int? = null, val critical: CritResult = CritResult.NoEffect) : ImpactResult()
 	data class Destroyed(val ship: ShipWreck) : ImpactResult()
 }
 
@@ -307,7 +320,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 				hits++
 		}
 		
-		impact(hits)
+		impact(hits).applyCriticals(by, weaponId)
 	}
 	is ShipWeaponInstance.Lance -> {
 		var hits = 0
@@ -317,28 +330,27 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 				hits++
 		}
 		
-		impact(hits)
+		impact(hits).applyCriticals(by, weaponId)
+	}
+	is ShipWeaponInstance.Torpedo -> {
+		if (shieldAmount > 0) {
+			if (Random.nextBoolean())
+				impact(1).applyCriticals(by, weaponId)
+			else
+				ImpactResult.Damaged(this, 0)
+		} else
+			impact(2).applyCriticals(by, weaponId)
 	}
 	is ShipWeaponInstance.Hangar -> {
 		ImpactResult.Damaged(
 			if (weapon.weapon.wing == StrikeCraftWing.FIGHTERS)
 				copy(fighterWings = fighterWings + setOf(ShipHangarWing(by.id, weaponId)))
 			else
-				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId))),
-			amount = null
+				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId)))
 		)
 	}
-	is ShipWeaponInstance.Torpedo -> {
-		if (shieldAmount > 0) {
-			if (Random.nextBoolean())
-				impact(1)
-			else
-				ImpactResult.Damaged(this, amount = 0)
-		} else
-			impact(2)
-	}
 	is ShipWeaponInstance.MegaCannon -> {
-		impact((3..7).random())
+		impact((3..7).random()).applyCriticals(by, weaponId)
 	}
 	is ShipWeaponInstance.RevelationGun -> {
 		ImpactResult.Destroyed(ShipWreck(ship, owner))
@@ -354,14 +366,49 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 	}
 }
 
-fun canWeaponBeUsed(shipInstance: ShipInstance, shipWeapon: ShipWeaponInstance): Boolean = when (shipWeapon) {
-	is ShipWeaponInstance.Cannon -> shipInstance.weaponAmount > 0
-	is ShipWeaponInstance.Hangar -> shipWeapon.wingHealth > 0.0
-	is ShipWeaponInstance.Lance -> shipWeapon.numCharges > 0
-	is ShipWeaponInstance.Torpedo -> true
-	is ShipWeaponInstance.MegaCannon -> shipWeapon.remainingShots > 0
-	is ShipWeaponInstance.RevelationGun -> shipWeapon.remainingShots > 0
-	is ShipWeaponInstance.EmpAntenna -> shipWeapon.remainingShots > 0
+fun ImpactResult.Damaged.withCritResult(critical: CritResult): ImpactResult = when (critical) {
+	is CritResult.NoEffect -> this
+	is CritResult.FireStarted -> copy(
+		ship = critical.ship,
+		amount = amount,
+		critical = critical
+	)
+	is CritResult.ModulesDisabled -> copy(
+		ship = critical.ship,
+		amount = amount,
+		critical = critical
+	)
+	is CritResult.HullDamaged -> copy(
+		ship = critical.ship,
+		amount = amount?.let { it + critical.amount },
+		critical = critical
+	)
+	is CritResult.Destroyed -> ImpactResult.Destroyed(critical.ship)
+}
+
+fun ImpactResult.applyCriticals(attacker: ShipInstance, weaponId: Id<ShipWeapon>): ImpactResult {
+	return when (this) {
+		is ImpactResult.Destroyed -> this
+		is ImpactResult.Damaged -> {
+			val critChance = criticalChance(attacker, weaponId, ship)
+			if (Random.nextDouble() > critChance)
+				this
+			else
+				withCritResult(ship.doCriticalDamage())
+		}
+	}
+}
+
+fun criticalChance(attacker: ShipInstance, weaponId: Id<ShipWeapon>, targeted: ShipInstance): Double {
+	val targetHasShields = targeted.canUseShields && targeted.shieldAmount > 0
+	val weapon = attacker.armaments.weaponInstances[weaponId] ?: return 0.0
+	
+	return when (weapon) {
+		is ShipWeaponInstance.Torpedo -> if (targetHasShields) 0.0 else 0.375
+		is ShipWeaponInstance.Hangar -> 0.0
+		is ShipWeaponInstance.MegaCannon -> 0.5
+		else -> if (targetHasShields) 0.125 else 0.25
+	}
 }
 
 fun getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: GlobalSide): PickRequest = when (weapon) {
@@ -369,17 +416,17 @@ fun getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: Globa
 		type = PickType.Location(
 			excludesNearShips = emptySet(),
 			helper = PickHelper.Circle(radius = weapon.areaRadius),
-			drawLineFrom = if (weapon.isLine) null else position.currentLocation
+			drawLineFrom = if (weapon.isLine) null else position.location
 		),
 		boundary = if (weapon.isLine)
 			PickBoundary.AlongLine(
-				pointA = position.currentLocation + (normalDistance(position.facingAngle) * weapon.minRange),
-				pointB = position.currentLocation + (normalDistance(position.facingAngle) * weapon.maxRange)
+				pointA = position.location + (normalDistance(position.facing) * weapon.minRange),
+				pointB = position.location + (normalDistance(position.facing) * weapon.maxRange)
 			)
 		else
 			PickBoundary.WeaponsFire(
-				center = position.currentLocation,
-				facing = position.facingAngle,
+				center = position.location,
+				facing = position.facing,
 				minDistance = weapon.minRange,
 				maxDistance = weapon.maxRange,
 				firingArcs = weapon.firingArcs,
@@ -394,8 +441,8 @@ fun getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: Globa
 		PickRequest(
 			PickType.Ship(targetSet),
 			PickBoundary.WeaponsFire(
-				center = position.currentLocation,
-				facing = position.facingAngle,
+				center = position.location,
+				facing = position.facing,
 				minDistance = weapon.minRange,
 				maxDistance = weapon.maxRange,
 				firingArcs = weapon.firingArcs,
@@ -411,7 +458,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 	return when (val weaponType = weapon.weapon) {
 		is AreaWeapon -> {
 			val targetedLocation = (target as? PickResponse.Location)?.position ?: return GameEvent.InvalidAction("Invalid pick response type")
-			val targetedShips = ships.filterValues { (it.position.currentLocation - targetedLocation).length < weaponType.areaRadius }
+			val targetedShips = ships.filterValues { (it.position.location - targetedLocation).length < weaponType.areaRadius }
 			
 			if (targetedShips.isEmpty()) return GameEvent.InvalidAction("No ships targeted - aborting fire")
 			
@@ -440,6 +487,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 							Moment.now,
 							damage,
 							weapon.weapon,
+							impact.critical.report(),
 						)
 					}
 					is ImpactResult.Destroyed -> {
@@ -485,6 +533,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 							Moment.now,
 							damage,
 							weapon.weapon,
+							impact.critical.report(),
 						)
 					}
 				}
@@ -496,3 +545,48 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 		}
 	}
 }
+
+val ShipWeapon.displayName: String
+	get() {
+		val firingArcsDesc = when (firingArcs) {
+			FiringArc.FIRE_360 -> "360-Degree "
+			FiringArc.FIRE_BROADSIDE -> "Broadside "
+			FiringArc.FIRE_FORE_270 -> "Dorsal "
+			setOf(FiringArc.ABEAM_PORT) -> "Port "
+			setOf(FiringArc.ABEAM_STARBOARD) -> "Starboard "
+			setOf(FiringArc.BOW) -> "Fore "
+			setOf(FiringArc.STERN) -> "Rear "
+			else -> null
+		}.takeIf { this !is ShipWeapon.Hangar } ?: ""
+		
+		val weaponIsPlural = numShots > 1
+		
+		val weaponDesc = when (this) {
+			is ShipWeapon.Cannon -> "Cannon" + (if (weaponIsPlural) "s" else "")
+			is ShipWeapon.Lance -> "Lance" + (if (weaponIsPlural) "s" else "")
+			is ShipWeapon.Hangar -> when (wing) {
+				StrikeCraftWing.FIGHTERS -> "Fighters"
+				StrikeCraftWing.BOMBERS -> "Bombers"
+			}
+			is ShipWeapon.Torpedo -> "Torpedo" + (if (weaponIsPlural) "es" else "")
+			is ShipWeapon.MegaCannon -> "Mega Giga Cannon"
+			is ShipWeapon.RevelationGun -> "Revelation Gun"
+			is ShipWeapon.EmpAntenna -> "EMP Antenna"
+		}
+		
+		return "$firingArcsDesc$weaponDesc"
+	}
+
+val ShipWeaponInstance.displayName: String
+	get() {
+		val weaponParam = when (this) {
+			is ShipWeaponInstance.Lance -> " (${charge.toPercent()})"
+			is ShipWeaponInstance.Hangar -> " (${wingHealth.toPercent()})"
+			is ShipWeaponInstance.MegaCannon -> " ($remainingShots)"
+			is ShipWeaponInstance.RevelationGun -> " ($remainingShots)"
+			is ShipWeaponInstance.EmpAntenna -> " ($remainingShots)"
+			else -> ""
+		}
+		
+		return "${weapon.displayName}$weaponParam"
+	}

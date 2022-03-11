@@ -150,5 +150,8 @@ enum class ShipType(
 		get() = "$displayName-class ${faction.demonymSingular} ${weightClass.displayName}"
 }
 
+val ShipType.pointCost: Int
+	get() = weightClass.basePointCost + armaments.weapons.values.sumOf { it.addsPointCost }
+
 val ShipType.meshName: String
 	get() = "${faction.meshTag}-${weightClass.meshIndex}-${toUrlSlug()}-class"

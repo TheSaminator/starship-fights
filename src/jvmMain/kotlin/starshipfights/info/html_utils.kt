@@ -1,6 +1,8 @@
 package starshipfights.info
 
-import kotlinx.html.*
+import kotlinx.html.A
+import kotlinx.html.FORM
+import kotlinx.html.hiddenInput
 import starshipfights.auth.CsrfProtector
 import starshipfights.data.Id
 import starshipfights.data.auth.UserSession

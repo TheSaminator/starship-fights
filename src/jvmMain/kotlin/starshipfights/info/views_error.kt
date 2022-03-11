@@ -32,6 +32,14 @@ suspend fun ApplicationCall.error403(): HTML.() -> Unit = page("Not Allowed", st
 	devModeCallId(callId)
 }
 
+suspend fun ApplicationCall.error403InvalidCsrf(): HTML.() -> Unit = page("CSRF Validation Failed", standardNavBar()) {
+	section {
+		h1 { +"CSRF Validation Failed" }
+		p { +"Unfortunately, the received CSRF failed to validate. Please try again." }
+	}
+	devModeCallId(callId)
+}
+
 suspend fun ApplicationCall.error404(): HTML.() -> Unit = page("Not Found", standardNavBar()) {
 	section {
 		h1 { +"Not Found" }

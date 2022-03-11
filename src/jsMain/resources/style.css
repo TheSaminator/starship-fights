@@ -165,7 +165,7 @@ div.ui-layer {
 
 #error-messages {
 	position: fixed;
-	top: 5vh;
+	top: 20vh;
 	left: 50vw;
 	transform: translate(-50%, 0);
 
@@ -175,15 +175,25 @@ div.ui-layer {
 	text-shadow: 0 0 4px #a33;
 }
 
+#help-messages {
+	position: fixed;
+	bottom: 20vh;
+	left: 50vw;
+	transform: translate(-50%, 0);
+
+	font-size: 1.25em;
+	color: #fff;
+}
+
 #top-middle-info {
 	position: fixed;
-	top: 0;
+	top: 2.5vh;
 	left: 50vw;
-	width: 32.5vw;
-	height: 15vh;
+	width: 36vw;
+	height: 12.5vh;
 
-	transform: translate(-50%, -1em);
-	padding-top: 1.25em;
+	transform: translate(-50%, 0);
+	padding-top: 0.75em;
 }
 
 #top-right-bar {
@@ -192,6 +202,10 @@ div.ui-layer {
 	right: 2.5vw;
 	width: 15vw;
 	height: 75vh;
+}
+
+hr + hr {
+	display: none;
 }
 
 #bottom-center-bar {

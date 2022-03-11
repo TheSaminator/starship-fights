@@ -33,6 +33,7 @@ object GameUI {
 	private lateinit var topRightBar: HTMLDivElement
 	
 	private lateinit var errorMessages: HTMLParagraphElement
+	private lateinit var helpMessages: HTMLParagraphElement
 	
 	private lateinit var shipsOverlay: HTMLElement
 	private lateinit var shipsOverlayRenderer: CSS3DRenderer
@@ -83,6 +84,10 @@ object GameUI {
 			p {
 				id = "error-messages"
 			}
+			
+			p {
+				id = "help-messages"
+			}
 		}
 		
 		chatHistory = document.getElementById("chat-history").unsafeCast<HTMLDivElement>()
@@ -112,6 +117,7 @@ object GameUI {
 		topRightBar = document.getElementById("top-right-bar").unsafeCast<HTMLDivElement>()
 		
 		errorMessages = document.getElementById("error-messages").unsafeCast<HTMLParagraphElement>()
+		helpMessages = document.getElementById("help-messages").unsafeCast<HTMLParagraphElement>()
 		
 		shipsOverlayRenderer = CSS3DRenderer()
 		shipsOverlayRenderer.setSize(window.innerWidth, window.innerHeight)
@@ -138,6 +144,12 @@ object GameUI {
 		
 		errorMessages.textContent = ""
 	}
+	
+	var currentHelpMessage: String
+		get() = helpMessages.textContent ?: ""
+		set(value) {
+			helpMessages.textContent = value
+		}
 	
 	fun updateGameUI(controls: CameraControls) {
 		shipsOverlayCamera.position.copy(controls.camera.getWorldPosition(shipsOverlayCamera.position))
@@ -180,7 +192,7 @@ object GameUI {
 								+ship.fullName
 							}
 							+" has been sighted"
-							if (owner == LocalSide.BLUE)
+							if (owner == LocalSide.GREEN)
 								+" by the enemy"
 							+"!"
 						}
@@ -220,15 +232,11 @@ object GameUI {
 							else
 								entry.damageInflicted.toString()
 							
+							if (entry.critical != null)
+								+" critical"
+							
 							+" damage from "
 							when (entry.attacker) {
-								ShipAttacker.Bombers -> {
-									if (owner == LocalSide.RED)
-										+"our "
-									else
-										+"enemy "
-									+"bombers"
-								}
 								is ShipAttacker.EnemyShip -> {
 									if (entry.weapon != null) {
 										+"the "
@@ -244,11 +252,27 @@ object GameUI {
 										+" of "
 									}
 									+"the "
-									span {
+									strong {
 										style = "color:${owner.other.htmlColor}"
 										+state.getShipInfo(entry.attacker.id).fullName
 									}
 								}
+								ShipAttacker.Fire -> {
+									+"onboard fires"
+								}
+								ShipAttacker.Bombers -> {
+									if (owner == LocalSide.RED)
+										+"our "
+									else
+										+"enemy "
+									+"bombers"
+								}
+							}
+							
+							+when (entry.critical) {
+								ShipCritical.Fire -> ", starting a fire"
+								is ShipCritical.ModulesHit -> ", disabling ${entry.critical.module.joinToDisplayString { it.getDisplayName(ship) }}"
+								else -> ""
 							}
 							+"."
 						}
@@ -267,10 +291,13 @@ object GameUI {
 							when (entry.destroyedBy) {
 								is ShipAttacker.EnemyShip -> {
 									+"the "
-									span {
+									strong {
 										style = "color:${owner.other.htmlColor}"
 										+state.getShipInfo(entry.destroyedBy.id).fullName
 									}
+								}
+								ShipAttacker.Fire -> {
+									+"onboard fires"
 								}
 								ShipAttacker.Bombers -> {
 									+if (owner == LocalSide.RED)
@@ -321,6 +348,13 @@ object GameUI {
 						br
 						+"Phase III - Weapons Fire"
 					}
+					is GamePhase.Repair -> {
+						strong(classes = "heading") {
+							+"Turn ${state.phase.turn}"
+						}
+						br
+						+"Phase IV - Onboard Repairs"
+					}
 				}
 			}
 		}
@@ -347,7 +381,7 @@ object GameUI {
 					
 					element.style.asDynamic().pointerEvents = "none"
 					
-					position.copy(RenderScaling.toWorldPosition(ship.position.currentLocation))
+					position.copy(RenderScaling.toWorldPosition(ship.position.location))
 					position.y = 7.5
 				})
 		}
@@ -396,12 +430,12 @@ object GameUI {
 						tr {
 							repeat(activeShield) {
 								td {
-									style = "background-color:#69F;margin:10px;height:15px"
+									style = "background-color:#69F;margin:20px;height:15px"
 								}
 							}
 							repeat(downShield) {
 								td {
-									style = "background-color:#46A;margin:10px;height:15px"
+									style = "background-color:#46A;margin:20px;height:15px"
 								}
 							}
 						}
@@ -417,12 +451,12 @@ object GameUI {
 						tr {
 							repeat(activeHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#39F" else "#F66"};margin:10px;height:15px"
+									style = "background-color:${if (ship.owner == mySide) "#5F5" else "#F55"};margin:20px;height:15px"
 								}
 							}
 							repeat(downHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#135" else "#522"};margin:10px;height:15px"
+									style = "background-color:${if (ship.owner == mySide) "#262" else "#622"};margin:20px;height:15px"
 								}
 							}
 						}
@@ -439,12 +473,12 @@ object GameUI {
 							tr {
 								repeat(activeWeapons) {
 									td {
-										style = "background-color:#F63;margin:10px;height:15px"
+										style = "background-color:#F63;margin:20px;height:15px"
 									}
 								}
 								repeat(downWeapons) {
 									td {
-										style = "background-color:#A42;margin:10px;height:15px"
+										style = "background-color:#A42;margin:20px;height:15px"
 									}
 								}
 							}
@@ -464,8 +498,8 @@ object GameUI {
 				if (ship.fighterWings.isNotEmpty()) {
 					span {
 						val (borderColor, fillColor) = when (fighterSide) {
-							LocalSide.BLUE -> "#39F" to "#135"
-							LocalSide.RED -> "#F66" to "#522"
+							LocalSide.GREEN -> "#5F5" to "#262"
+							LocalSide.RED -> "#F55" to "#622"
 						}
 						
 						style = "display:inline-block;border:5px solid $borderColor;border-radius:15px;background-color:$fillColor;color:#fff"
@@ -487,7 +521,7 @@ object GameUI {
 				if (ship.bomberWings.isNotEmpty()) {
 					span {
 						val (borderColor, fillColor) = when (bomberSide) {
-							LocalSide.BLUE -> "#39F" to "#135"
+							LocalSide.GREEN -> "#39F" to "#135"
 							LocalSide.RED -> "#F66" to "#522"
 						}
 						
@@ -613,13 +647,11 @@ object GameUI {
 				p {
 					style = "height:19%;margin:0"
 					
-					strong(classes = "heading") {
-						+ship.ship.fullName
-					}
-					
+					strong(classes = "heading") { +ship.ship.fullName }
 					br
 					
 					+ship.ship.shipType.fullerDisplayName
+					br
 					
 					if (ship.owner == mySide)
 						table {
@@ -636,12 +668,43 @@ object GameUI {
 								}
 							}
 						}
+					
+					ship.modulesStatus.statuses.forEach { (module, status) ->
+						when (status) {
+							ShipModuleStatus.INTACT -> {}
+							ShipModuleStatus.DAMAGED -> {
+								span {
+									style = "color:#fd4"
+									+"${module.getDisplayName(ship.ship)} Damaged"
+								}
+								br
+							}
+							ShipModuleStatus.DESTROYED -> {
+								span {
+									style = "color:#e22"
+									+"${module.getDisplayName(ship.ship)} Destroyed"
+								}
+								br
+							}
+						}
+					}
+					
+					if (ship.numFires > 0)
+						span {
+							style = "color:#e94"
+							+"${ship.numFires} Onboard Fires"
+						}
 				}
 				
 				hr { style = "border-color:#555" }
 				
 				p {
 					style = "height:69%;margin:0"
+					
+					if (gameState.phase is GamePhase.Repair) {
+						+"${ship.remainingRepairTokens} Repair Tokens"
+						br
+					}
 					
 					shipAbilities.forEach { ability ->
 						when (ability) {
@@ -678,7 +741,7 @@ object GameUI {
 												title = "${transferFrom.displayName} to ${transferTo.displayName}"
 												
 												img(src = transferFrom.imageUrl, alt = transferFrom.displayName) {
-													style = "width:0.95em;"
+													style = "width:0.95em"
 												}
 												+Entities.nbsp
 												img(src = ShipSubsystem.transferImageUrl, alt = " to ") {
@@ -686,7 +749,7 @@ object GameUI {
 												}
 												+Entities.nbsp
 												img(src = transferTo.imageUrl, alt = transferTo.displayName) {
-													style = "width:0.95em;"
+													style = "width:0.95em"
 												}
 												
 												val delta = mapOf(transferFrom to -1, transferTo to 1)
@@ -707,37 +770,58 @@ object GameUI {
 									}
 								}
 								
-								p {
-									style = "text-align:center"
-									button {
-										+"Confirm"
-										if (ship.validatePowerMode(shipPowerMode))
-											onClickFunction = { e ->
-												e.preventDefault()
-												responder.useAbility(ability)
-											}
-										else {
-											disabled = true
-											style = "cursor:not-allowed"
-										}
-									}
-								}
-							}
-							is PlayerAbilityType.MoveShip -> {
-								p {
-									style = "text-align:center"
-									button {
-										+"Move Ship"
+								button {
+									+"Confirm"
+									if (ship.validatePowerMode(shipPowerMode))
 										onClickFunction = { e ->
 											e.preventDefault()
 											responder.useAbility(ability)
 										}
+									else {
+										disabled = true
+										style = "cursor:not-allowed"
+									}
+								}
+								
+								button {
+									+"Reset"
+									onClickFunction = { e ->
+										e.preventDefault()
+										ClientAbilityData.newShipPowerModes[ship.id] = ship.powerMode
+										updateAbilityData(gameState)
 									}
 								}
 							}
+							is PlayerAbilityType.MoveShip -> {
+								button {
+									+"Move Ship"
+									onClickFunction = { e ->
+										e.preventDefault()
+										responder.useAbility(ability)
+									}
+								}
+							}
+							is PlayerAbilityType.RepairShipModule -> {
+								a(href = "#") {
+									+"Repair ${ability.module.getDisplayName(ship.ship)}"
+									onClickFunction = { e ->
+										e.preventDefault()
+										responder.useAbility(ability)
+									}
+								}
+								br
+							}
+							is PlayerAbilityType.ExtinguishFire -> {
+								a(href = "#") {
+									+"Extinguish Fire"
+									onClickFunction = { e ->
+										e.preventDefault()
+										responder.useAbility(ability)
+									}
+								}
+								br
+							}
 						}
-						
-						hr { style = "border-color:#555" }
 					}
 					
 					combatAbilities.forEach { ability ->
@@ -745,42 +829,13 @@ object GameUI {
 						
 						val weaponInstance = ship.armaments.weaponInstances.getValue(ability.weapon)
 						
-						val firingArcs = weaponInstance.weapon.firingArcs
-						val firingArcsDesc = when (firingArcs) {
-							FiringArc.FIRE_360 -> "360-Degree"
-							FiringArc.FIRE_BROADSIDE -> "Broadside"
-							FiringArc.FIRE_FORE_270 -> "Dorsal"
-							setOf(FiringArc.ABEAM_PORT) -> "Port"
-							setOf(FiringArc.ABEAM_STARBOARD) -> "Starboard"
-							setOf(FiringArc.BOW) -> "Fore"
-							setOf(FiringArc.STERN) -> "Rear"
-							else -> null
-						}.takeIf { weaponInstance !is ShipWeaponInstance.Hangar }
-						
 						val weaponVerb = if (weaponInstance is ShipWeaponInstance.Hangar) "Release" else "Fire"
-						
-						val weaponIsPlural = weaponInstance.weapon.numShots > 1
-						
-						val weaponDesc = when (weaponInstance) {
-							is ShipWeaponInstance.Cannon -> "Cannon" + (if (weaponIsPlural) "s" else "")
-							is ShipWeaponInstance.Lance -> "Lance" + (if (weaponIsPlural) "s" else "") + " (${weaponInstance.charge.toPercent()})"
-							is ShipWeaponInstance.Hangar -> when (weaponInstance.weapon.wing) {
-								StrikeCraftWing.FIGHTERS -> "Fighters"
-								StrikeCraftWing.BOMBERS -> "Bombers"
-							} + " (${weaponInstance.wingHealth.toPercent()})"
-							is ShipWeaponInstance.Torpedo -> "Torpedo" + (if (weaponIsPlural) "es" else "")
-							is ShipWeaponInstance.MegaCannon -> "Mega Giga Cannon (" + weaponInstance.remainingShots + ")"
-							is ShipWeaponInstance.RevelationGun -> "Revelation Gun (" + weaponInstance.remainingShots + ")"
-							is ShipWeaponInstance.EmpAntenna -> "EMP Antenna (" + weaponInstance.remainingShots + ")"
-						}
+						val weaponDesc = weaponInstance.displayName
 						
 						when (ability) {
 							is PlayerAbilityType.ChargeLance -> {
 								a(href = "#") {
-									+"Charge "
-									if (firingArcsDesc != null)
-										+"$firingArcsDesc "
-									+weaponDesc
+									+"Charge $weaponDesc"
 									onClickFunction = { e ->
 										e.preventDefault()
 										responder.useAbility(ability)
@@ -789,10 +844,7 @@ object GameUI {
 							}
 							is PlayerAbilityType.UseWeapon -> {
 								a(href = "#") {
-									+"$weaponVerb "
-									if (firingArcsDesc != null)
-										+"$firingArcsDesc "
-									+weaponDesc
+									+"$weaponVerb $weaponDesc"
 									onClickFunction = { e ->
 										e.preventDefault()
 										responder.useAbility(ability)
@@ -801,10 +853,7 @@ object GameUI {
 							}
 							is PlayerAbilityType.RecallStrikeCraft -> {
 								a(href = "#") {
-									+"Recall "
-									if (firingArcsDesc != null)
-										+"$firingArcsDesc "
-									+weaponDesc
+									+"Recall $weaponDesc"
 									onClickFunction = { e ->
 										e.preventDefault()
 										responder.useAbility(ability)
@@ -819,10 +868,12 @@ object GameUI {
 			p {
 				style = "height:9%;margin:0"
 				
+				hr { style = "border-color:#555" }
+				
 				val finishPhase = abilities.filterIsInstance<PlayerAbilityType.DonePhase>().singleOrNull()
 				if (finishPhase != null)
 					a(href = "#") {
-						+"End Your Phase"
+						+"End Phase"
 						id = "done-phase"
 						
 						onClickFunction = { e ->
@@ -833,7 +884,7 @@ object GameUI {
 				else
 					span {
 						style = "color:#333;cursor:not-allowed"
-						+"End Your Phase"
+						+"End Phase"
 					}
 			}
 		}

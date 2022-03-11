@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 import kotlin.math.abs
 import kotlin.random.Random
+import kotlin.random.nextInt
 
 @Serializable
 data class GameState(
@@ -25,6 +26,20 @@ data class GameState(
 	fun getShipOwner(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships.getValue(id).owner
 }
 
+fun GameState.canFinishPhase(side: GlobalSide): Boolean {
+	return when (phase) {
+		GamePhase.Deploy -> {
+			val usedPoints = ships.values
+				.filter { it.owner == side }
+				.sumOf { it.ship.pointCost }
+			
+			start.playerStart(side).deployableFleet.values.none { usedPoints + it.pointCost <= battleInfo.size.numPoints }
+		}
+		is GamePhase.Move -> ships.values.filter { it.owner == side }.all { it.isDoneCurrentPhase }
+		else -> true
+	}
+}
+
 private fun GameState.afterPhase(): GameState {
 	var newShips = ships
 	val newWrecks = destroyedShips.toMutableMap()
@@ -32,15 +47,9 @@ private fun GameState.afterPhase(): GameState {
 	
 	when (phase) {
 		is GamePhase.Move -> {
-			// Auto-move drifting ships
-			newShips = newShips.mapValues { (_, ship) ->
-				if (ship.isDoneCurrentPhase) ship
-				else ship.copy(position = ship.position.drift)
-			}
-			
 			// Ships that move off the battlefield are considered to disengage
 			newShips = newShips.mapNotNull fleeingShips@{ (id, ship) ->
-				val r = ship.position.currentLocation.vector
+				val r = ship.position.location.vector
 				val mx = start.battlefieldWidth / 2
 				val my = start.battlefieldLength / 2
 				
@@ -56,7 +65,7 @@ private fun GameState.afterPhase(): GameState {
 			// Identify enemy ships
 			newShips = newShips.mapValues { (_, ship) ->
 				if (ship.isIdentified) ship
-				else if (newShips.values.any { it.owner != ship.owner && (it.position.currentLocation - ship.position.currentLocation).length <= SHIP_SENSOR_RANGE })
+				else if (newShips.values.any { it.owner != ship.owner && (it.position.location - ship.position.location).length <= SHIP_SENSOR_RANGE })
 					ship.copy(isIdentified = true).also {
 						newChatEntries += ChatEntry.ShipIdentified(it.id, Moment.now)
 					}
@@ -73,7 +82,7 @@ private fun GameState.afterPhase(): GameState {
 				
 				val totalFighterHealth = ship.fighterWings.sumOf { (carrierId, wingId) ->
 					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-				} + ship.ship.durability.turretDefense
+				} + (if (ship.canUseTurrets) ship.ship.durability.turretDefense else 0.0)
 				
 				val totalBomberHealth = ship.bomberWings.sumOf { (carrierId, wingId) ->
 					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
@@ -96,7 +105,14 @@ private fun GameState.afterPhase(): GameState {
 				
 				when (val impactResult = ship.impact(hits)) {
 					is ImpactResult.Damaged -> {
-						newChatEntries += ChatEntry.ShipAttacked(id, ShipAttacker.Bombers, Moment.now, hits, null)
+						newChatEntries += ChatEntry.ShipAttacked(
+							ship = id,
+							attacker = ShipAttacker.Bombers,
+							sentAt = Moment.now,
+							damageInflicted = hits,
+							weapon = null,
+							critical = null
+						)
 						id to impactResult.ship
 					}
 					is ImpactResult.Destroyed -> {
@@ -120,15 +136,50 @@ private fun GameState.afterPhase(): GameState {
 				)
 			}
 			
-			// Recall strike craft and regenerate weapon and shield powers
+			// Recall strike craft and regenerate weapon power
 			newShips = newShips.mapValues { (_, ship) ->
 				ship.copy(
 					weaponAmount = ship.powerMode.weapons,
-					shieldAmount = (ship.shieldAmount..ship.powerMode.shields).random(),
 					
 					fighterWings = emptySet(),
 					bomberWings = emptySet(),
 					usedArmaments = emptySet(),
+				)
+			}
+		}
+		is GamePhase.Repair -> {
+			// Deal fire damage
+			newShips = newShips.mapNotNull fireDamage@{ (id, ship) ->
+				if (ship.numFires <= 0)
+					return@fireDamage id to ship
+				
+				val hits = Random.nextInt(0..ship.numFires)
+				
+				when (val impactResult = ship.impact(hits)) {
+					is ImpactResult.Damaged -> {
+						newChatEntries += ChatEntry.ShipAttacked(
+							ship = id,
+							attacker = ShipAttacker.Fire,
+							sentAt = Moment.now,
+							damageInflicted = hits,
+							weapon = null,
+							critical = null
+						)
+						id to impactResult.ship
+					}
+					is ImpactResult.Destroyed -> {
+						newWrecks[id] = impactResult.ship
+						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Fire)
+						null
+					}
+				}
+			}.toMap()
+			
+			// Replenish repair tokens and regenerate shield power
+			newShips = newShips.mapValues { (_, ship) ->
+				ship.copy(
+					shieldAmount = if (ship.canUseShields) (ship.shieldAmount..ship.powerMode.shields).random() else 0,
+					usedRepairTokens = 0
 				)
 			}
 		}
@@ -183,20 +234,20 @@ enum class GlobalSide {
 		}
 }
 
-fun GlobalSide.relativeTo(me: GlobalSide) = if (this == me) LocalSide.BLUE else LocalSide.RED
+fun GlobalSide.relativeTo(me: GlobalSide) = if (this == me) LocalSide.GREEN else LocalSide.RED
 
 enum class LocalSide {
-	BLUE, RED;
+	GREEN, RED;
 	
 	val other: LocalSide
 		get() = when (this) {
-			BLUE -> RED
-			RED -> BLUE
+			GREEN -> RED
+			RED -> GREEN
 		}
 }
 
 val LocalSide.htmlColor: String
 	get() = when (this) {
-		LocalSide.BLUE -> "#3399FF"
-		LocalSide.RED -> "#FF6666"
+		LocalSide.GREEN -> "#55FF55"
+		LocalSide.RED -> "#FF5555"
 	}

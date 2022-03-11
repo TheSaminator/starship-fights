@@ -56,15 +56,17 @@ object RenderResources {
 		coroutineScope {
 			launch {
 				val img = Image()
+				val job = launch { img.awaitEvent("load") }
 				img.src = LOGO_URL
-				img.awaitEvent("load")
+				job.join()
 			}
 			
 			launch {
 				Faction.values().map { faction ->
 					val img = Image()
+					val job = launch { img.awaitEvent("load") }
 					img.src = faction.flagUrl
-					launch { img.awaitEvent("load") }
+					job
 				}.joinAll()
 			}
 			
@@ -181,7 +183,7 @@ object RenderResources {
 				
 				markerFactory = CustomRenderFactory { side ->
 					when (side) {
-						LocalSide.BLUE -> friendlyMarkerMesh
+						LocalSide.GREEN -> friendlyMarkerMesh
 						LocalSide.RED -> hostileMarkerMesh
 					}.clone(true)
 				}
@@ -227,16 +229,16 @@ object RenderResources {
 					
 					shipMeshesRaw[st] = RenderFactory { mesh.clone(true) }
 					
-					val blueOutlineMaterial = outlineMaterial.clone().unsafeCast<ShaderMaterial>().apply {
-						uniforms["outlineColor"]!!.value = Color(LocalSide.BLUE.htmlColor)
+					val greenOutlineMaterial = outlineMaterial.clone().unsafeCast<ShaderMaterial>().apply {
+						uniforms["outlineColor"]!!.value = Color(LocalSide.GREEN.htmlColor)
 					}
 					
 					val redOutlineMaterial = outlineMaterial.clone().unsafeCast<ShaderMaterial>().apply {
 						uniforms["outlineColor"]!!.value = Color(LocalSide.RED.htmlColor)
 					}
 					
-					val outlineBlue = mesh.clone(true).unsafeCast<Mesh>()
-					outlineBlue.material = blueOutlineMaterial
+					val outlineGreen = mesh.clone(true).unsafeCast<Mesh>()
+					outlineGreen.material = greenOutlineMaterial
 					
 					val outlineRed = mesh.clone(true).unsafeCast<Mesh>()
 					outlineRed.material = redOutlineMaterial
@@ -249,7 +251,7 @@ object RenderResources {
 							markerFactory.generate(side).unsafeCast<Mesh>(),
 							mesh.clone(true).unsafeCast<Mesh>(),
 							when (side) {
-								LocalSide.BLUE -> outlineBlue
+								LocalSide.GREEN -> outlineGreen
 								LocalSide.RED -> outlineRed
 							}.clone(true).unsafeCast<Mesh>()
 						).group
@@ -258,8 +260,8 @@ object RenderResources {
 				
 				shipMesh = CustomRenderFactory { shipInstance ->
 					shipMeshes.getValue(shipInstance.ship.shipType).generate(shipInstance).also { render ->
-						RenderScaling.toWorldRotation(shipInstance.position.facingAngle, render)
-						render.position.copy(RenderScaling.toWorldPosition(shipInstance.position.currentLocation))
+						RenderScaling.toWorldRotation(shipInstance.position.facing, render)
+						render.position.copy(RenderScaling.toWorldPosition(shipInstance.position.location))
 					}
 				}
 			}

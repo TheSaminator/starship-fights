@@ -4,11 +4,11 @@ import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 
 enum class BattleSize(val numPoints: Int, val maxWeightClass: ShipWeightClass, val displayName: String) {
-	SKIRMISH(500, ShipWeightClass.CRUISER, "Skirmish"),
-	FIREFIGHT(700, ShipWeightClass.BATTLECRUISER, "Firefight"),
-	BATTLE(900, ShipWeightClass.BATTLESHIP, "Battle"),
-	GRAND_CLASH(1200, ShipWeightClass.BATTLESHIP, "Grand Clash"),
-	LEGENDARY_STRUGGLE(1500, ShipWeightClass.BATTLESHIP, "Legendary Struggle"),
+	SKIRMISH(600, ShipWeightClass.CRUISER, "Skirmish"),
+	FIREFIGHT(800, ShipWeightClass.CRUISER, "Firefight"),
+	BATTLE(1000, ShipWeightClass.BATTLECRUISER, "Battle"),
+	GRAND_CLASH(1300, ShipWeightClass.BATTLESHIP, "Grand Clash"),
+	LEGENDARY_STRUGGLE(1600, ShipWeightClass.BATTLESHIP, "Legendary Struggle"),
 	CRUCIBLE_OF_HISTORY(2000, ShipWeightClass.COLOSSUS, "Crucible of History");
 }
 

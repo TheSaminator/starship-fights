@@ -103,8 +103,8 @@ interface AuthProvider {
 						showDiscordName = form["showdiscord"] == "yes",
 						showUserStatus = form["showstatus"] == "yes",
 						logIpAddresses = form["logaddress"] == "yes",
-						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters").formUrlEncode()),
-						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage?" + parametersOf("error", "Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters").formUrlEncode())
+						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters")),
+						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters"))
 					)
 					User.put(newUser)
 					
@@ -133,7 +133,7 @@ interface AuthProvider {
 					
 					val newAdmiral = Admiral(
 						owningUser = currentUser,
-						name = form["name"]?.takeIf { it.isNotBlank() && it.length < ADMIRAL_NAME_MAX_LENGTH } ?: throw MissingRequestParameterException("name"),
+						name = form["name"]?.takeIf { it.isNotBlank() && it.length <= ADMIRAL_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $ADMIRAL_NAME_MAX_LENGTH characters")),
 						isFemale = form.getOrFail("sex") == "female",
 						faction = Faction.valueOf(form.getOrFail("faction")),
 						acumen = 0,
@@ -169,7 +169,7 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) forbid()
 					
 					val newAdmiral = admiral.copy(
-						name = form["name"]?.takeIf { it.isNotBlank() } ?: admiral.name,
+						name = form["name"]?.takeIf { it.isNotBlank() && it.length <= ADMIRAL_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $ADMIRAL_NAME_MAX_LENGTH characters")),
 						isFemale = form["sex"] == "female"
 					)
 					
@@ -197,7 +197,7 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) forbid()
 					if (ship.owningAdmiral != admiralId) forbid()
 					
-					val newName = formParams["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage")
+					val newName = formParams["name"]?.takeIf { it.isNotBlank() && it.length <= SHIP_NAME_MAX_LENGTH } ?: redirect("/admiral/${admiralId}/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $SHIP_NAME_MAX_LENGTH characters"))
 					ShipInDrydock.set(shipId, setValue(ShipInDrydock::name, newName))
 					
 					redirect("/admiral/${admiralId}/manage")
@@ -224,12 +224,12 @@ interface AuthProvider {
 					if (admiral.owningUser != currentUser) forbid()
 					if (ship.owningAdmiral != admiralId) forbid()
 					
-					if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage")
-					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
+					if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot sell ships that are not ready for battle"))
+					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot sell a ${ship.shipType.fullDisplayName}"))
 					
 					coroutineScope {
 						launch { ShipInDrydock.del(shipId) }
-						launch { Admiral.set(admiralId, inc(Admiral::money, ship.shipType.weightClass.sellPrice)) }
+						launch { Admiral.set(admiralId, inc(Admiral::money, ship.shipType.sellPrice)) }
 					}
 					
 					redirect("/admiral/${admiralId}/manage")
@@ -253,15 +253,15 @@ interface AuthProvider {
 					if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
 						throw NotFoundException()
 					
-					if (shipType.weightClass.buyPrice > admiral.money)
-						redirect("/admiral/${admiralId}/manage")
+					if (shipType.buyPrice > admiral.money)
+						redirect("/admiral/${admiralId}/manage" + withErrorMessage("You cannot afford that ship"))
 					
 					val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 					
 					if (shipType.weightClass.isUnique) {
 						val hasSameWeightClass = ownedShips.any { it.shipType.weightClass == shipType.weightClass }
 						if (hasSameWeightClass)
-							redirect("/admiral/${admiralId}/manage")
+							redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot buy two copies of a ${shipType.fullDisplayName}"))
 					}
 					
 					val shipNames = ownedShips.map { it.name }.toMutableSet()
@@ -276,7 +276,7 @@ interface AuthProvider {
 					
 					coroutineScope {
 						launch { ShipInDrydock.put(newShip) }
-						launch { Admiral.set(admiralId, inc(Admiral::money, -shipType.weightClass.buyPrice)) }
+						launch { Admiral.set(admiralId, inc(Admiral::money, -shipType.buyPrice)) }
 					}
 					
 					redirect("/admiral/${admiralId}/manage")
@@ -434,7 +434,7 @@ object TestAuthProvider : AuthProvider {
 					else
 						"An unknown error occurred."
 					
-					val redirectUrl = "/login?" + parametersOf("error", errorMsg).formUrlEncode()
+					val redirectUrl = "/login" + withErrorMessage(errorMsg)
 					call.respondRedirect(redirectUrl)
 				}
 			}
@@ -446,8 +446,6 @@ object TestAuthProvider : AuthProvider {
 			get("/login") {
 				if (call.getUserSession() != null)
 					redirect("/me")
-				
-				val errorMsg = call.request.queryParameters["error"]
 				
 				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
@@ -470,10 +468,10 @@ object TestAuthProvider : AuthProvider {
 								
 								required = true
 							}
-							errorMsg?.let { msg ->
+							call.request.queryParameters["error"]?.let { errorMsg ->
 								p {
 									style = "color:#d22"
-									+msg
+									+errorMsg
 								}
 							}
 							submitInput {
@@ -533,8 +531,6 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 	override fun installRouting(conf: Routing) {
 		with(conf) {
 			get("/login") {
-				val errorMsg = call.request.queryParameters["error"]
-				
 				call.respondHtml(HttpStatusCode.OK, page("Login with Discord", call.standardNavBar()) {
 					section {
 						p {
@@ -543,11 +539,12 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 							a(href = "/about#pp") { +"Privacy Policy" }
 							+"."
 						}
-						if (errorMsg != null)
+						call.request.queryParameters["error"]?.let { errorMsg ->
 							p {
 								style = "color:#d22"
 								+errorMsg
 							}
+						}
 						p {
 							style = "text-align:center"
 							a(href = "/login/discord") { +"Continue to Discord" }

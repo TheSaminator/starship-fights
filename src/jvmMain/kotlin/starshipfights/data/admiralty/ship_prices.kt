@@ -1,9 +1,10 @@
 package starshipfights.data.admiralty
 
-import starshipfights.game.ShipWeightClass
+import starshipfights.game.ShipType
+import starshipfights.game.pointCost
 
-val ShipWeightClass.buyPrice: Int
-	get() = basePointCost * 28 / 25
+val ShipType.buyPrice: Int
+	get() = pointCost * 28 / 25
 
-val ShipWeightClass.sellPrice: Int
-	get() = basePointCost * 21 / 25
+val ShipType.sellPrice: Int
+	get() = pointCost * 21 / 25

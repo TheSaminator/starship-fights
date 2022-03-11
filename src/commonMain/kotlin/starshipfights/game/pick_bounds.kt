@@ -15,7 +15,7 @@ fun GameState.isValidPick(request: PickRequest, response: PickResponse): Boolean
 			
 			if (response.position !in request.boundary) return false
 			if (ships.values.any {
-					it.owner in request.type.excludesNearShips && (it.position.currentLocation - response.position).length <= SHIP_BASE_SIZE
+					it.id in request.type.excludesNearShips && (it.position.location - response.position).length <= SHIP_BASE_SIZE
 				}) return false
 			
 			return true
@@ -26,7 +26,7 @@ fun GameState.isValidPick(request: PickRequest, response: PickResponse): Boolean
 			if (response.id !in ships) return false
 			
 			val ship = ships.getValue(response.id)
-			if (ship.position.currentLocation !in request.boundary) return false
+			if (ship.position.location !in request.boundary) return false
 			if (ship.owner !in request.type.allowSides) return false
 			
 			return true
@@ -49,7 +49,7 @@ sealed class PickResponse {
 @Serializable
 sealed class PickType {
 	@Serializable
-	data class Location(val excludesNearShips: Set<GlobalSide>, val helper: PickHelper, val drawLineFrom: Position? = null) : PickType()
+	data class Location(val excludesNearShips: Set<Id<ShipInstance>>, val helper: PickHelper, val drawLineFrom: Position? = null) : PickType()
 	
 	@Serializable
 	data class Ship(val allowSides: Set<GlobalSide>) : PickType()

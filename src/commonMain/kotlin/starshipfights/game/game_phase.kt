@@ -27,6 +27,11 @@ sealed class GamePhase {
 	
 	@Serializable
 	data class Attack(override val turn: Int) : GamePhase() {
+		override fun next() = Repair(turn)
+	}
+	
+	@Serializable
+	data class Repair(override val turn: Int) : GamePhase() {
 		override fun next() = Power(turn + 1)
 	}
 }

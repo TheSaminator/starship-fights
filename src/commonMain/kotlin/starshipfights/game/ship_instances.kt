@@ -21,12 +21,45 @@ data class ShipInstance(
 	val shieldAmount: Int = powerMode.shields,
 	val hullAmount: Int = ship.durability.maxHullPoints,
 	
+	val modulesStatus: ShipModulesStatus = ShipModulesStatus.forShip(ship),
+	val numFires: Int = 0,
+	val usedRepairTokens: Int = 0,
+	
 	val armaments: ShipInstanceArmaments = ship.armaments.instantiate(),
 	val usedArmaments: Set<Id<ShipWeapon>> = emptySet(),
 	
 	val fighterWings: Set<ShipHangarWing> = emptySet(),
 	val bomberWings: Set<ShipHangarWing> = emptySet(),
 ) {
+	val canUseShields: Boolean
+		get() = modulesStatus[ShipModule.Shields].canBeUsed
+	
+	val canUseTurrets: Boolean
+		get() = modulesStatus[ShipModule.Turrets].canBeUsed
+	
+	fun canUseWeapon(weaponId: Id<ShipWeapon>): Boolean {
+		if (weaponId in usedArmaments)
+			return false
+		
+		if (!modulesStatus[ShipModule.Weapon(weaponId)].canBeUsed)
+			return false
+		
+		val weapon = armaments.weaponInstances[weaponId] ?: return false
+		
+		return when (weapon) {
+			is ShipWeaponInstance.Cannon -> weaponAmount > 0
+			is ShipWeaponInstance.Hangar -> weapon.wingHealth > 0.0
+			is ShipWeaponInstance.Lance -> weapon.numCharges > 0
+			is ShipWeaponInstance.Torpedo -> true
+			is ShipWeaponInstance.MegaCannon -> weapon.remainingShots > 0
+			is ShipWeaponInstance.RevelationGun -> weapon.remainingShots > 0
+			is ShipWeaponInstance.EmpAntenna -> weapon.remainingShots > 0
+		}
+	}
+	
+	val remainingRepairTokens: Int
+		get() = ship.durability.repairTokens - usedRepairTokens
+	
 	val id: Id<ShipInstance>
 		get() = ship.id.reinterpret()
 }
@@ -43,19 +76,9 @@ data class ShipWreck(
 
 @Serializable
 data class ShipPosition(
-	val currentLocation: Position,
-	val previousLocation: Position,
-	val facingAngle: Double
-) {
-	val currentVelocity: Distance
-		get() = currentLocation - previousLocation
-	
-	val drift: ShipPosition
-		get() = copy(
-			currentLocation = currentLocation + currentVelocity,
-			previousLocation = currentLocation
-		)
-}
+	val location: Position,
+	val facing: Double
+)
 
 enum class ShipSubsystem {
 	WEAPONS, SHIELDS, ENGINES;
@@ -108,9 +131,16 @@ data class ShipPowerMode(
 fun ShipInstance.remainingGridEfficiency(newPowerMode: ShipPowerMode) = (ship.reactor.gridEfficiency * 2 - (newPowerMode distanceTo powerMode)) / 2
 fun ShipInstance.validatePowerMode(newPowerMode: ShipPowerMode) = newPowerMode.total == ship.reactor.powerOutput && ShipSubsystem.values().none { newPowerMode[it] < 0 } && (newPowerMode distanceTo powerMode) <= ship.reactor.gridEfficiency * 2
 
+val ShipInstance.movementCoefficient: Double
+	get() = sqrt(powerMode.engines.toDouble() / ship.reactor.subsystemAmount) *
+			if (modulesStatus[ShipModule.Engines].canBeUsed)
+				1.0
+			else
+				0.5
+
 val ShipInstance.movement: ShipMovement
 	get() {
-		val coefficient = sqrt(powerMode.engines.toDouble() / ship.reactor.subsystemAmount)
+		val coefficient = movementCoefficient
 		return with(ship.movement) {
 			copy(turnAngle = turnAngle * coefficient, moveSpeed = moveSpeed * coefficient)
 		}

@@ -41,3 +41,10 @@ else this + (this * (multiplier - 1))
 fun Double.toPercent() = "${(this * 100).roundToInt()}%"
 
 fun smoothNegative(x: Double) = if (x < 0) exp(x) else x + 1
+
+fun <T> Iterable<T>.joinToDisplayString(oxfordComma: Boolean = true, transform: (T) -> String = { it.toString() }): String = when (val size = count()) {
+	0 -> ""
+	1 -> transform(single())
+	2 -> "${transform(first())} and ${transform(last())}"
+	else -> "${take(size - 1).joinToString { transform(it) }}${if (oxfordComma) "," else ""} and ${transform(last())}"
+}

@@ -111,8 +111,8 @@ private suspend fun GameRenderInteraction.execute() {
 	}
 }
 
-private suspend fun GameNetworkInteraction.execute(token: String): String {
-	val gameEnd = CompletableDeferred<String>()
+private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSide?, String> {
+	val gameEnd = CompletableDeferred<Pair<LocalSide?, String>>()
 	
 	try {
 		httpClient.webSocket("$rootPathWs/game/$token") {
@@ -121,7 +121,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): String {
 			}.display()
 			
 			if (!opponentJoined)
-				Popup.GameOver("Unfortunately, your opponent never entered the battle.", gameState.value).display()
+				Popup.GameOver(LocalSide.GREEN, "Unfortunately, your opponent never entered the battle.", gameState.value).display()
 			
 			val sendActionsJob = launch {
 				while (true) {
@@ -141,18 +141,18 @@ private suspend fun GameNetworkInteraction.execute(token: String): String {
 						errorMessages.send(event.message)
 					}
 					is GameEvent.GameEnd -> {
-						gameEnd.complete(event.message)
+						gameEnd.complete(event.winner?.relativeTo(mySide) to event.message)
 						closeAndReturn { return@webSocket sendActionsJob.cancel() }
 					}
 				}
 			}
 		}
 	} catch (ex: WebSocketException) {
-		gameEnd.complete("Server closed connection abruptly")
+		gameEnd.complete(null to "Server closed connection abruptly")
 	}
 	
 	if (gameEnd.isActive)
-		gameEnd.complete("Connection closed")
+		gameEnd.complete(null to "Connection closed")
 	
 	return gameEnd.await()
 }
@@ -202,10 +202,10 @@ suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 		val connectionJob = async { gameConnection.execute(token) }
 		val renderingJob = launch { gameRendering.execute() }
 		
-		val finalMessage = connectionJob.await()
+		val (finalWinner, finalMessage) = connectionJob.await()
 		renderingJob.cancel()
 		
 		interruptExit = false
-		Popup.GameOver(finalMessage, gameState.value).display()
+		Popup.GameOver(finalWinner, finalMessage, gameState.value).display()
 	}
 }

@@ -570,7 +570,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 	
 	val buyableShips = ShipType.values().filter { type ->
-		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.weightClass.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)
+		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)
 	}.sortedBy { it.name }.sortedBy { it.weightClass.rank }
 	
 	return page(
@@ -582,6 +582,12 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	) {
 		section {
 			h1 { +"Managing ${admiral.name}" }
+			request.queryParameters["error"]?.let { errorMsg ->
+				p {
+					style = "color:#d22"
+					+errorMsg
+				}
+			}
 			form(method = FormMethod.post, action = "/admiral/${admiral.id}/manage") {
 				csrfToken(currentSession.id)
 				h3 {
@@ -716,7 +722,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							}
 						}
 						td {
-							+ship.shipType.weightClass.sellPrice.toString()
+							+ship.shipType.sellPrice.toString()
 							+" "
 							+admiral.faction.currencyName
 							if (ship.readyAt <= now && !ship.shipType.weightClass.isUnique) {
@@ -739,7 +745,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							a(href = "/info/${st.toUrlSlug()}") { +st.fullDisplayName }
 						}
 						td {
-							+st.weightClass.buyPrice.toString()
+							+st.buyPrice.toString()
 							+" "
 							+admiral.faction.currencyName
 							br
@@ -827,7 +833,7 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.weightClass.sellPrice} ${admiral.faction.currencyName}."
+				+"${admiral.fullName} is about to sell the ${ship.shipType.fullDisplayName} ${ship.shipData.fullName} for ${ship.shipType.sellPrice} ${admiral.faction.currencyName}."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {
@@ -858,14 +864,14 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 	if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
 		throw NotFoundException()
 	
-	if (shipType.weightClass.buyPrice > admiral.money) {
+	if (shipType.buyPrice > admiral.money) {
 		return page(
 			"Too Expensive", null, null
 		) {
 			section {
 				h1 { +"Too Expensive" }
 				p {
-					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}."
+					+"Unfortunately, the ${shipType.fullDisplayName} is out of ${admiral.fullName}'s budget. It costs ${shipType.buyPrice} ${admiral.faction.currencyName}, and ${admiral.name} only has ${admiral.money} ${admiral.faction.currencyName}."
 				}
 				form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 					submitInput {
@@ -882,7 +888,7 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 		section {
 			h1 { +"Are You Sure?" }
 			p {
-				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.weightClass.buyPrice} ${admiral.faction.currencyName}."
+				+"${admiral.fullName} is about to buy a ${shipType.fullDisplayName} for ${shipType.buyPrice} ${admiral.faction.currencyName}."
 			}
 			form(method = FormMethod.get, action = "/admiral/${admiral.id}/manage") {
 				submitInput {

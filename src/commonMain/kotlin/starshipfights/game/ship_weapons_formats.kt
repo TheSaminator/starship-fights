@@ -97,7 +97,7 @@ fun diadochiShipWeapons(
 	}
 	
 	repeat(hangarSections * 2) { w ->
-		if (w % 3 == 0)
+		if (w % 2 == 0)
 			idCounter.add(weapons, ShipWeapon.Hangar(StrikeCraftWing.FIGHTERS, "Fighter complement"))
 		else
 			idCounter.add(weapons, ShipWeapon.Hangar(StrikeCraftWing.BOMBERS, "Bomber complement"))

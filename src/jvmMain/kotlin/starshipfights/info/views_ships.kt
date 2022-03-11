@@ -22,7 +22,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 		h2 { +"Game Mechanics" }
 		h3 { +"Types of Weapons" }
 		p {
-			+"The four main types of weapons in Starship Fights are cannons, lances, torpedoes, and strike craft. Cannons fire bolts of massive particles that have a chance to miss their target; this chance increases with distance and relative velocity. Lances fire a beam of massless particles that strike their target instantly, however lances also need to be charged by spending Weapons Power. Torpedoes are strong against unshielded hulls, guaranteed to deal two impacts, but are weak against shields, with only a 50% chance to hit if the target has its shields up. Strike craft come in two flavors: fighters and bombers. Fighters are used to defend your ships from bombers, while bombers are used to attack hostile ships."
+			+"The four main types of weapons in Starship Fights are cannons, lances, torpedoes, and strike craft. Cannons fire bolts of massive particles that have a chance to miss their target; this chance increases with distance. Lances fire a beam of massless particles that strike their target instantly, however lances also need to be charged by spending Weapons Power. Torpedoes are strong against unshielded hulls, guaranteed to deal two impacts, but are weak against shields, with only a 50% chance to hit if the target has its shields up. Strike craft come in two flavors: fighters and bombers. Fighters are used to defend your ships from bombers, while bombers are used to attack hostile ships."
 		}
 		p {
 			+"There are also three types of special weapons: the Mechyrdians' Mega Giga Cannon, the Masra Draetsen Revelation Gun, and the Isarnareyksk EMP Emitter. The Mega Giga Cannon fires a long-range projectile that deals severe damage to enemy ships, but has a limited number of shots. The Revelation Gun instantly vaporizes an enemy ship, but can only be used once in a battle. The EMP Antenna depletes by a random amount the targeted ships' subsystem powers."
@@ -36,7 +36,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", s
 			+"Games start with a pre-battle deployment phase, and continue with three-phase turns. During the deploy phase, both players simultaneously deploy their fleets in the area that they are allowed to deploy ships within. Once both players are done deploying, the battle begins: enemy ships are revealed as Signals (not yet identified as ships), and the first Turn starts. The first phase of a turn is the Power Distribution phase: ships distribute power between their various subsystems. Both players take this phase simultaneously."
 		}
 		p {
-			+"The next phase is the Ship Movement phase: ships turn and then either accelerate or decelerate. The velocity of a ship is the vector distance from the ship's previous position and its current position. If a ship isn't moved manually, it is considered drifting, and will move in accordance with its current velocity. If a ship is moved manually, first it decides a direction and angle to turn towards. Then, it moves along a line centered on what its position would be if it were left to drift; the direction of this line is halfway between the angle that the ship is facing, and the direction of its current velocity. Once both players are done moving their ships, the third and final phase begins."
+			+"The next phase is the Ship Movement phase: ships turn and then move. Ships turn up to a certain angle away from their current facing, then they move a certain distance away from their current position."
 		}
 		p {
 			+"At the last phase of a turn, ships fire weapons at each other. Again, both players take this phase simultaneously. Ships fire weapons at enemy ships, as far as they can and as much as they can. Damage from weapons is inflicted on targeted ships instantly, so players are encouraged to click fast when attacking enemy ships. Note that this does not apply to strike craft; they are deployed to ships, with percentages on the ship labels indicating the total strength of all strike wings surrounding a ship, and the damage done by bombers is calculated at the end of the phase, before the next turn begins."
@@ -91,7 +91,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 				td {
 					+shipType.weightClass.displayName
 					br
-					+"(${shipType.weightClass.basePointCost} points to deploy)"
+					+"(${shipType.pointCost} points to deploy)"
 				}
 				td {
 					+"${shipType.weightClass.durability.maxHullPoints} impacts"

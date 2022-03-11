@@ -15,7 +15,7 @@ data class Ship(
 		get() = "${shipType.faction.shipPrefix}$name"
 	
 	val pointCost: Int
-		get() = shipType.weightClass.basePointCost
+		get() = shipType.pointCost
 	
 	val reactor: ShipReactor
 		get() = shipType.weightClass.reactor
@@ -68,48 +68,49 @@ data class ShipMovement(
 
 val ShipWeightClass.movement: ShipMovement
 	get() = when (this) {
-		ShipWeightClass.ESCORT -> ShipMovement(PI / 2, 800.0)
-		ShipWeightClass.DESTROYER -> ShipMovement(PI / 2, 700.0)
-		ShipWeightClass.CRUISER -> ShipMovement(PI / 3, 600.0)
-		ShipWeightClass.BATTLECRUISER -> ShipMovement(PI / 3, 600.0)
-		ShipWeightClass.BATTLESHIP -> ShipMovement(PI / 4, 500.0)
+		ShipWeightClass.ESCORT -> ShipMovement(PI / 2, 2500.0)
+		ShipWeightClass.DESTROYER -> ShipMovement(PI / 2, 2200.0)
+		ShipWeightClass.CRUISER -> ShipMovement(PI / 3, 1900.0)
+		ShipWeightClass.BATTLECRUISER -> ShipMovement(PI / 3, 1900.0)
+		ShipWeightClass.BATTLESHIP -> ShipMovement(PI / 4, 1600.0)
 		
-		ShipWeightClass.GRAND_CRUISER -> ShipMovement(PI / 4, 600.0)
-		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 400.0)
+		ShipWeightClass.GRAND_CRUISER -> ShipMovement(PI / 4, 1750.0)
+		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 2800.0)
 		
-		ShipWeightClass.AUXILIARY_SHIP -> ShipMovement(PI / 2, 800.0)
-		ShipWeightClass.LIGHT_CRUISER -> ShipMovement(PI / 2, 700.0)
-		ShipWeightClass.MEDIUM_CRUISER -> ShipMovement(PI / 3, 600.0)
-		ShipWeightClass.HEAVY_CRUISER -> ShipMovement(PI / 3, 500.0)
+		ShipWeightClass.AUXILIARY_SHIP -> ShipMovement(PI / 2, 2500.0)
+		ShipWeightClass.LIGHT_CRUISER -> ShipMovement(PI / 2, 2250.0)
+		ShipWeightClass.MEDIUM_CRUISER -> ShipMovement(PI / 3, 2000.0)
+		ShipWeightClass.HEAVY_CRUISER -> ShipMovement(PI / 3, 1750.0)
 		
-		ShipWeightClass.FRIGATE -> ShipMovement(PI * 2 / 3, 1000.0)
-		ShipWeightClass.LINE_SHIP -> ShipMovement(PI / 2, 800.0)
-		ShipWeightClass.DREADNOUGHT -> ShipMovement(PI / 3, 600.0)
+		ShipWeightClass.FRIGATE -> ShipMovement(PI * 2 / 3, 2750.0)
+		ShipWeightClass.LINE_SHIP -> ShipMovement(PI / 2, 2250.0)
+		ShipWeightClass.DREADNOUGHT -> ShipMovement(PI / 3, 1750.0)
 	}
 
 @Serializable
 data class ShipDurability(
 	val maxHullPoints: Int,
 	val turretDefense: Double,
+	val repairTokens: Int,
 )
 
 val ShipWeightClass.durability: ShipDurability
 	get() = when (this) {
-		ShipWeightClass.ESCORT -> ShipDurability(2, 0.5)
-		ShipWeightClass.DESTROYER -> ShipDurability(4, 0.5)
-		ShipWeightClass.CRUISER -> ShipDurability(6, 1.0)
-		ShipWeightClass.BATTLECRUISER -> ShipDurability(7, 1.0)
-		ShipWeightClass.BATTLESHIP -> ShipDurability(9, 2.0)
+		ShipWeightClass.ESCORT -> ShipDurability(4, 0.5, 1)
+		ShipWeightClass.DESTROYER -> ShipDurability(8, 0.5, 2)
+		ShipWeightClass.CRUISER -> ShipDurability(12, 1.0, 3)
+		ShipWeightClass.BATTLECRUISER -> ShipDurability(14, 1.0, 3)
+		ShipWeightClass.BATTLESHIP -> ShipDurability(18, 2.0, 4)
 		
-		ShipWeightClass.GRAND_CRUISER -> ShipDurability(8, 1.5)
-		ShipWeightClass.COLOSSUS -> ShipDurability(13, 3.0)
+		ShipWeightClass.GRAND_CRUISER -> ShipDurability(16, 1.5, 3)
+		ShipWeightClass.COLOSSUS -> ShipDurability(27, 3.0, 5)
 		
-		ShipWeightClass.AUXILIARY_SHIP -> ShipDurability(2, 2.0)
-		ShipWeightClass.LIGHT_CRUISER -> ShipDurability(4, 3.0)
-		ShipWeightClass.MEDIUM_CRUISER -> ShipDurability(6, 3.5)
-		ShipWeightClass.HEAVY_CRUISER -> ShipDurability(8, 4.0)
+		ShipWeightClass.AUXILIARY_SHIP -> ShipDurability(4, 2.0, 1)
+		ShipWeightClass.LIGHT_CRUISER -> ShipDurability(8, 3.0, 2)
+		ShipWeightClass.MEDIUM_CRUISER -> ShipDurability(12, 3.5, 3)
+		ShipWeightClass.HEAVY_CRUISER -> ShipDurability(16, 4.0, 4)
 		
-		ShipWeightClass.FRIGATE -> ShipDurability(4, 1.5)
-		ShipWeightClass.LINE_SHIP -> ShipDurability(7, 2.0)
-		ShipWeightClass.DREADNOUGHT -> ShipDurability(10, 2.5)
+		ShipWeightClass.FRIGATE -> ShipDurability(10, 1.5, 1)
+		ShipWeightClass.LINE_SHIP -> ShipDurability(15, 2.0, 1)
+		ShipWeightClass.DREADNOUGHT -> ShipDurability(20, 2.5, 1)
 	}

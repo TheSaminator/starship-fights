@@ -15,7 +15,7 @@ object GameRender {
 		state.ships.forEach { (_, ship) ->
 			when (state.renderShipAs(ship, mySide)) {
 				ShipRenderMode.NONE -> {}
-				ShipRenderMode.SIGNAL -> shipGroup.add(RenderResources.enemySignal.generate(ship.position.currentLocation))
+				ShipRenderMode.SIGNAL -> shipGroup.add(RenderResources.enemySignal.generate(ship.position.location))
 				ShipRenderMode.FULL -> shipGroup.add(RenderResources.shipMesh.generate(ship))
 			}
 		}
