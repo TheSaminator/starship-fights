@@ -1,7 +1,6 @@
 package starshipfights.info
 
 import kotlinx.html.*
-import starshipfights.data.auth.User
 import starshipfights.game.ShipType
 import starshipfights.game.getDefiniteShortName
 
@@ -12,25 +11,6 @@ abstract class Sidebar {
 
 class CustomSidebar(private val block: ASIDE.() -> Unit) : Sidebar() {
 	override fun ASIDE.display() = block()
-}
-
-data class IndexSidebar(val madeBy: User) : Sidebar() {
-	override fun ASIDE.display() {
-		p {
-			style = "text-align:center"
-			+"Starship Fights is made by "
-			a(href = "/user/${madeBy.id}") { +madeBy.profileName }
-		}
-		img(src = madeBy.discordAvatarUrl) {
-			style = "border-radius:50%"
-		}
-		p {
-			style = "text-align:center"
-			+madeBy.discordName
-			+"#"
-			+madeBy.discordDiscriminator
-		}
-	}
 }
 
 data class ShipViewSidebar(val shipType: ShipType) : Sidebar() {
