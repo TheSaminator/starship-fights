@@ -536,7 +536,9 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 						p {
 							style = "text-align:center"
 							+"By logging in, you indicate your agreement to the "
-							a(href = "/about#pp") { +"Privacy Policy" }
+							a(href = "/about/tnc") { +"Terms and Conditions" }
+							+" and the "
+							a(href = "/about/pp") { +"Privacy Policy" }
 							+"."
 						}
 						call.request.queryParameters["error"]?.let { errorMsg ->

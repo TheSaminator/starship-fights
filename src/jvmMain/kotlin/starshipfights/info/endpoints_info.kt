@@ -28,6 +28,14 @@ fun Routing.installPages() {
 		call.respondHtml(HttpStatusCode.OK, call.aboutPage())
 	}
 	
+	get("/about/pp") {
+		call.respondHtml(HttpStatusCode.OK, call.privacyPolicyPage())
+	}
+	
+	get("/about/tnc") {
+		call.respondHtml(HttpStatusCode.OK, call.termsAndConditionsPage())
+	}
+	
 	get("/users") {
 		call.respondHtml(HttpStatusCode.OK, call.newUsersPage())
 	}

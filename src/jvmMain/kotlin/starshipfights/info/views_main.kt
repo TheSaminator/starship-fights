@@ -44,8 +44,9 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 	return page(
 		"About", standardNavBar(), PageNavSidebar(
 			listOf(
-				NavHead("Jump To"),
-				NavLink("#pp", "Privacy Policy")
+				NavHead("Useful Links"),
+				NavLink("/about/pp", "Privacy Policy"),
+				NavLink("/about/tnc", "Terms and Conditions"),
 			)
 		)
 	) {
@@ -59,8 +60,20 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				+"."
 			}
 		}
+	}
+}
+
+suspend fun ApplicationCall.privacyPolicyPage(): HTML.() -> Unit {
+	return page(
+		"Privacy Policy", standardNavBar(), PageNavSidebar(
+			listOf(
+				NavHead("Useful Links"),
+				NavLink("/about", "About Starship Fights"),
+				NavLink("/about/tnc", "Terms and Conditions"),
+			)
+		)
+	) {
 		section {
-			id = "pp"
 			h1 { +"Privacy Policy" }
 			h2 { +"What Data Do We Collect" }
 			p { +"Starship Fights does not collect very much personal data; the only data it collects is relevant to either user authentication or user authorization. The following data is collected by the game:" }
@@ -117,6 +130,67 @@ suspend fun ApplicationCall.aboutPage(): HTML.() -> Unit {
 				dd { +"Initial writing" }
 				dt { +"February 15, 2022" }
 				dd { +"Indicate that IP storage is an opt-in-only feature" }
+			}
+		}
+	}
+}
+
+suspend fun ApplicationCall.termsAndConditionsPage(): HTML.() -> Unit {
+	val ownerDiscordUsername = CurrentConfiguration.discordClient?.ownerId?.let {
+		User.locate(User::discordId eq it)
+	}?.let { "${it.discordName}#${it.discordDiscriminator}" }
+	
+	return page(
+		"Terms and Conditions", standardNavBar(), PageNavSidebar(
+			listOf(
+				NavHead("Useful Links"),
+				NavLink("/about", "About Starship Fights"),
+				NavLink("/about/pp", "Privacy Policy"),
+			)
+		)
+	) {
+		section {
+			h1 { +"Terms And Conditions" }
+			h2 { +"Section I - Privacy Policy" }
+			p {
+				+"By agreeing to these Terms and Conditions, you confirm that you have read and acknowledged the Privacy Policy of Starship Fights, accessible at "
+				a(href = "https://starshipfights.net/about/pp") { +"https://starshipfights.net/about/pp" }
+				+"."
+			}
+			h2 { +"Section II - Limitation of Liability" }
+			p {
+				+"UNDER NO CIRCUMSTANCES will Starship Fights be liable or responsible to either its users or any third party for any damages or injuries sustained as a result of using this website."
+			}
+			h2 { +"Section III - Termination" }
+			p {
+				+"Starship Fights may terminate your usage if:"
+			}
+			ol {
+				li { +"You are in breach of these Terms and Conditions." }
+				li { +"You, at any point, inflict abuse upon the website, including but not limited to: DDoS attacks, vulnerability scanning, vulnerability exploitation, etc." }
+				li { +"For any reason, at our sole discretion." }
+			}
+			h2 { +"Section IV - Amendment Process" }
+			p {
+				+"Starship Fights will notify users when amendments to the Terms and Conditions will impact their usage of their site."
+				CurrentConfiguration.discordClient?.serverInvite?.let { invite ->
+					+" Users will be notified via the "
+					a(href = "https://discord.gg/$invite") { +"Starship Fights Discord server" }
+					+"."
+				}
+			}
+			h2 { +"Section V - Amendments" }
+			dl {
+				dt { +"March 11, 2022" }
+				dd { +"Initial writing" }
+			}
+			ownerDiscordUsername?.let {
+				h2 { +"Section VI - Contact" }
+				p {
+					+"The operator of Starship Fights may be contacted via Discord at $it, or via telegram to "
+					a(href = "https://nationstates.net/mechyrdia") { +"his NationStates account" }
+					+"."
+				}
 			}
 		}
 	}
