@@ -18,7 +18,8 @@ data class IndexSidebar(val madeBy: User) : Sidebar() {
 	override fun ASIDE.display() {
 		p {
 			style = "text-align:center"
-			+"Starship Fights is made by"
+			+"Starship Fights is made by "
+			a(href = "/user/${madeBy.id}") { +madeBy.profileName }
 		}
 		img(src = madeBy.discordAvatarUrl) {
 			style = "border-radius:50%"
