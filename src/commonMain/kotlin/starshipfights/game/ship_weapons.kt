@@ -163,7 +163,7 @@ sealed class ShipWeapon {
 			get() = "Revelation Gun"
 		
 		override val addsPointCost: Int
-			get() = 75
+			get() = 76
 		
 		override fun instantiate() = ShipWeaponInstance.RevelationGun(numShots)
 	}
