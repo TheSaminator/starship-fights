@@ -1,6 +1,7 @@
 package starshipfights.info
 
 import kotlinx.html.*
+import starshipfights.data.auth.User
 import starshipfights.game.ShipType
 import starshipfights.game.getDefiniteShortName
 
@@ -13,10 +14,20 @@ class CustomSidebar(private val block: ASIDE.() -> Unit) : Sidebar() {
 	override fun ASIDE.display() = block()
 }
 
-object IndexSidebar : Sidebar() {
+data class IndexSidebar(val madeBy: User) : Sidebar() {
 	override fun ASIDE.display() {
 		p {
-			+"This game is in early development! Report bugs and flaws as you see them, but keep in mind that this game is still being worked on."
+			style = "text-align:center"
+			+"Starship Fights is made by"
+		}
+		img(src = madeBy.discordAvatarUrl) {
+			style = "border-radius:50%"
+		}
+		p {
+			style = "text-align:center"
+			+madeBy.discordName
+			+"#"
+			+madeBy.discordDiscriminator
 		}
 	}
 }

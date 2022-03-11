@@ -10,7 +10,11 @@ import starshipfights.CurrentConfiguration
 import starshipfights.data.auth.User
 
 suspend fun ApplicationCall.mainPage(): HTML.() -> Unit {
-	return page(null, standardNavBar(), IndexSidebar) {
+	return page(null, standardNavBar(), CurrentConfiguration.discordClient?.ownerId?.let {
+		User.locate(User::discordId eq it)
+	}?.let {
+		IndexSidebar(it)
+	}) {
 		section {
 			img(alt = "Starship Fights Logo", src = "/static/images/logo.svg") {
 				style = "width:100%"
