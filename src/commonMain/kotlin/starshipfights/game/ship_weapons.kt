@@ -3,6 +3,7 @@ package starshipfights.game
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 import kotlin.math.expm1
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 enum class FiringArc {
@@ -256,7 +257,7 @@ data class ShipInstanceArmaments(
 
 fun cannonChanceToHit(attacker: ShipInstance, targeted: ShipInstance): Double {
 	val relativeDistance = attacker.position.location - targeted.position.location
-	return SHIP_BASE_SIZE / relativeDistance.length
+	return sqrt(SHIP_BASE_SIZE / relativeDistance.length)
 }
 
 sealed class ImpactResult {

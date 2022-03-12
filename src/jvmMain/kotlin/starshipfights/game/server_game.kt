@@ -81,14 +81,14 @@ class GameSession(gameState: GameState) {
 		}
 	}.also {
 		if (it)
-			_gameStart.complete()
+			gameStartMutable.complete()
 		else
 			onPacket(player.other, PlayerAction.TimeOut)
 	}
 	
-	private val _gameStart = Job()
+	private val gameStartMutable = Job()
 	val gameStart: Job
-		get() = _gameStart
+		get() = gameStartMutable
 	
 	private val stateMutable = MutableStateFlow(gameState)
 	private val stateMutex = Mutex()
@@ -108,24 +108,24 @@ class GameSession(gameState: GameState) {
 		GlobalSide.GUEST -> guestErrorMessages
 	}
 	
-	private val _gameEnd = CompletableDeferred<GameEvent.GameEnd>()
+	private val gameEndMutable = CompletableDeferred<GameEvent.GameEnd>()
 	val gameEnd: Deferred<GameEvent.GameEnd>
-		get() = _gameEnd
+		get() = gameEndMutable
 	
 	suspend fun onPacket(player: GlobalSide, packet: PlayerAction) {
 		stateMutex.withLock {
 			when (val result = state.value.after(player, packet)) {
 				is GameEvent.StateChange -> {
 					stateMutable.value = result.newState
-					result.newState.checkVictory()?.let { _gameEnd.complete(it) }
+					result.newState.checkVictory()?.let { gameEndMutable.complete(it) }
 				}
 				is GameEvent.InvalidAction -> {
 					errorMessageChannel(player).send(result.message)
 				}
 				is GameEvent.GameEnd -> {
-					if (_gameStart.isActive)
-						_gameStart.cancel()
-					_gameEnd.complete(result)
+					if (gameStartMutable.isActive)
+						gameStartMutable.cancel()
+					gameEndMutable.complete(result)
 				}
 			}
 		}
