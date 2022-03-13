@@ -2,7 +2,6 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
-import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -46,77 +45,27 @@ private fun GameState.afterPhase(): GameState {
 	val newChatEntries = mutableListOf<ChatEntry>()
 	
 	when (phase) {
-		is GamePhase.Move -> {
-			// Ships that move off the battlefield are considered to disengage
-			newShips = newShips.mapNotNull fleeingShips@{ (id, ship) ->
-				val r = ship.position.location.vector
-				val mx = start.battlefieldWidth / 2
-				val my = start.battlefieldLength / 2
-				
-				if (abs(r.x) > mx || abs(r.y) > my) {
-					newWrecks[id] = ShipWreck(ship.ship, ship.owner, true)
-					newChatEntries += ChatEntry.ShipEscaped(id, Moment.now)
-					return@fleeingShips null
-				}
-				
-				id to ship
-			}.toMap()
-			
-			// Identify enemy ships
-			newShips = newShips.mapValues { (_, ship) ->
-				if (ship.isIdentified) ship
-				else if (newShips.values.any { it.owner != ship.owner && (it.position.location - ship.position.location).length <= SHIP_SENSOR_RANGE })
-					ship.copy(isIdentified = true).also {
-						newChatEntries += ChatEntry.ShipIdentified(it.id, Moment.now)
-					}
-				else ship
-			}
-		}
 		is GamePhase.Attack -> {
 			val strikeWingDamage = mutableMapOf<ShipHangarWing, Double>()
 			
 			// Apply damage to ships from strike craft
 			newShips = newShips.mapNotNull strikeBombard@{ (id, ship) ->
-				if (ship.bomberWings.isEmpty())
-					return@strikeBombard id to ship
-				
-				val totalFighterHealth = ship.fighterWings.sumOf { (carrierId, wingId) ->
-					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-				} + (if (ship.canUseTurrets) ship.ship.durability.turretDefense else 0.0)
-				
-				val totalBomberHealth = ship.bomberWings.sumOf { (carrierId, wingId) ->
-					(newShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-				}
-				
-				val maxBomberWingOutput = smoothNegative(totalBomberHealth - totalFighterHealth)
-				val maxFighterWingOutput = smoothNegative(totalFighterHealth - totalBomberHealth)
-				
-				ship.fighterWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput }
-				ship.bomberWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxFighterWingOutput }
-				
-				var hits = 0
-				var chanceOfShipDamage = smoothNegative(maxBomberWingOutput - maxFighterWingOutput)
-				while (chanceOfShipDamage >= 1.0) {
-					hits++
-					chanceOfShipDamage -= 1.0
-				}
-				if (Random.nextDouble() < chanceOfShipDamage)
-					hits++
-				
-				when (val impactResult = ship.impact(hits)) {
+				when (val impact = ship.afterBombed(newShips, strikeWingDamage)) {
 					is ImpactResult.Damaged -> {
-						newChatEntries += ChatEntry.ShipAttacked(
-							ship = id,
-							attacker = ShipAttacker.Bombers,
-							sentAt = Moment.now,
-							damageInflicted = hits,
-							weapon = null,
-							critical = null
-						)
-						id to impactResult.ship
+						impact.amount?.let { damage ->
+							newChatEntries += ChatEntry.ShipAttacked(
+								ship = id,
+								attacker = ShipAttacker.Bombers,
+								sentAt = Moment.now,
+								damageInflicted = damage,
+								weapon = null,
+								critical = impact.critical.report()
+							)
+						}
+						id to impact.ship
 					}
 					is ImpactResult.Destroyed -> {
-						newWrecks[id] = impactResult.ship
+						newWrecks[id] = impact.ship
 						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Bombers)
 						null
 					}
@@ -124,30 +73,10 @@ private fun GameState.afterPhase(): GameState {
 			}.toMap()
 			
 			// Apply damage to strike craft wings
-			newShips = newShips.mapValues { (shipId, ship) ->
-				val newArmaments = ship.armaments.weaponInstances.mapValues { (weaponId, weapon) ->
-					if (weapon is ShipWeaponInstance.Hangar)
-						weapon.copy(wingHealth = weapon.wingHealth - (strikeWingDamage[ShipHangarWing(shipId, weaponId)] ?: 0.0))
-					else weapon
-				}.filterValues { it !is ShipWeaponInstance.Hangar || it.wingHealth > 0.0 }
-				
-				ship.copy(
-					armaments = ShipInstanceArmaments(newArmaments)
-				)
+			newShips = newShips.mapValues { (_, ship) ->
+				ship.afterBombing(strikeWingDamage)
 			}
 			
-			// Recall strike craft and regenerate weapon power
-			newShips = newShips.mapValues { (_, ship) ->
-				ship.copy(
-					weaponAmount = ship.powerMode.weapons,
-					
-					fighterWings = emptySet(),
-					bomberWings = emptySet(),
-					usedArmaments = emptySet(),
-				)
-			}
-		}
-		is GamePhase.Repair -> {
 			// Deal fire damage
 			newShips = newShips.mapNotNull fireDamage@{ (id, ship) ->
 				if (ship.numFires <= 0)
@@ -175,11 +104,16 @@ private fun GameState.afterPhase(): GameState {
 				}
 			}.toMap()
 			
-			// Replenish repair tokens and regenerate shield power
+			// Replenish repair tokens, recall strike craft, and regenerate weapons and shields power
 			newShips = newShips.mapValues { (_, ship) ->
 				ship.copy(
+					weaponAmount = ship.powerMode.weapons,
 					shieldAmount = if (ship.canUseShields) (ship.shieldAmount..ship.powerMode.shields).random() else 0,
-					usedRepairTokens = 0
+					usedRepairTokens = 0,
+					
+					fighterWings = emptySet(),
+					bomberWings = emptySet(),
+					usedArmaments = emptySet(),
 				)
 			}
 		}

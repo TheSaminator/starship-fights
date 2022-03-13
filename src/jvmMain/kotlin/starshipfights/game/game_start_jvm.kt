@@ -2,11 +2,10 @@ package starshipfights.game
 
 import starshipfights.data.admiralty.getAdmiralsShips
 import kotlin.math.PI
-import kotlin.random.Random
 
-suspend fun generateGameStart(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral, battleInfo: BattleInfo, random: Random = Random): GameStart {
-	val battleWidth = (25..35).random(random) * 500.0
-	val battleLength = (15..45).random(random) * 500.0
+suspend fun generateGameStart(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral, battleInfo: BattleInfo): GameStart {
+	val battleWidth = (25..35).random() * 500.0
+	val battleLength = (15..45).random() * 500.0
 	
 	val deployWidth2 = battleWidth / 2
 	val deployLength2 = 875.0

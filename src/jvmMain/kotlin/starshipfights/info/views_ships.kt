@@ -120,6 +120,22 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 					+shipType.weightClass.reactor.gridEfficiency.toString()
 				}
 			}
+			tr {
+				th { +"Base Crit Chance" }
+				th { +"Cannon Targeting" }
+				th { +"Lance Efficiency" }
+			}
+			tr {
+				td {
+					+shipType.weightClass.firepower.criticalChance.toPercent()
+				}
+				td {
+					+shipType.weightClass.firepower.cannonAccuracy.toPercent()
+				}
+				td {
+					+shipType.weightClass.firepower.lanceCharging.toPercent()
+				}
+			}
 		}
 		table {
 			tr {
@@ -146,8 +162,14 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 						}
 					}
 					td {
+						val weaponRangeMult = when (weapon) {
+							is ShipWeapon.Cannon -> shipType.weightClass.firepower.rangeMultiplier
+							is ShipWeapon.Lance -> shipType.weightClass.firepower.rangeMultiplier
+							else -> 1.0
+						}
+						
 						weapon.minRange.takeIf { it != SHIP_BASE_SIZE }?.let { +"${it.roundToInt()}-" }
-						+"${weapon.maxRange.roundToInt()} meters"
+						+"${(weapon.maxRange * weaponRangeMult).roundToInt()} meters"
 						if (weapon is AreaWeapon) {
 							br
 							+"${weapon.areaRadius.roundToInt()} meter impact radius"

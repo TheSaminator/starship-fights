@@ -2,10 +2,9 @@ package starshipfights.data.admiralty
 
 import starshipfights.game.Faction
 import starshipfights.game.ShipWeightClass
-import kotlin.random.Random
 
-fun newShipName(faction: Faction, shipWeightClass: ShipWeightClass, existingNames: MutableSet<String>, random: Random = Random) = generateSequence {
-	ShipNames.nameShip(faction, shipWeightClass, random)
+fun newShipName(faction: Faction, shipWeightClass: ShipWeightClass, existingNames: MutableSet<String>) = generateSequence {
+	ShipNames.nameShip(faction, shipWeightClass)
 }.take(20).dropWhile { it in existingNames }.firstOrNull()?.also { existingNames.add(it) }
 
 object ShipNames {
@@ -121,12 +120,12 @@ object ShipNames {
 		"King Kaleb of Axum"
 	)
 	
-	private fun nameMechyrdianShip(weightClass: ShipWeightClass, randomChooser: Random) = when (weightClass) {
-		ShipWeightClass.ESCORT -> "${mechyrdianFrigateNames1.random(randomChooser)} ${mechyrdianFrigateNames2.random(randomChooser)}"
-		ShipWeightClass.DESTROYER -> "${mechyrdianFrigateNames1.random(randomChooser)} ${mechyrdianFrigateNames2.random(randomChooser)}"
-		ShipWeightClass.CRUISER -> "${mechyrdianCruiserNames1.random(randomChooser)} ${mechyrdianCruiserNames2.random(randomChooser)}"
-		ShipWeightClass.BATTLECRUISER -> "${mechyrdianCruiserNames1.random(randomChooser)} ${mechyrdianCruiserNames2.random(randomChooser)}"
-		ShipWeightClass.BATTLESHIP -> mechyrdianBattleshipNames.random(randomChooser)
+	private fun nameMechyrdianShip(weightClass: ShipWeightClass) = when (weightClass) {
+		ShipWeightClass.ESCORT -> "${mechyrdianFrigateNames1.random()} ${mechyrdianFrigateNames2.random()}"
+		ShipWeightClass.DESTROYER -> "${mechyrdianFrigateNames1.random()} ${mechyrdianFrigateNames2.random()}"
+		ShipWeightClass.CRUISER -> "${mechyrdianCruiserNames1.random()} ${mechyrdianCruiserNames2.random()}"
+		ShipWeightClass.BATTLECRUISER -> "${mechyrdianCruiserNames1.random()} ${mechyrdianCruiserNames2.random()}"
+		ShipWeightClass.BATTLESHIP -> mechyrdianBattleshipNames.random()
 		else -> error("Invalid Mechyrdian ship weight!")
 	}
 	
@@ -183,9 +182,9 @@ object ShipNames {
 	
 	private const val masraDraetsenColossusName = "Boukephalas"
 	
-	private fun nameMasraDraetsenShip(weightClass: ShipWeightClass, randomChooser: Random) = if (weightClass == ShipWeightClass.COLOSSUS)
+	private fun nameMasraDraetsenShip(weightClass: ShipWeightClass) = if (weightClass == ShipWeightClass.COLOSSUS)
 		masraDraetsenColossusName
-	else "${masraDraetsenShipNames1.random(randomChooser)} ${masraDraetsenShipNames2.random(randomChooser)}"
+	else "${masraDraetsenShipNames1.random()} ${masraDraetsenShipNames2.random()}"
 	
 	private val isarnareykkShipNames = listOf(
 		"Professional with Standards",
@@ -217,7 +216,7 @@ object ShipNames {
 		"Praethoris Khorr Gaming",
 	)
 	
-	private fun nameIsarnareykskShip(randomChooser: Random) = isarnareykkShipNames.random(randomChooser)
+	private fun nameIsarnareykskShip() = isarnareykkShipNames.random()
 	
 	private val vestigiumShipNames = listOf(
 		// NAMED AFTER SPACE SHUTTLES
@@ -305,12 +304,12 @@ object ShipNames {
 		"Ilya Korochenko"
 	)
 	
-	private fun nameAmericanShip(randomChooser: Random) = vestigiumShipNames.random(randomChooser)
+	private fun nameAmericanShip() = vestigiumShipNames.random()
 	
-	fun nameShip(faction: Faction, weightClass: ShipWeightClass, randomChooser: Random = Random): String = when (faction) {
-		Faction.MECHYRDIA -> nameMechyrdianShip(weightClass, randomChooser)
-		Faction.MASRA_DRAETSEN -> nameMasraDraetsenShip(weightClass, randomChooser)
-		Faction.ISARNAREYKK -> nameIsarnareykskShip(randomChooser)
-		Faction.VESTIGIUM -> nameAmericanShip(randomChooser)
+	fun nameShip(faction: Faction, weightClass: ShipWeightClass): String = when (faction) {
+		Faction.MECHYRDIA -> nameMechyrdianShip(weightClass)
+		Faction.MASRA_DRAETSEN -> nameMasraDraetsenShip(weightClass)
+		Faction.ISARNAREYKK -> nameIsarnareykskShip()
+		Faction.VESTIGIUM -> nameAmericanShip()
 	}
 }

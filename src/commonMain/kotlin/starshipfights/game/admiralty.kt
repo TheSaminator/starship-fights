@@ -41,7 +41,7 @@ enum class AdmiralRank {
 		}
 	
 	companion object {
-		fun fromAcumen(acumen: Int) = values().firstOrNull { it.minAcumen <= acumen } ?: REAR_ADMIRAL
+		fun fromAcumen(acumen: Int) = values().lastOrNull { it.minAcumen <= acumen } ?: values().first()
 	}
 }
 

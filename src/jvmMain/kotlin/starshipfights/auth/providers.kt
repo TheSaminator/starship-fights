@@ -136,7 +136,7 @@ interface AuthProvider {
 						name = form["name"]?.takeIf { it.isNotBlank() && it.length <= ADMIRAL_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $ADMIRAL_NAME_MAX_LENGTH characters")),
 						isFemale = form.getOrFail("sex") == "female",
 						faction = Faction.valueOf(form.getOrFail("faction")),
-						acumen = 0,
+						acumen = if (CurrentConfiguration.isDevEnv) 20_000 else 0,
 						money = 500
 					)
 					val newShips = generateFleet(newAdmiral)

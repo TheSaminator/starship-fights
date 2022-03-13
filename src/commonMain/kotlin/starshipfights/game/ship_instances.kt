@@ -49,7 +49,7 @@ data class ShipInstance(
 		return when (weapon) {
 			is ShipWeaponInstance.Cannon -> weaponAmount > 0
 			is ShipWeaponInstance.Hangar -> weapon.wingHealth > 0.0
-			is ShipWeaponInstance.Lance -> weapon.numCharges > 0
+			is ShipWeaponInstance.Lance -> weapon.numCharges > EPSILON
 			is ShipWeaponInstance.Torpedo -> true
 			is ShipWeaponInstance.MegaCannon -> weapon.remainingShots > 0
 			is ShipWeaponInstance.RevelationGun -> weapon.remainingShots > 0
@@ -145,6 +145,9 @@ val ShipInstance.movement: ShipMovement
 			copy(turnAngle = turnAngle * coefficient, moveSpeed = moveSpeed * coefficient)
 		}
 	}
+
+val ShipInstance.firepower: ShipFirepower
+	get() = ship.firepower
 
 fun Ship.defaultPowerMode(): ShipPowerMode {
 	val amount = reactor.subsystemAmount

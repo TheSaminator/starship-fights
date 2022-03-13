@@ -20,7 +20,6 @@ import org.litote.kmongo.serialization.registerSerializer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.File
-import java.net.ServerSocket
 import kotlin.system.exitProcess
 
 @Serializable
@@ -30,8 +29,6 @@ sealed class ConnectionType {
 	@Serializable
 	@SerialName("embedded")
 	data class Embedded(val dataDir: String = "mongodb") : ConnectionType() {
-		private fun getFreePort() = ServerSocket(0).use { it.localPort }
-		
 		@Transient
 		val log: Logger = LoggerFactory.getLogger(javaClass)
 		
@@ -40,12 +37,11 @@ sealed class ConnectionType {
 			
 			val starter = MongodStarter.getDefaultInstance()
 			
-			val port = getFreePort()
-			log.info("Running embedded MongoDB on port $port")
+			log.info("Running embedded MongoDB on port 27017")
 			
 			val config = MongodConfig.builder()
 				.version(Version.Main.PRODUCTION)
-				.net(Net(port, Network.localhostIsIPv6()))
+				.net(Net(27017, Network.localhostIsIPv6()))
 				.replication(Storage(dataDirPath, null, 1024))
 				.cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
 				.build()
@@ -66,7 +62,7 @@ sealed class ConnectionType {
 				exitProcess(-1)
 			}
 			
-			return "mongodb://localhost:$port"
+			return "mongodb://localhost:27017"
 		}
 	}
 	

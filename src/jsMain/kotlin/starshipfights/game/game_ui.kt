@@ -72,7 +72,6 @@ object GameUI {
 				id = "top-middle-info"
 				
 				p {
-					style = "text-align:center;margin:0"
 					+"Battle has not started yet"
 				}
 			}
@@ -319,8 +318,6 @@ object GameUI {
 		topMiddleInfo.clear()
 		topMiddleInfo.append {
 			p {
-				style = "text-align:center;margin:0"
-				
 				when (state.phase) {
 					GamePhase.Deploy -> {
 						strong(classes = "heading") {
@@ -430,12 +427,12 @@ object GameUI {
 						tr {
 							repeat(activeShield) {
 								td {
-									style = "background-color:#69F;margin:20px;height:15px"
+									style = "background-color:#69F;height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 							repeat(downShield) {
 								td {
-									style = "background-color:#46A;margin:20px;height:15px"
+									style = "background-color:#46A;height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 						}
@@ -451,12 +448,12 @@ object GameUI {
 						tr {
 							repeat(activeHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#5F5" else "#F55"};margin:20px;height:15px"
+									style = "background-color:${if (ship.owner == mySide) "#5F5" else "#F55"};height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 							repeat(downHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#262" else "#622"};margin:20px;height:15px"
+									style = "background-color:${if (ship.owner == mySide) "#262" else "#622"};height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 						}
@@ -473,12 +470,12 @@ object GameUI {
 							tr {
 								repeat(activeWeapons) {
 									td {
-										style = "background-color:#F63;margin:20px;height:15px"
+										style = "background-color:#F63;height:15px;box-shadow:inset 0 0 0 3px #555"
 									}
 								}
 								repeat(downWeapons) {
 									td {
-										style = "background-color:#A42;margin:20px;height:15px"
+										style = "background-color:#A42;height:15px;box-shadow:inset 0 0 0 3px #555"
 									}
 								}
 							}
@@ -632,8 +629,6 @@ object GameUI {
 					style = "text-align:center;margin:0"
 					
 					+"No ship selected. Click on a ship to select it."
-					
-					hr { style = "border-color:#555" }
 				}
 			} else {
 				val shipAbilities = abilities
@@ -692,171 +687,173 @@ object GameUI {
 					if (ship.numFires > 0)
 						span {
 							style = "color:#e94"
-							+"${ship.numFires} Onboard Fires"
+							+"${ship.numFires} Onboard Fire${if (ship.numFires == 1) "" else "s"}"
 						}
 				}
 				
-				hr { style = "border-color:#555" }
-				
-				p {
-					style = "height:69%;margin:0"
+				if (ship.owner == mySide) {
+					hr { style = "border-color:#555" }
 					
-					if (gameState.phase is GamePhase.Repair) {
-						+"${ship.remainingRepairTokens} Repair Tokens"
-						br
-					}
-					
-					shipAbilities.forEach { ability ->
-						when (ability) {
-							is PlayerAbilityType.DistributePower -> {
-								val shipPowerMode = ClientAbilityData.newShipPowerModes[ship.id] ?: ship.powerMode
-								
-								table {
-									style = "width:100%;table-layout:fixed;background-color:#555"
-									tr {
-										ShipSubsystem.values().forEach { subsystem ->
-											val amount = shipPowerMode[subsystem]
-											
-											repeat(amount) {
-												td {
-													style = "background-color:${subsystem.htmlColor};margin:1px;height:0.55em"
-												}
-											}
-										}
-									}
-								}
-								
-								p {
-									style = "text-align:center"
-									+"Power Output: ${ship.ship.reactor.powerOutput}"
-									br
-									+"Remaining Transfers: ${ship.remainingGridEfficiency(shipPowerMode)}"
-								}
-								
-								ShipSubsystem.values().forEach { transferFrom ->
-									div(classes = "button-set row") {
-										ShipSubsystem.values().filter { it != transferFrom }.forEach { transferTo ->
-											button {
-												style = "font-size:0.8em;padding:0 0.25em"
-												title = "${transferFrom.displayName} to ${transferTo.displayName}"
+					p {
+						style = "height:69%;margin:0"
+						
+						if (gameState.phase is GamePhase.Repair) {
+							+"${ship.remainingRepairTokens} Repair Tokens"
+							br
+						}
+						
+						shipAbilities.forEach { ability ->
+							when (ability) {
+								is PlayerAbilityType.DistributePower -> {
+									val shipPowerMode = ClientAbilityData.newShipPowerModes[ship.id] ?: ship.powerMode
+									
+									table {
+										style = "width:100%;table-layout:fixed;background-color:#555"
+										tr {
+											ShipSubsystem.values().forEach { subsystem ->
+												val amount = shipPowerMode[subsystem]
 												
-												img(src = transferFrom.imageUrl, alt = transferFrom.displayName) {
-													style = "width:0.95em"
-												}
-												+Entities.nbsp
-												img(src = ShipSubsystem.transferImageUrl, alt = " to ") {
-													style = "width:0.95em"
-												}
-												+Entities.nbsp
-												img(src = transferTo.imageUrl, alt = transferTo.displayName) {
-													style = "width:0.95em"
-												}
-												
-												val delta = mapOf(transferFrom to -1, transferTo to 1)
-												val newPowerMode = shipPowerMode + delta
-												
-												if (ship.validatePowerMode(newPowerMode))
-													onClickFunction = { e ->
-														e.preventDefault()
-														ClientAbilityData.newShipPowerModes[ship.id] = newPowerMode
-														updateAbilityData(gameState)
+												repeat(amount) {
+													td {
+														style = "background-color:${subsystem.htmlColor};margin:1px;height:0.55em"
 													}
-												else {
-													disabled = true
-													style += ";cursor:not-allowed"
 												}
 											}
 										}
 									}
+									
+									p {
+										style = "text-align:center"
+										+"Power Output: ${ship.ship.reactor.powerOutput}"
+										br
+										+"Remaining Transfers: ${ship.remainingGridEfficiency(shipPowerMode)}"
+									}
+									
+									ShipSubsystem.values().forEach { transferFrom ->
+										div(classes = "button-set row") {
+											ShipSubsystem.values().filter { it != transferFrom }.forEach { transferTo ->
+												button {
+													style = "font-size:0.8em;padding:0 0.25em"
+													title = "${transferFrom.displayName} to ${transferTo.displayName}"
+													
+													img(src = transferFrom.imageUrl, alt = transferFrom.displayName) {
+														style = "width:0.95em"
+													}
+													+Entities.nbsp
+													img(src = ShipSubsystem.transferImageUrl, alt = " to ") {
+														style = "width:0.95em"
+													}
+													+Entities.nbsp
+													img(src = transferTo.imageUrl, alt = transferTo.displayName) {
+														style = "width:0.95em"
+													}
+													
+													val delta = mapOf(transferFrom to -1, transferTo to 1)
+													val newPowerMode = shipPowerMode + delta
+													
+													if (ship.validatePowerMode(newPowerMode))
+														onClickFunction = { e ->
+															e.preventDefault()
+															ClientAbilityData.newShipPowerModes[ship.id] = newPowerMode
+															updateAbilityData(gameState)
+														}
+													else {
+														disabled = true
+														style += ";cursor:not-allowed"
+													}
+												}
+											}
+										}
+									}
+									
+									button {
+										+"Confirm"
+										if (ship.validatePowerMode(shipPowerMode))
+											onClickFunction = { e ->
+												e.preventDefault()
+												responder.useAbility(ability)
+											}
+										else {
+											disabled = true
+											style = "cursor:not-allowed"
+										}
+									}
+									
+									button {
+										+"Reset"
+										onClickFunction = { e ->
+											e.preventDefault()
+											ClientAbilityData.newShipPowerModes[ship.id] = ship.powerMode
+											updateAbilityData(gameState)
+										}
+									}
 								}
-								
-								button {
-									+"Confirm"
-									if (ship.validatePowerMode(shipPowerMode))
+								is PlayerAbilityType.MoveShip -> {
+									button {
+										+"Move Ship"
 										onClickFunction = { e ->
 											e.preventDefault()
 											responder.useAbility(ability)
 										}
-									else {
-										disabled = true
-										style = "cursor:not-allowed"
 									}
 								}
-								
-								button {
-									+"Reset"
-									onClickFunction = { e ->
-										e.preventDefault()
-										ClientAbilityData.newShipPowerModes[ship.id] = ship.powerMode
-										updateAbilityData(gameState)
+								is PlayerAbilityType.RepairShipModule -> {
+									a(href = "#") {
+										+"Repair ${ability.module.getDisplayName(ship.ship)}"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
 									}
+									br
 								}
-							}
-							is PlayerAbilityType.MoveShip -> {
-								button {
-									+"Move Ship"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
+								is PlayerAbilityType.ExtinguishFire -> {
+									a(href = "#") {
+										+"Extinguish Fire"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
 									}
+									br
 								}
-							}
-							is PlayerAbilityType.RepairShipModule -> {
-								a(href = "#") {
-									+"Repair ${ability.module.getDisplayName(ship.ship)}"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
-									}
-								}
-								br
-							}
-							is PlayerAbilityType.ExtinguishFire -> {
-								a(href = "#") {
-									+"Extinguish Fire"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
-									}
-								}
-								br
 							}
 						}
-					}
-					
-					combatAbilities.forEach { ability ->
-						br
 						
-						val weaponInstance = ship.armaments.weaponInstances.getValue(ability.weapon)
-						
-						val weaponVerb = if (weaponInstance is ShipWeaponInstance.Hangar) "Release" else "Fire"
-						val weaponDesc = weaponInstance.displayName
-						
-						when (ability) {
-							is PlayerAbilityType.ChargeLance -> {
-								a(href = "#") {
-									+"Charge $weaponDesc"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
+						combatAbilities.forEach { ability ->
+							br
+							
+							val weaponInstance = ship.armaments.weaponInstances.getValue(ability.weapon)
+							
+							val weaponVerb = if (weaponInstance is ShipWeaponInstance.Hangar) "Release" else "Fire"
+							val weaponDesc = weaponInstance.displayName
+							
+							when (ability) {
+								is PlayerAbilityType.ChargeLance -> {
+									a(href = "#") {
+										+"Charge $weaponDesc"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
 									}
 								}
-							}
-							is PlayerAbilityType.UseWeapon -> {
-								a(href = "#") {
-									+"$weaponVerb $weaponDesc"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
+								is PlayerAbilityType.UseWeapon -> {
+									a(href = "#") {
+										+"$weaponVerb $weaponDesc"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
 									}
 								}
-							}
-							is PlayerAbilityType.RecallStrikeCraft -> {
-								a(href = "#") {
-									+"Recall $weaponDesc"
-									onClickFunction = { e ->
-										e.preventDefault()
-										responder.useAbility(ability)
+								is PlayerAbilityType.RecallStrikeCraft -> {
+									a(href = "#") {
+										+"Recall $weaponDesc"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
 									}
 								}
 							}

@@ -2,6 +2,7 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
+import kotlin.math.abs
 
 sealed interface ShipAbility {
 	val ship: Id<ShipInstance>
@@ -220,10 +221,46 @@ sealed class PlayerAbilityType {
 			if (data.newPosition.location.distanceToLineSegment(moveFrom, moveTo) > EPSILON) return GameEvent.InvalidAction("Illegal move - must be on facing line")
 			
 			val newShipInstance = shipInstance.copy(position = data.newPosition, isDoneCurrentPhase = true)
-			val newShips = gameState.ships + mapOf(ship to newShipInstance)
+			
+			// Identify enemy ships
+			val identifiedEnemyShips = gameState.ships.filterValues { enemyShip ->
+				!enemyShip.isIdentified && enemyShip.owner != playerSide && (enemyShip.position.location - newShipInstance.position.location).length <= SHIP_SENSOR_RANGE
+			}
+			
+			// Be identified by enemy ships
+			val shipsToBeIdentified = identifiedEnemyShips + if (!newShipInstance.isIdentified && identifiedEnemyShips.isNotEmpty())
+				mapOf(ship to newShipInstance)
+			else emptyMap()
+			
+			val identifiedShips = shipsToBeIdentified.mapValues { (_, shipInstance) -> shipInstance.copy(isIdentified = true) }
+			
+			// Ships that move off the battlefield are considered to disengage
+			val isDisengaged = newShipInstance.position.location.vector.let { (x, y) ->
+				val mx = gameState.start.battlefieldWidth / 2
+				val my = gameState.start.battlefieldLength / 2
+				abs(x) > mx || abs(y) > my
+			}
+			
+			val newChatEntries = gameState.chatBox + identifiedShips.map { (id, _) ->
+				ChatEntry.ShipIdentified(id, Moment.now)
+			} + (if (isDisengaged)
+				listOf(ChatEntry.ShipEscaped(ship, Moment.now))
+			else emptyList())
+			
+			val newShips = (gameState.ships + mapOf(ship to newShipInstance) + identifiedShips) - (if (isDisengaged)
+				setOf(ship)
+			else emptySet())
+			
+			val newWrecks = gameState.destroyedShips + (if (isDisengaged)
+				mapOf(ship to ShipWreck(newShipInstance.ship, newShipInstance.owner, true))
+			else emptyMap())
 			
 			return GameEvent.StateChange(
-				gameState.copy(ships = newShips)
+				gameState.copy(
+					ships = newShips,
+					destroyedShips = newWrecks,
+					chatBox = newChatEntries,
+				)
 			)
 		}
 	}
@@ -256,7 +293,7 @@ sealed class PlayerAbilityType {
 							weaponAmount = shipInstance.weaponAmount - 1,
 							armaments = shipInstance.armaments.copy(
 								weaponInstances = shipInstance.armaments.weaponInstances + mapOf(
-									weapon to shipWeapon.copy(numCharges = shipWeapon.numCharges + 1)
+									weapon to shipWeapon.copy(numCharges = shipWeapon.numCharges + shipInstance.firepower.lanceCharging)
 								)
 							)
 						)
@@ -274,7 +311,7 @@ sealed class PlayerAbilityType {
 			if (!shipInstance.canUseWeapon(weapon)) return null
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
 			
-			val pickResponse = pick(getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner))
+			val pickResponse = pick(shipInstance.getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner))
 			
 			return pickResponse?.let { PlayerAbilityData.UseWeapon(it) }
 		}
@@ -287,7 +324,7 @@ sealed class PlayerAbilityType {
 			if (!shipInstance.canUseWeapon(weapon)) return GameEvent.InvalidAction("That weapon cannot be used")
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			
-			val pickRequest = getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner)
+			val pickRequest = shipInstance.getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner)
 			val pickResponse = data.target
 			
 			if (!gameState.isValidPick(pickRequest, pickResponse)) return GameEvent.InvalidAction("Invalid target")
@@ -486,7 +523,7 @@ else when (phase) {
 				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
 					PlayerAbilityType.ChargeLance(id, weaponId).takeIf {
 						when (weapon) {
-							is ShipWeaponInstance.Lance -> weapon.numCharges < 7 && weaponId !in ship.usedArmaments
+							is ShipWeaponInstance.Lance -> weapon.numCharges < 7.0 && weaponId !in ship.usedArmaments
 							else -> false
 						}
 					}
