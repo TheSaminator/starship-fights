@@ -129,7 +129,7 @@ object ShipNames {
 		else -> error("Invalid Mechyrdian ship weight!")
 	}
 	
-	private val masraDraetsenShipNames1 = listOf(
+	private val masraDraetsenFrigateNames1 = listOf(
 		"Murderous",
 		"Hateful",
 		"Heinous",
@@ -155,7 +155,7 @@ object ShipNames {
 		"Spiritous"
 	)
 	
-	private val masraDraetsenShipNames2 = listOf(
+	private val masraDraetsenFrigateNames2 = listOf(
 		"Murder",
 		"Hate",
 		"Hatred",
@@ -180,11 +180,64 @@ object ShipNames {
 		"Spirit"
 	)
 	
+	private val masraDraetsenCruiserNames1 = listOf(
+		"Despoiler of",
+		"Desecrator of",
+		"Desolator of",
+		"Destroyer of",
+		"Executioner of",
+		"Pillager of",
+		"Villain of",
+		"Great Devil of",
+		"Infidelity of",
+		"Incineration of",
+		"Immolation of",
+		"Crucifixion of",
+		"Unending Darkness of",
+	)
+	
+	private val masraDraetsenCruiserNames2 = listOf(
+		// Diadochi space
+		"Eskhaton",
+		"Terminus",
+		"Tychiphage",
+		"Magaddu",
+		"Ghattusha",
+		"Three Suns",
+		"RB-5354",
+		"VT-3072",
+		"Siegsstern",
+		"Atzalstadt",
+		"Apex",
+		"Summit",
+		// Lyudareykk and Isarnareykk
+		"Vion Kann",
+		"Kasr Karul",
+		"Vladizapad",
+		// Chaebodes Star Empire
+		"Ultima Thule",
+		"Prenovez",
+		// Calibor and Vescar sectors
+		"Letum Angelorum",
+		"Pharsalus",
+		"Eutopia",
+		// Ferthlon and Olympia sectors
+		"Ferthlon Primus",
+		"Ferthlon Secundus",
+		"Nova Roma",
+		"Mont Imperial",
+	)
+	
 	private const val masraDraetsenColossusName = "Boukephalas"
 	
-	private fun nameMasraDraetsenShip(weightClass: ShipWeightClass) = if (weightClass == ShipWeightClass.COLOSSUS)
-		masraDraetsenColossusName
-	else "${masraDraetsenShipNames1.random()} ${masraDraetsenShipNames2.random()}"
+	private fun nameMasraDraetsenShip(weightClass: ShipWeightClass) = when (weightClass) {
+		ShipWeightClass.ESCORT -> "${masraDraetsenFrigateNames1.random()} ${masraDraetsenFrigateNames2.random()}"
+		ShipWeightClass.DESTROYER -> "${masraDraetsenFrigateNames1.random()} ${masraDraetsenFrigateNames2.random()}"
+		ShipWeightClass.CRUISER -> "${masraDraetsenCruiserNames1.random()} ${masraDraetsenCruiserNames2.random()}"
+		ShipWeightClass.GRAND_CRUISER -> "${masraDraetsenCruiserNames1.random()} ${masraDraetsenCruiserNames2.random()}"
+		ShipWeightClass.COLOSSUS -> masraDraetsenColossusName
+		else -> error("Invalid Masra Draetsen ship weight!")
+	}
 	
 	private val isarnareykkShipNames = listOf(
 		"Professional with Standards",
