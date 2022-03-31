@@ -1,10 +1,15 @@
 html {
 	margin: 0;
-	padding: 20px 5vw;
+	padding: 0;
 	color: #222;
+	background-color: #aaa;
 
 	font-family: 'Noto Sans', sans-serif;
 	font-size: 100%;
+
+	--h1-size: 1.6em;
+	--h2-size: 1.4em;
+	--h3-size: 1.2em;
 }
 
 ::selection {
@@ -13,20 +18,7 @@ html {
 }
 
 div#bg {
-	width: 100%;
-	height: 100%;
-	position: fixed;
-	top: 0;
-	left: 0;
-
-	background-image: url("/static/images/background.svg");
-	background-attachment: fixed;
-	background-position: center;
-	background-size: cover;
-
-	filter: blur(4px);
-
-	z-index: 0;
+	display: none;
 }
 
 h1, h2, h3 {
@@ -39,60 +31,128 @@ h1, h2 {
 }
 
 h1 {
-	border: 3px solid #888;
-	box-shadow: inset 0 0 0 4px #444;
-	padding: 5px;
+	border: 0.1875rem solid #888;
+	box-shadow: inset 0 0 0 0.25rem #444;
+	padding: 0.3125rem;
 
 	background-color: #aaa;
 	font-variant: small-caps;
-	font-size: 2.6em;
+	font-size: var(--h1-size);
 	font-weight: 800;
 }
 
 h2 {
-	border-bottom: 2px solid #666;
-	font-size: 2.2em;
+	border-bottom: 0.125rem solid #666;
+	font-size: var(--h2-size);
 	font-weight: 600;
 }
 
 h3 {
 	text-decoration: underline;
 	text-decoration-color: #888;
-	font-size: 1.8em;
+	font-size: var(--h3-size);
 	font-weight: 400;
 }
 
-main {
-	padding: 5vh 0;
+.desktop {
+	display: none;
 }
 
 /*noinspection CssOverwrittenProperties*/
-main > section, nav, aside {
+main > section, main > nav.mobile, main > aside.mobile {
 	border-image-source: url("/static/images/panel.svg");
 	border-image-slice: 40% fill;
-	border-image-width: 2em;
-	border-width: 2em;
+	border-image-width: 1em;
+	border-width: 1em;
+
+	padding: 1.5em 1.5em;
 
 	box-sizing: border-box;
-	padding: 2.5em 3em;
+	width: 90vw;
+	margin: 5vw 5vw;
 
 	position: relative;
 	z-index: 1;
 }
 
-main > section {
-	width: 40%;
-	margin: 5vh auto;
-}
+@media only screen and (min-width: 8in) {
+	html {
+		padding: 1.25rem 5vw;
 
-main > section:first-child {
-	margin: 0 auto 5vh;
-}
+		--h1-size: 2.6em;
+		--h2-size: 2.2em;
+		--h3-size: 1.8em;
+	}
 
-nav {
-	width: 20%;
-	float: left;
-	margin: 5vh 5vw;
+	div#bg {
+		display: unset;
+
+		width: 100%;
+		height: 100%;
+		position: fixed;
+		top: 0;
+		left: 0;
+
+		background-image: url("/static/images/background.svg");
+		background-attachment: fixed;
+		background-position: center;
+		background-size: cover;
+
+		filter: blur(0.25rem);
+
+		z-index: 0;
+	}
+
+	main {
+		padding: 5vh 0;
+	}
+
+	/*noinspection CssOverwrittenProperties*/
+	main > section, nav.desktop, aside.desktop {
+		border-image-source: url("/static/images/panel.svg");
+		border-image-slice: 40% fill;
+		border-image-width: 2em;
+		border-width: 2em;
+
+		box-sizing: border-box;
+		padding: 2.5em 3em;
+
+		position: relative;
+		z-index: 1;
+	}
+
+	main > section {
+		width: 40%;
+		margin: 5vh auto;
+	}
+
+	main > section:first-of-type {
+		margin: 0 auto 5vh;
+	}
+
+	.mobile {
+		display: none;
+	}
+
+	.desktop {
+		display: unset;
+	}
+
+	nav.desktop {
+		width: 20%;
+		float: left;
+		margin: 5vh 5vw;
+	}
+
+	aside.desktop {
+		width: 20%;
+		float: right;
+		margin: 5vh 5vw;
+	}
+
+	aside.desktop img {
+		width: 100%;
+	}
 }
 
 div.list {
@@ -138,7 +198,7 @@ div.list > div.item > a {
 	vertical-align: middle;
 	text-align: center;
 
-	border-radius: 5px;
+	border-radius: 0.3em;
 	color: #369;
 	text-decoration: none;
 }
@@ -170,20 +230,10 @@ a[href^="http://"]::after, a[href^="https://"]::after {
 	height: 1em;
 }
 
-aside {
-	width: 20%;
-	float: right;
-	margin: 5vh 5vw;
-}
-
-aside img {
-	width: 100%;
-}
-
 table {
 	table-layout: fixed;
 	border-collapse: collapse;
-	border: 2pt solid #036;
+	border: 0.125rem solid #036;
 	background-color: #ccc;
 
 	width: 100%;
@@ -200,7 +250,7 @@ table + table tr:first-child th {
 }
 
 td {
-	border: 2pt solid #036;
+	border: 0.125rem solid #036;
 	background-color: #eee;
 	font-size: 0.7em;
 	padding: 0.15em 0;
@@ -210,7 +260,7 @@ td {
 }
 
 th {
-	border: 2pt solid #036;
+	border: 0.125rem solid #036;
 	background-color: #036;
 	padding: 0.15em 0;
 
@@ -231,7 +281,7 @@ textarea {
 	box-sizing: border-box;
 	background-color: #aaa;
 	border: none;
-	border-bottom: 2px solid #222;
+	border-bottom: 0.1em solid #222;
 
 	color: #024;
 	font-size: 1.5em;
@@ -264,7 +314,7 @@ textarea:invalid {
 input[type=submit] {
 	background-color: #06c;
 	border: none;
-	border-radius: 8pt;
+	border-radius: 0.3em;
 	color: #bdf;
 	cursor: pointer;
 	display: block;
@@ -285,7 +335,7 @@ input[type=submit]:active {
 input[type=submit].evil {
 	background-color: #c66;
 	border: none;
-	border-radius: 8pt;
+	border-radius: 0.3em;
 	color: #fcc;
 	cursor: pointer;
 	display: block;

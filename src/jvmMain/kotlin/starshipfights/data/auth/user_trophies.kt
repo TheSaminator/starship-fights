@@ -6,8 +6,8 @@ import starshipfights.CurrentConfiguration
 
 @Serializable
 sealed class UserTrophy : Comparable<UserTrophy> {
-	protected abstract fun ASIDE.render()
-	fun renderInto(sidebar: ASIDE) = sidebar.render()
+	protected abstract fun TagConsumer<*>.render()
+	fun renderInto(consumer: TagConsumer<*>) = consumer.render()
 	
 	// Higher rank = lower on page
 	protected abstract val rank: Int
@@ -16,11 +16,11 @@ sealed class UserTrophy : Comparable<UserTrophy> {
 	}
 }
 
-fun ASIDE.renderTrophy(trophy: UserTrophy) = trophy.renderInto(this)
+fun TagConsumer<*>.renderTrophy(trophy: UserTrophy) = trophy.renderInto(this)
 
 @Serializable
 object SiteOwnerTrophy : UserTrophy() {
-	override fun ASIDE.render() {
+	override fun TagConsumer<*>.render() {
 		p {
 			style = "text-align:center;border:2px solid #a82;padding:3px;background-color:#fc3;color:#541;font-variant:small-caps;font-family:'JetBrains Mono',monospace"
 			+"Site Owner"
@@ -33,7 +33,7 @@ object SiteOwnerTrophy : UserTrophy() {
 
 @Serializable
 object SiteDeveloperTrophy : UserTrophy() {
-	override fun ASIDE.render() {
+	override fun TagConsumer<*>.render() {
 		p {
 			style = "text-align:center;border:2px solid #62a;padding:3px;background-color:#93f;color:#315;font-variant:small-caps;font-family:'JetBrains Mono',monospace"
 			title = "This person helps with coding the game"
@@ -47,7 +47,7 @@ object SiteDeveloperTrophy : UserTrophy() {
 
 @Serializable
 data class SiteJanitorTrophy(val isSenior: Boolean) : UserTrophy() {
-	override fun ASIDE.render() {
+	override fun TagConsumer<*>.render() {
 		p {
 			style = "text-align:center;border:2px solid #840;padding:3px;background-color:#c60;color:#420;font-variant:small-caps;font-family:'JetBrains Mono',monospace"
 			title = "This person helps with cleaning the poo out of the site"
@@ -61,7 +61,7 @@ data class SiteJanitorTrophy(val isSenior: Boolean) : UserTrophy() {
 
 @Serializable
 data class SiteSupporterTrophy(val amountInUsCents: Int) : UserTrophy() {
-	override fun ASIDE.render() {
+	override fun TagConsumer<*>.render() {
 		p {
 			style = "text-align:center;border:2px solid #694;padding:3px;background-color:#af7;color:#231;font-variant:small-caps;font-family:'JetBrains Mono',monospace"
 			title = "\"I spent money on an online game and all I got was this lousy trophy!\""

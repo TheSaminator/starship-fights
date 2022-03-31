@@ -5,16 +5,16 @@ import starshipfights.game.ShipType
 import starshipfights.game.getDefiniteShortName
 
 abstract class Sidebar {
-	protected abstract fun ASIDE.display()
-	fun displayIn(aside: ASIDE) = aside.display()
+	protected abstract fun TagConsumer<*>.display()
+	fun displayIn(aside: ASIDE) = aside.consumer.display()
 }
 
-class CustomSidebar(private val block: ASIDE.() -> Unit) : Sidebar() {
-	override fun ASIDE.display() = block()
+class CustomSidebar(private val block: TagConsumer<*>.() -> Unit) : Sidebar() {
+	override fun TagConsumer<*>.display() = block()
 }
 
 data class ShipViewSidebar(val shipType: ShipType) : Sidebar() {
-	override fun ASIDE.display() {
+	override fun TagConsumer<*>.display() {
 		p {
 			img(alt = "Flag of ${shipType.faction.getDefiniteShortName()}", src = shipType.faction.flagUrl)
 		}
@@ -28,7 +28,7 @@ data class ShipViewSidebar(val shipType: ShipType) : Sidebar() {
 }
 
 data class PageNavSidebar(val contents: List<NavItem>) : Sidebar() {
-	override fun ASIDE.display() {
+	override fun TagConsumer<*>.display() {
 		div(classes = "list") {
 			contents.forEach {
 				div(classes = "item") {

@@ -65,23 +65,3 @@ data class UserSession(
 		index(UserSession::user)
 	})
 }
-
-/*
-@Serializable
-data class PrivateMessage(
-	@SerialName("_id")
-	override val id: Id<PrivateMessage> = Id(),
-	val sender: Id<User>,
-	val receiver: Id<User>,
-	val subject: String,
-	val message: String,
-	val sentAt: @Contextual Instant,
-	val isRead: Boolean
-) : DataDocument<PrivateMessage> {
-	companion object Table : DocumentTable<PrivateMessage> by DocumentTable.create({
-		index(PrivateMessage::sender)
-		index(PrivateMessage::receiver)
-		index(PrivateMessage::sentAt)
-	})
-}
-*/

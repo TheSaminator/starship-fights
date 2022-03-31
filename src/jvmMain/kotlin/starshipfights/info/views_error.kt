@@ -5,7 +5,7 @@ import io.ktor.features.*
 import kotlinx.html.*
 import starshipfights.CurrentConfiguration
 
-private fun MAIN.devModeCallId(callId: String?) {
+private fun SECTIONS.devModeCallId(callId: String?) {
 	callId?.let { id ->
 		section {
 			style = if (CurrentConfiguration.isDevEnv) "" else "display:none"

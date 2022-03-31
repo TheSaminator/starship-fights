@@ -24,9 +24,9 @@ data class NavHead(val label: String) : NavItem() {
 	}
 }
 
-data class NavLink(val to: String, val text: String, val isPost: Boolean = false, val csrfUserCookie: Id<UserSession>? = null) : NavItem() {
+data class NavLink(val to: String, val text: String, val classes: String? = null, val isPost: Boolean = false, val csrfUserCookie: Id<UserSession>? = null) : NavItem() {
 	override fun DIV.display() {
-		a(href = to) {
+		a(href = to, classes = classes) {
 			if (isPost)
 				method = "post"
 			csrfUserCookie?.let { csrfToken(it) }
@@ -51,17 +51,7 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 		listOf(
 			NavLink("/me", user.profileName),
 			NavLink("/me/manage", "User Preferences"),
-			/*NavLink(
-				"/me/inbox", "Inbox (${
-					PrivateMessage.number(
-						and(
-							PrivateMessage::receiver eq user.id,
-							PrivateMessage::isRead eq false
-						)
-					)
-				})"
-			),*/
-			NavLink("/lobby", "Enter Game Lobby"),
+			NavLink("/lobby", "Enter Game Lobby", classes = "desktop"),
 			NavLink("/logout", "Log Out", isPost = true, csrfUserCookie = session.id),
 		)
 } + listOf(

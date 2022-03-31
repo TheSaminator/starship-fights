@@ -2,9 +2,10 @@ package starshipfights.info
 
 import kotlinx.html.*
 
-fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Sidebar? = null, content: MAIN.() -> Unit): HTML.() -> Unit = {
+fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Sidebar? = null, content: SECTIONS.() -> Unit): HTML.() -> Unit = {
 	head {
 		meta(charset = "utf-8")
+		meta(name = "viewport", content = "width=device-width, initial-scale=1.0")
 		
 		link(rel = "icon", type = "image/svg+xml", href = "/static/images/icon.svg")
 		link(rel = "preconnect", href = "https://fonts.googleapis.com")
@@ -21,7 +22,7 @@ fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Side
 		div { id = "bg" }
 		
 		navBar?.let {
-			nav {
+			nav(classes = "desktop") {
 				div(classes = "list") {
 					it.forEach {
 						div(classes = "item") {
@@ -33,13 +34,33 @@ fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Side
 		}
 		
 		sidebar?.let {
-			aside {
+			aside(classes = "desktop") {
 				it.displayIn(this)
 			}
 		}
 		
 		main {
-			content()
+			sidebar?.let {
+				aside(classes = "mobile") {
+					it.displayIn(this)
+				}
+			}
+			
+			with(sectioned()) {
+				content()
+			}
+			
+			navBar?.let {
+				nav(classes = "mobile") {
+					div(classes = "list") {
+						it.forEach {
+							div(classes = "item") {
+								it.displayIn(this)
+							}
+						}
+					}
+				}
+			}
 		}
 		
 		script(src = "/static/init.js") {}
