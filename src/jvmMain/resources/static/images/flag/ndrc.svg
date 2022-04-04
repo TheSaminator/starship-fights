@@ -3,8 +3,8 @@
 		xmlns="http://www.w3.org/2000/svg"
 		version="1.1"
 		viewBox="0 0 128 80"
-		height="80mm"
-		width="128mm">
+		height="160px"
+		width="256px">
 	<defs
 			id="defs2">
 		<clipPath
