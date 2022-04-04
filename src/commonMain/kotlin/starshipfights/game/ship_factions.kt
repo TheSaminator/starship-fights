@@ -40,6 +40,29 @@ enum class Faction(
 			}
 		},
 	),
+	NDRC(
+		shortName = "NdRC",
+		shortNameIsDefinite = true,
+		navyName = "Dutch Marines",
+		polityName = "Dutch Outer Space Company",
+		demonymSingular = "Dutch",
+		currencyName = "guldens",
+		shipPrefix = "NKS ", // Nederlandse Koopschip
+		blurbDesc = {
+			p {
+				+"The history of the Dutch Outer Space Company extends almost as far back as that of the American Vestigium. Founded in 2079 to provide space-colonization services to the European continent, the Dutch Outer Space Company has come into frequent conflict with the Imperial States of America."
+			}
+			p {
+				+"They survived during, and fought back against, the Drakhassi and Tylan occupations, waging a guerilla war against the oppressive regimes, as well as supplying other local humans with weapons to rebel too. In doing so, they put aside their differences with the Americans and formed a united front."
+			}
+			p {
+				+"Now, the Dutch Outer Space Company prospers, and so too do their business partners: the Empire of Mechyrdia. But with the imperilment of Mechyrdia to threats both within and without, the Company finds itself in the same danger. Shall it be liberty, or shall it be death?"
+			}
+			p {
+				i { +"Gameside note: Dutch admirals may purchase ships from other factions at a marked-up price, in addition to ships from their own faction." }
+			}
+		},
+	),
 	MASRA_DRAETSEN(
 		shortName = "Masra Draetsen",
 		shortNameIsDefinite = true,
@@ -126,6 +149,7 @@ fun Faction.getDefiniteShortName(capitalized: Boolean = false) = if (shortNameIs
 val Faction.meshTag: String
 	get() = when (this) {
 		Faction.MECHYRDIA -> "mechyrdia"
+		Faction.NDRC -> "ndrc"
 		Faction.MASRA_DRAETSEN -> "diadochi"
 		Faction.ISARNAREYKK -> "fulkreykk"
 		Faction.VESTIGIUM -> "usa"

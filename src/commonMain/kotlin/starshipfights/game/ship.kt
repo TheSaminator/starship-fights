@@ -50,6 +50,8 @@ val ShipWeightClass.reactor: ShipReactor
 		ShipWeightClass.BATTLECRUISER -> ShipReactor(6, 3)
 		ShipWeightClass.BATTLESHIP -> ShipReactor(7, 4)
 		
+		ShipWeightClass.BATTLE_BARGE -> ShipReactor(5, 3)
+		
 		ShipWeightClass.GRAND_CRUISER -> ShipReactor(6, 4)
 		ShipWeightClass.COLOSSUS -> ShipReactor(9, 6)
 		
@@ -76,6 +78,8 @@ val ShipWeightClass.movement: ShipMovement
 		ShipWeightClass.CRUISER -> ShipMovement(PI / 3, 1900.0)
 		ShipWeightClass.BATTLECRUISER -> ShipMovement(PI / 3, 1900.0)
 		ShipWeightClass.BATTLESHIP -> ShipMovement(PI / 4, 1600.0)
+		
+		ShipWeightClass.BATTLE_BARGE -> ShipMovement(PI / 4, 1600.0)
 		
 		ShipWeightClass.GRAND_CRUISER -> ShipMovement(PI / 4, 1750.0)
 		ShipWeightClass.COLOSSUS -> ShipMovement(PI / 6, 1300.0)
@@ -105,6 +109,8 @@ val ShipWeightClass.durability: ShipDurability
 		ShipWeightClass.BATTLECRUISER -> ShipDurability(14, 1.5, 2)
 		ShipWeightClass.BATTLESHIP -> ShipDurability(16, 2.0, 3)
 		
+		ShipWeightClass.BATTLE_BARGE -> ShipDurability(16, 1.5, 3)
+		
 		ShipWeightClass.GRAND_CRUISER -> ShipDurability(15, 1.75, 3)
 		ShipWeightClass.COLOSSUS -> ShipDurability(27, 3.0, 4)
 		
@@ -133,6 +139,8 @@ val ShipWeightClass.firepower: ShipFirepower
 		ShipWeightClass.CRUISER -> ShipFirepower(1.0, 1.0, 1.0, 1.0)
 		ShipWeightClass.BATTLECRUISER -> ShipFirepower(1.25, 1.25, 1.25, 1.25)
 		ShipWeightClass.BATTLESHIP -> ShipFirepower(1.25, 1.25, 1.25, 1.25)
+		
+		ShipWeightClass.BATTLE_BARGE -> ShipFirepower(1.25, 1.25, 1.25, 1.25)
 		
 		ShipWeightClass.GRAND_CRUISER -> ShipFirepower(1.25, 1.25, 1.25, 1.25)
 		ShipWeightClass.COLOSSUS -> ShipFirepower(1.5, 1.5, 1.5, 1.5)

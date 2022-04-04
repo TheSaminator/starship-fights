@@ -247,22 +247,16 @@ interface AuthProvider {
 					val admiral = Admiral.get(admiralId)!!
 					
 					if (admiral.owningUser != currentUser) forbid()
-					
-					val shipType = call.parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
-					
-					if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
-						throw NotFoundException()
-					
-					if (shipType.buyPrice > admiral.money)
-						redirect("/admiral/${admiralId}/manage" + withErrorMessage("You cannot afford that ship"))
-					
 					val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 					
-					if (shipType.weightClass.isUnique) {
-						val hasSameWeightClass = ownedShips.any { it.shipType.weightClass == shipType.weightClass }
-						if (hasSameWeightClass)
-							redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot buy two copies of a ${shipType.fullDisplayName}"))
-					}
+					val shipType = call.parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
+					val shipPrice = shipType.buyPrice(admiral, ownedShips)
+					
+					if (shipPrice == null)
+						throw NotFoundException()
+					
+					if (shipPrice > admiral.money)
+						redirect("/admiral/${admiralId}/manage" + withErrorMessage("You cannot afford that ship"))
 					
 					val shipNames = ownedShips.map { it.name }.toMutableSet()
 					val newShipName = newShipName(shipType.faction, shipType.weightClass, shipNames) ?: ShipNames.nameShip(shipType.faction, shipType.weightClass)
@@ -276,7 +270,7 @@ interface AuthProvider {
 					
 					coroutineScope {
 						launch { ShipInDrydock.put(newShip) }
-						launch { Admiral.set(admiralId, inc(Admiral::money, -shipType.buyPrice)) }
+						launch { Admiral.set(admiralId, inc(Admiral::money, -shipPrice)) }
 					}
 					
 					redirect("/admiral/${admiralId}/manage")

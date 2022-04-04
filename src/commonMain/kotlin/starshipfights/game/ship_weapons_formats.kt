@@ -67,6 +67,42 @@ fun mechyrdiaShipWeapons(
 	return ShipArmaments(weapons)
 }
 
+fun ndrcShipWeapons(
+	torpedoes: Int,
+	hasMegaCannon: Boolean,
+	
+	numDorsalLances: Int,
+	foreFiringDorsalLances: Boolean,
+	
+	numBroadsideCannons: Int,
+	numBroadsideLances: Int
+): ShipArmaments {
+	val idCounter = ShipWeaponIdCounter()
+	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
+	
+	repeat(torpedoes) {
+		idCounter.add(weapons, ShipWeapon.Torpedo(setOf(FiringArc.BOW), "Fore torpedo launchers"))
+	}
+	
+	if (hasMegaCannon)
+		idCounter.add(weapons, ShipWeapon.MegaCannon)
+	
+	if (numDorsalLances > 0)
+		idCounter.add(weapons, ShipWeapon.Lance(numDorsalLances, if (foreFiringDorsalLances) FiringArc.FIRE_FORE_270 else FiringArc.FIRE_BROADSIDE, "Dorsal lance batteries"))
+	
+	if (numBroadsideCannons > 0) {
+		idCounter.add(weapons, ShipWeapon.Cannon(numBroadsideCannons, setOf(FiringArc.ABEAM_PORT), "Port cannon battery"))
+		idCounter.add(weapons, ShipWeapon.Cannon(numBroadsideCannons, setOf(FiringArc.ABEAM_STARBOARD), "Starboard cannon battery"))
+	}
+	
+	if (numBroadsideLances > 0) {
+		idCounter.add(weapons, ShipWeapon.Lance(numBroadsideLances, setOf(FiringArc.ABEAM_PORT), "Port lance battery"))
+		idCounter.add(weapons, ShipWeapon.Lance(numBroadsideLances, setOf(FiringArc.ABEAM_STARBOARD), "Starboard lance battery"))
+	}
+	
+	return ShipArmaments(weapons)
+}
+
 fun diadochiShipWeapons(
 	torpedoes: Int,
 	hasRevelationGun: Boolean,

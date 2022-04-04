@@ -343,6 +343,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 							+Entities.nbsp
 							+faction.shortName
 						}
+						br
 					}
 				}
 				h3 {
@@ -568,10 +569,13 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 	if (admiral.owningUser != currentUser) forbid()
 	
 	val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
-	
-	val buyableShips = ShipType.values().filter { type ->
-		type.faction == admiral.faction && type.weightClass.rank <= admiral.rank.maxShipWeightClass.rank && type.buyPrice <= admiral.money && (if (type.weightClass.isUnique) ownedShips.none { it.shipType.weightClass == type.weightClass } else true)
-	}.sortedBy { it.name }.sortedBy { it.weightClass.rank }
+	val buyableShips = ShipType.values()
+		.mapNotNull { type -> type.buyPriceChecked(admiral, ownedShips)?.let { price -> type to price } }
+		.sortedBy { (_, price) -> price }
+		.sortedBy { (type, _) -> type.name }
+		.sortedBy { (type, _) -> type.weightClass.rank }
+		.sortedBy { (type, _) -> if (type.faction == admiral.faction) -1 else type.faction.ordinal }
+		.toMap()
 	
 	return page(
 		"Managing ${admiral.name}", standardNavBar(), PageNavSidebar(
@@ -739,13 +743,13 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					th { +"Ship Class" }
 					th { +"Ship Cost" }
 				}
-				buyableShips.forEach { st ->
+				buyableShips.forEach { (st, price) ->
 					tr {
 						td {
 							a(href = "/info/${st.toUrlSlug()}") { +st.fullDisplayName }
 						}
 						td {
-							+st.buyPrice.toString()
+							+price.toString()
 							+" "
 							+admiral.faction.currencyName
 							br
@@ -861,9 +865,6 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 	
 	val shipType = parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
 	
-	if (shipType.faction != admiral.faction || shipType.weightClass.rank > admiral.rank.maxShipWeightClass.rank)
-		throw NotFoundException()
-	
 	if (shipType.buyPrice > admiral.money) {
 		return page(
 			"Too Expensive", null, null
@@ -881,6 +882,10 @@ suspend fun ApplicationCall.buyShipConfirmPage(): HTML.() -> Unit {
 			}
 		}
 	}
+	
+	val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
+	if (shipType.buyPriceChecked(admiral, ownedShips) == null)
+		throw NotFoundException()
 	
 	return page(
 		"Are You Sure?", null, null

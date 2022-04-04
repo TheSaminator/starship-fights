@@ -24,6 +24,13 @@ val ShipType.armaments: ShipArmaments
 		ShipType.NOVA_ROMA -> mechyrdiaShipWeapons(3, false, 0, 3, 0, 1)
 		ShipType.TYLA -> mechyrdiaShipWeapons(3, false, 1, 0, 2, 1)
 		
+		ShipType.JAGER -> ndrcShipWeapons(2, true, 0, false, 0, 2)
+		ShipType.STER -> ndrcShipWeapons(0, true, 2, true, 3, 0)
+		ShipType.ZWAARD -> ndrcShipWeapons(2, false, 2, true, 3, 0)
+		ShipType.SLAGSCHIP -> ndrcShipWeapons(3, false, 2, true, 5, 0)
+		ShipType.VOORHOEDE -> ndrcShipWeapons(3, true, 0, false, 3, 1)
+		ShipType.KRIJGSCHUIT -> ndrcShipWeapons(4, true, 2, true, 6, 0)
+		
 		ShipType.ERIS -> diadochiShipWeapons(2, false, 1, 0, 0, 0)
 		ShipType.TYPHON -> diadochiShipWeapons(0, false, 1, 0, 0, 1)
 		ShipType.AHRIMAN -> diadochiShipWeapons(1, false, 0, 1, 0, 0)

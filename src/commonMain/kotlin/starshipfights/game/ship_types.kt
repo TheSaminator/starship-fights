@@ -11,6 +11,9 @@ enum class ShipWeightClass(
 	BATTLECRUISER(4, 3),
 	BATTLESHIP(5, 4),
 	
+	// NdRC-specific
+	BATTLE_BARGE(5, 3),
+	
 	// Masra Draetsen-specific
 	GRAND_CRUISER(4, 3),
 	COLOSSUS(5, 5),
@@ -37,6 +40,8 @@ enum class ShipWeightClass(
 			CRUISER -> 200
 			BATTLECRUISER -> 250
 			BATTLESHIP -> 350
+			
+			BATTLE_BARGE -> 300
 			
 			GRAND_CRUISER -> 300
 			COLOSSUS -> 500
@@ -85,6 +90,14 @@ enum class ShipType(
 	MECHYRDIA(Faction.MECHYRDIA, ShipWeightClass.BATTLESHIP),
 	NOVA_ROMA(Faction.MECHYRDIA, ShipWeightClass.BATTLESHIP),
 	TYLA(Faction.MECHYRDIA, ShipWeightClass.BATTLESHIP),
+	
+	// NdRC
+	JAGER(Faction.NDRC, ShipWeightClass.DESTROYER),
+	STER(Faction.NDRC, ShipWeightClass.DESTROYER),
+	ZWAARD(Faction.NDRC, ShipWeightClass.DESTROYER),
+	SLAGSCHIP(Faction.NDRC, ShipWeightClass.CRUISER),
+	VOORHOEDE(Faction.NDRC, ShipWeightClass.CRUISER),
+	KRIJGSCHUIT(Faction.NDRC, ShipWeightClass.BATTLE_BARGE),
 	
 	// Masra Draetsen
 	ERIS(Faction.MASRA_DRAETSEN, ShipWeightClass.ESCORT),

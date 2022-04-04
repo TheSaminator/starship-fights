@@ -154,5 +154,3 @@ gradle-app.setting
 logs/
 mongodb/
 config.json
-
-yarn.lock

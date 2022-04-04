@@ -2,6 +2,7 @@ package starshipfights.data.admiralty
 
 enum class AdmiralNameFlavor {
 	MECHYRDIA, TYLA, CALIBOR, // Mechyrdia-aligned
+	DUTCH, // NdRC-aliged
 	DIADOCHI, // Masra Draetsen-aligned
 	FULKREYKK, // Isarnareykk-aligned
 	AMERICAN, HISPANIC_AMERICAN; // Vestigium-aligned
@@ -11,6 +12,7 @@ enum class AdmiralNameFlavor {
 			MECHYRDIA -> "Mechyrdian"
 			TYLA -> "Tylan"
 			CALIBOR -> "Caliborese"
+			DUTCH -> "Dutch"
 			DIADOCHI -> "Diadochi"
 			FULKREYKK -> "Thedish"
 			AMERICAN -> "American"
@@ -231,6 +233,91 @@ object AdmiralNames {
 	private fun randomCaliboreseName(isFemale: Boolean) = caliboreseNames.filter {
 		it.length < 8 && (isFemale == (it.last() in caliboreseVowels))
 	}.random() + " " + caliboreseNames.filter { it.length > 7 }.random()
+	
+	private val dutchMaleNames = listOf(
+		"Aalderik",
+		"Andreas",
+		"Boudewijn",
+		"Bruno",
+		"Christiaan",
+		"Cornelius",
+		"Dirk",
+		"Frederik",
+		"Gerlach",
+		"Helbrecht",
+		"Hendrik",
+		"Jakob",
+		"Jochem",
+		"Joris",
+		"Koenraad",
+		"Leopold",
+		"Lodewijk",
+		"Maarten",
+		"Michel",
+		"Niels",
+		"Pieter",
+		"Renaat",
+		"Ruben",
+		"Sebastiaan",
+		"Sjaak",
+		"Tobias",
+		"Valentijn",
+		"Wiebrand",
+	)
+	
+	private val dutchFemaleNames = listOf(
+		"Adelwijn",
+		"Amber",
+		"Katharijne",
+		"Eva",
+		"Gerda",
+		"Helga",
+		"Ida",
+		"Irene",
+		"Jacqueline",
+		"Josefien",
+		"Juliana",
+		"Lore",
+		"Margriet",
+		"Meike",
+		"Nora",
+		"Rebeka",
+		"Sara",
+		"Vera",
+		"Wilhelmina",
+	)
+	
+	private val dutchMerchantHouses = listOf(
+		"Venetho",
+		"Luibeck",
+		"Birka",
+		"Heiðabýr",
+		"Rostok",
+		"Guistrov",
+		"Schverin",
+		"Koeln",
+		"Bruigge",
+		"Reval",
+		"Elbing",
+		"Dorpat",
+		"Stralsund",
+		"Mijdeborg",
+		"Breslaw",
+		"Dortmund",
+		"Antwerp",
+		"Falsterbo",
+		"Zwolle",
+		"Buchtehud",
+		"Bremen",
+		"Zutphen",
+		"Kampen",
+		"Grunn",
+		"Deventer",
+		"Wismer",
+		"Luinenburg",
+	)
+	
+	private fun randomDutchName(isFemale: Boolean) = (if (isFemale) dutchFemaleNames else dutchMaleNames).random() + " van " + dutchMerchantHouses.random()
 	
 	private val diadochiMaleNames = listOf(
 		"Oqatai",
@@ -535,6 +622,7 @@ object AdmiralNames {
 		AdmiralNameFlavor.MECHYRDIA -> randomMechyrdianName(isFemale)
 		AdmiralNameFlavor.TYLA -> randomTylanName(isFemale)
 		AdmiralNameFlavor.CALIBOR -> randomCaliboreseName(isFemale)
+		AdmiralNameFlavor.DUTCH -> randomDutchName(isFemale)
 		AdmiralNameFlavor.DIADOCHI -> randomDiadochiName(isFemale)
 		AdmiralNameFlavor.FULKREYKK -> randomThedishName(isFemale)
 		AdmiralNameFlavor.AMERICAN -> randomAmericanName(isFemale)

@@ -126,6 +126,7 @@ object ShipNames {
 		ShipWeightClass.CRUISER -> "${mechyrdianCruiserNames1.random()} ${mechyrdianCruiserNames2.random()}"
 		ShipWeightClass.BATTLECRUISER -> "${mechyrdianCruiserNames1.random()} ${mechyrdianCruiserNames2.random()}"
 		ShipWeightClass.BATTLESHIP -> mechyrdianBattleshipNames.random()
+		ShipWeightClass.BATTLE_BARGE -> mechyrdianBattleshipNames.random()
 		else -> error("Invalid Mechyrdian ship weight!")
 	}
 	
@@ -361,6 +362,7 @@ object ShipNames {
 	
 	fun nameShip(faction: Faction, weightClass: ShipWeightClass): String = when (faction) {
 		Faction.MECHYRDIA -> nameMechyrdianShip(weightClass)
+		Faction.NDRC -> nameMechyrdianShip(weightClass)
 		Faction.MASRA_DRAETSEN -> nameMasraDraetsenShip(weightClass)
 		Faction.ISARNAREYKK -> nameIsarnareykskShip()
 		Faction.VESTIGIUM -> nameAmericanShip()

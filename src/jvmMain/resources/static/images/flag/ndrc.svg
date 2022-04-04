@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+		xmlns="http://www.w3.org/2000/svg"
+		id="svg8"
+		version="1.1"
+		viewBox="0 0 128 80"
+		height="80mm"
+		width="128mm">
+	<defs
+			id="defs2">
+		<clipPath
+				id="clipPath853">
+			<rect
+					ry="16"
+					y="216.99985"
+					x="-2.4715459e-06"
+					height="80"
+					width="128"
+					id="rect855"
+					style="fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.99999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"/>
+		</clipPath>
+	</defs>
+	<g
+			transform="translate(0,-217)"
+			id="layer1">
+		<g
+				clip-path="url(#clipPath853)"
+				id="g851">
+			<rect
+					style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:4.8241806;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:100;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+					id="rect815"
+					width="127.99999"
+					height="79.999985"
+					x="1.3431513e-06"
+					y="216.99986"/>
+			<rect
+					style="fill:#ff9933;fill-opacity:1;stroke:none;stroke-width:4.90563059;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:100;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+					id="rect817-1"
+					width="127.99999"
+					height="26.66666"
+					x="1.3431513e-06"
+					y="216.99986"/>
+			<rect
+					style="fill:#3399ff;fill-opacity:1;stroke:none;stroke-width:4.90563059;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:100;stroke-dasharray:none;stroke-opacity:1;paint-order:normal"
+					id="rect817-8"
+					width="127.99999"
+					height="26.66666"
+					x="1.4167209e-07"
+					y="270.33319"/>
+			<g
+					aria-label="NdRC"
+					transform="matrix(1.2676412,0,0,1.2520914,2.2717269,-76.875677)"
+					style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.64354515px;line-height:1.25;font-family:'Fenrisian Text';-inkscape-font-specification:'Fenrisian Text';letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.51456106"
+					id="text836">
+				<path
+						id="path844"
+						style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:20.74450874px;font-family:Orbitron;-inkscape-font-specification:'Orbitron Bold';stroke-width:0.53212643"
+						d="m 80.250047,261.59617 v -2.92843 h -12.01107 c -1.597327,0 -2.883486,1.37547 -2.883486,3.08372 v 9.80575 c 0,1.70825 1.286159,3.08372 2.883486,3.08372 h 12.01107 v -2.92841 h -12.01107 c -0.08298,0 -0.145211,-0.0665 -0.145211,-0.15531 v -9.80575 c 0,-0.0888 0.06223,-0.15529 0.145211,-0.15529 z m -17.077265,0.17748 c 0,-1.68607 -1.306904,-3.08372 -2.904231,-3.08372 H 48.236736 v 15.951 h 2.738275 v -5.47969 h 0.06223 4.833469 l 4.314858,5.47969 h 2.98721 v -0.75429 l -3.713268,-4.7254 h 0.809036 c 1.597327,0 2.904232,-1.39766 2.904232,-3.08371 z m -12.052559,4.45917 c -0.08298,0 -0.145212,-0.0665 -0.145212,-0.15529 v -4.30388 c 0,-0.0888 0.06223,-0.1553 0.145212,-0.1553 h 9.148328 c 0.08298,0 0.145211,0.0665 0.145211,0.1553 v 4.30388 c 0,0.0888 -0.06223,0.15529 -0.145211,0.15529 z m -7.882265,-7.56516 v 3.10599 h -6.658987 c -1.576583,0 -2.862742,1.37546 -2.862742,3.06152 v 6.74424 c 0,1.68605 1.286159,3.06152 2.862742,3.06152 h 9.376517 v -15.97327 z m -6.658987,13.06704 c -0.08298,0 -0.124467,-0.0665 -0.124467,-0.15529 v -6.74424 c 0,-0.0888 0.04149,-0.15529 0.124467,-0.15529 h 6.513776 c 0.08298,0 0.145211,0.0665 0.145211,0.15529 v 6.74424 c 0,0.0888 -0.06223,0.15529 -0.145211,0.15529 z m -7.261227,-1.35329 -9.189816,-11.71367 h -2.987209 v 15.97319 h 2.738275 v -11.71367 l 9.210561,11.71367 h 2.987209 v -15.97327 h -2.75902 z"/>
+			</g>
+		</g>
+		<path
+				id="rect815-8"
+				d="m 16.000088,216.99972 c -8.8639991,0 -16.000056560368,7.13605 -16.000056560368,16.00005 v 48.00017 C 3.1439632e-5,289.86394 7.1360889,297 16.000088,297 h 95.999822 c 8.864,0 16.00006,-7.13606 16.00006,-16.00006 v -48.00017 c 0,-8.864 -7.13606,-16.00005 -16.00006,-16.00005 z m 0,4.00027 h 95.999822 c 6.648,0 12.0003,5.35178 12.0003,11.99978 v 48.00017 c 0,6.648 -5.3523,11.99979 -12.0003,11.99979 H 16.000088 c -6.648,0 -11.9997842,-5.35179 -11.9997842,-11.99979 v -48.00017 c 0,-6.648 5.3517842,-11.99978 11.9997842,-11.99978 z"
+				style="fill:#000000;fill-opacity:0.33333333;fill-rule:nonzero;stroke:none;stroke-width:1.74999988;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"/>
+	</g>
+</svg>
