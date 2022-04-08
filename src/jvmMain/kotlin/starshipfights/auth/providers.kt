@@ -95,6 +95,14 @@ interface AuthProvider {
 					call.respondHtml(HttpStatusCode.OK, call.manageUserPage())
 				}
 				
+				get("/me/private-info") {
+					call.respondHtml(HttpStatusCode.OK, call.privateInfoPage())
+				}
+				
+				get("/me/private-info/txt") {
+					call.respondText(ContentType.Text.Plain, HttpStatusCode.OK) { call.privateInfo() }
+				}
+				
 				post("/me/manage") {
 					val form = call.receiveValidatedParameters()
 					val currentUser = call.getUser() ?: redirect("/login")

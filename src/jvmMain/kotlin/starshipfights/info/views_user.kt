@@ -210,6 +210,11 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					+Entities.nbsp
 					+"Log Session IP Addresses"
 				}
+				p {
+					+"Your private info can be viewed at the "
+					a(href = "/me/private-info") {+"Private Info"}
+					+" page."
+				}
 				request.queryParameters["error"]?.let { errorMsg ->
 					p {
 						style = "color:#d22"

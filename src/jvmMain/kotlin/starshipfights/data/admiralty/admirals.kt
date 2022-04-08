@@ -61,6 +61,9 @@ data class ShipInDrydock(
 	val shipData: Ship
 		get() = Ship(id.reinterpret(), name, shipType)
 	
+	val fullName: String
+		get() = shipData.fullName
+	
 	companion object Table : DocumentTable<ShipInDrydock> by DocumentTable.create({
 		index(ShipInDrydock::owningAdmiral)
 	})

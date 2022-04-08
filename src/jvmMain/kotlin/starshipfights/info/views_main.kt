@@ -120,6 +120,11 @@ suspend fun ApplicationCall.privacyPolicyPage(): HTML.() -> Unit {
 			p {
 				+"Privacy policies are nice and all, but they're only as strong as the staff that implements them. I have no interest in abusing others, just as I have no interest in doxing or otherwise revealing what locations people log in from. Nor have I any interest in being worshipped as some kind of programmer-god messiah. I am impervious to such corrupting ambitions."
 			}
+			p {
+				+"All of the private data we collect can be viewed at your "
+				a(href = "/me/private-info") { +"Private Info" }
+				+" page."
+			}
 			h2 { +"Who Can't See It" }
 			p {
 				+"We protect your data by a combination of requiring TLS-secured HTTP connections, and keeping the database's port only open on 127.0.0.1, i.e. no one outside of the server's local machine can even connect to the database, much less access the data stored inside of it."
@@ -130,6 +135,8 @@ suspend fun ApplicationCall.privacyPolicyPage(): HTML.() -> Unit {
 				dd { +"Initial writing" }
 				dt { +"February 15, 2022" }
 				dd { +"Indicate that IP storage is an opt-in-only feature" }
+				dt { +"April 08, 2022" }
+				dd { +"Add link to Private Info page" }
 			}
 		}
 	}
