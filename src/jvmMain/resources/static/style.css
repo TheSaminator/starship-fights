@@ -333,7 +333,7 @@ input[type=submit]:active {
 }
 
 input[type=submit].evil {
-	background-color: #c66;
+	background-color: #c33;
 	border: none;
 	border-radius: 0.3em;
 	color: #fcc;
@@ -346,14 +346,19 @@ input[type=submit].evil {
 }
 
 input[type=submit].evil:hover {
-	background-color: #a55;
+	background-color: #a22;
 }
 
 input[type=submit].evil:active {
-	background-color: #844;
+	background-color: #811;
 }
 
 input[type=submit]:disabled,
 input[type=submit].evil:disabled {
 	background-color: #444;
+	cursor: not-allowed;
+}
+
+iframe {
+	border-color: #036;
 }
