@@ -17,7 +17,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 
 suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.takeIf { session ->
-	session.userAgent == userAgent && session.expiration.isAfter(Instant.now())
+	session.userAgent == userAgent && session.expiration > Instant.now()
 }
 
 suspend fun UserSession.renewed(clientAddress: String) = copy(

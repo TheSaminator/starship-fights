@@ -212,7 +212,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				}
 				p {
 					+"Your private info can be viewed at the "
-					a(href = "/me/private-info") {+"Private Info"}
+					a(href = "/me/private-info") { +"Private Info" }
 					+" page."
 				}
 				request.queryParameters["error"]?.let { errorMsg ->
@@ -238,7 +238,7 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				val now = Instant.now()
 				val expiredSessions = mutableListOf<UserSession>()
 				allUserSessions.forEach { session ->
-					if (session.expiration.isBefore(now)) {
+					if (session.expiration < now) {
 						expiredSessions += session
 						return@forEach
 					}
