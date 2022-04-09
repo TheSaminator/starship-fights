@@ -419,7 +419,7 @@ object TestAuthProvider : AuthProvider {
 							user = user.id,
 							clientAddresses = listOf(originAddress),
 							userAgent = userAgent,
-							expiration = Instant.now().plus(1, ChronoUnit.HOURS)
+							expiration = newExpiration()
 						).also {
 							UserSession.put(it)
 						}
@@ -598,7 +598,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 						user = user.id,
 						clientAddresses = if (user.logIpAddresses) listOf(call.request.origin.remoteHost) else emptyList(),
 						userAgent = userAgent,
-						expiration = Instant.now().plus(1, ChronoUnit.HOURS)
+						expiration = newExpiration()
 					)
 					
 					coroutineScope {
