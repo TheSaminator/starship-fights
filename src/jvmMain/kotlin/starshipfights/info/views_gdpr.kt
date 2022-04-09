@@ -4,10 +4,7 @@ import io.ktor.application.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.toList
-import kotlinx.html.HTML
-import kotlinx.html.h1
-import kotlinx.html.iframe
-import kotlinx.html.style
+import kotlinx.html.*
 import org.litote.kmongo.eq
 import org.litote.kmongo.or
 import starshipfights.auth.getUser
@@ -166,6 +163,13 @@ suspend fun ApplicationCall.privateInfoPage(): HTML.() -> Unit {
 			iframe {
 				style = "width:100%;height:25em"
 				src = "/me/private-info/txt"
+			}
+			
+			p {
+				a(href = "/me/private-info/txt") {
+					attributes["download"] = "private-info.txt"
+					+"Download your private info"
+				}
 			}
 		}
 	}
