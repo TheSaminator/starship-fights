@@ -103,7 +103,11 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 		section {
 			h1 { +user.profileName }
 			
-			+user.profileBio
+			user.profileBio.split('\n').forEachIndexed { i, p ->
+				if (i > 0)
+					br
+				+p
+			}
 		}
 		section {
 			h2 { +"Admirals" }
