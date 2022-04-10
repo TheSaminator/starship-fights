@@ -63,4 +63,5 @@ suspend fun ApplicationCall.standardNavBar(): List<NavItem> = listOf(
 } ?: emptyList()) + listOf(
 	NavLink("https://mechyrdia.netlify.app/", "Mechyrdia Infobase"),
 	NavLink("https://nationstates.net/mechyrdia", "Multiverse Access"),
+	NavLink("https://www.buymeacoffee.com/starshipfights", "Support Starship Fights"),
 )
