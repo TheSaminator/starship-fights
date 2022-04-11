@@ -31,8 +31,6 @@ data class User(
 	val logIpAddresses: Boolean,
 	
 	val status: UserStatus = UserStatus.AVAILABLE,
-	
-	val amountDonatedInUsCents: Int = 0,
 ) : DataDocument<User> {
 	val discordAvatarUrl: String
 		get() = discordAvatar?.takeIf { showDiscordName }?.let {
