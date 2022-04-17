@@ -55,7 +55,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 		}
 		val getAdmirals = userBattles.associate { record ->
 			val admiralId = if (record.hostUser == userId) record.hostAdmiral else record.guestAdmiral
-			record.id to async { Admiral.get(admiralId) }
+			record.id to userAdmirals.singleOrNull { it.id == admiralId }
 		}
 		val getOpponents = userBattles.associate { record ->
 			val (opponentId, opponentAdmiralId) = if (record.hostUser == userId) record.guestUser to record.guestAdmiral else record.hostUser to record.hostAdmiral
@@ -65,7 +65,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 		
 		Triple(
 			getShips.mapValues { (_, deferred) -> deferred.await() },
-			getAdmirals.mapValues { (_, deferred) -> deferred.await() },
+			getAdmirals,
 			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } }
 		)
 	}

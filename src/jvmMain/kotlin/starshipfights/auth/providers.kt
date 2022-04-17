@@ -258,10 +258,7 @@ interface AuthProvider {
 					val ownedShips = ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList()
 					
 					val shipType = call.parameters["ship"]?.let { param -> ShipType.values().singleOrNull { it.toUrlSlug() == param } }!!
-					val shipPrice = shipType.buyPrice(admiral, ownedShips)
-					
-					if (shipPrice == null)
-						throw NotFoundException()
+					val shipPrice = shipType.buyPrice(admiral, ownedShips) ?: throw NotFoundException()
 					
 					if (shipPrice > admiral.money)
 						redirect("/admiral/${admiralId}/manage" + withErrorMessage("You cannot afford that ship"))
