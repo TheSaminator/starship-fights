@@ -1,7 +1,9 @@
 package starshipfights.data.admiralty
 
+import kotlin.random.Random
+
 enum class AdmiralNameFlavor {
-	MECHYRDIA, TYLA, CALIBOR, // Mechyrdia-aligned
+	MECHYRDIA, TYLA, CALIBOR, OLYMPIA, // Mechyrdia-aligned
 	DUTCH, // NdRC-aliged
 	DIADOCHI, // Masra Draetsen-aligned
 	FULKREYKK, // Isarnareykk-aligned
@@ -12,6 +14,7 @@ enum class AdmiralNameFlavor {
 			MECHYRDIA -> "Mechyrdian"
 			TYLA -> "Tylan"
 			CALIBOR -> "Caliborese"
+			OLYMPIA -> "Olympian"
 			DUTCH -> "Dutch"
 			DIADOCHI -> "Diadochi"
 			FULKREYKK -> "Thedish"
@@ -233,6 +236,130 @@ object AdmiralNames {
 	private fun randomCaliboreseName(isFemale: Boolean) = caliboreseNames.filter {
 		it.length < 8 && (isFemale == (it.last() in caliboreseVowels))
 	}.random() + " " + caliboreseNames.filter { it.length > 7 }.random()
+	
+	private val latinMaleCommonPraenomina = listOf(
+		"Gaius",
+		"Lucius",
+		"Marcus",
+	)
+	
+	private val latinMaleUncommonPraenomina = listOf(
+		"Publius",
+		"Quintus",
+		"Titus",
+		"Gnaeus"
+	)
+	
+	private val latinMaleRarePraenomina = listOf(
+		"Aulus",
+		"Spurius",
+		"Tiberius",
+		"Servius",
+		"Hostus"
+	)
+	
+	private val latinFemaleCommonPraenomina = listOf(
+		"Gaia",
+		"Lucia",
+		"Marcia",
+	)
+	
+	private val latinFemaleUncommonPraenomina = listOf(
+		"Prima",
+		"Secunda",
+		"Tertia",
+		"Quarta",
+		"Quinta",
+		"Sexta",
+		"Septima",
+		"Octavia",
+		"Nona",
+		"Decima"
+	)
+	
+	private val latinFemaleRarePraenomina = listOf(
+		"Caesula",
+		"Titia",
+		"Tiberia",
+		"Tanaquil"
+	)
+	
+	private val latinNominaGentilica = listOf(
+		"Aelius" to "Aelia",
+		"Aternius" to "Aternia",
+		"Caecilius" to "Caecilia",
+		"Cassius" to "Cassia",
+		"Cornelius" to "Cornelia",
+		"Calpurnius" to "Calpurnia",
+		"Fabius" to "Fabia",
+		"Flavius" to "Flavia",
+		"Fulvius" to "Fulvia",
+		"Haterius" to "Hateria",
+		"Hostilius" to "Hostilia",
+		"Iulius" to "Iulia",
+		"Iunius" to "Iunia",
+		"Iuventius" to "Iuventia",
+		"Lavinius" to "Lavinia",
+		"Licinius" to "Licinia",
+		"Marius" to "Maria",
+		"Octavius" to "Octavia",
+		"Pompeius" to "Pompeia",
+		"Porcius" to "Porcia",
+		"Salvius" to "Salvia",
+		"Sempronius" to "Sempronia",
+		"Spurius" to "Spuria",
+		"Terentius" to "Terentia",
+		"Tullius" to "Tullia",
+		"Ulpius" to "Ulpia",
+		"Valerius" to "Valeria"
+	)
+	
+	private val latinCognomina = listOf(
+		"Agricola" to "Agricola",
+		"Agrippa" to "Agrippina",
+		"Aquilinus" to "Aquilina",
+		"Balbus" to "Balba",
+		"Bibulus" to "Bibula",
+		"Bucco" to "Bucco",
+		"Caecus" to "Caeca",
+		"Calidus" to "Calida",
+		"Catilina" to "Catilina",
+		"Catulus" to "Catula",
+		"Crassus" to "Crassa",
+		"Crispus" to "Crispa",
+		"Drusus" to "Drusilla",
+		"Flaccus" to "Flacca",
+		"Gracchus" to "Graccha",
+		"Laevinus" to "Laevina",
+		"Lanius" to "Lania",
+		"Lepidus" to "Lepida",
+		"Lucullus" to "Luculla",
+		"Marcellus" to "Marcella",
+		"Metellus" to "Metella",
+		"Nasica" to "Nasica",
+		"Nerva" to "Nerva",
+		"Paullus" to "Paulla",
+		"Piso" to "Piso",
+		"Priscus" to "Prisca",
+		"Publicola" to "Publicola",
+		"Pulcher" to "Pulchra",
+		"Regulus" to "Regula",
+		"Rufus" to "Rufa",
+		"Scaevola" to "Scaevola",
+		"Severus" to "Severa",
+		"Structus" to "Structa",
+		"Taurus" to "Taura",
+		"Varro" to "Varro",
+		"Vitulus" to "Vitula"
+	)
+	
+	private fun randomLatinPraenomen(isFemale: Boolean) = when {
+		Random.nextBoolean() -> if (isFemale) latinFemaleCommonPraenomina else latinMaleCommonPraenomina
+		Random.nextInt(3) > 0 -> if (isFemale) latinFemaleUncommonPraenomina else latinMaleUncommonPraenomina
+		else -> if (isFemale) latinFemaleRarePraenomina else latinMaleRarePraenomina
+	}.random()
+	
+	private fun randomLatinName(isFemale: Boolean) = randomLatinPraenomen(isFemale) + " " + latinNominaGentilica.random().let { (m, f) -> if (isFemale) f else m } + " " + latinCognomina.random().let { (m, f) -> if (isFemale) f else m }
 	
 	private val dutchMaleNames = listOf(
 		"Aalderik",
@@ -622,6 +749,7 @@ object AdmiralNames {
 		AdmiralNameFlavor.MECHYRDIA -> randomMechyrdianName(isFemale)
 		AdmiralNameFlavor.TYLA -> randomTylanName(isFemale)
 		AdmiralNameFlavor.CALIBOR -> randomCaliboreseName(isFemale)
+		AdmiralNameFlavor.OLYMPIA -> randomLatinName(isFemale)
 		AdmiralNameFlavor.DUTCH -> randomDutchName(isFemale)
 		AdmiralNameFlavor.DIADOCHI -> randomDiadochiName(isFemale)
 		AdmiralNameFlavor.FULKREYKK -> randomThedishName(isFemale)
