@@ -1,9 +1,0 @@
-newmtl mechyrdia_1_blitz_class
-illum 1
-Ka 0.0 0.0 0.0
-Kd 0.8 0.8 0.8
-Ks 0.6 0.6 0.6
-Ns 6.9
-map_Ka mechyrdia-1-blitz-class.diff.png
-map_Kd mechyrdia-1-blitz-class.diff.png
-map_Ks mechyrdia-1-blitz-class.spec.png

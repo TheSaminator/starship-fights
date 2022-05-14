@@ -65,7 +65,9 @@ enum class ShipType(
 	val weightClass: ShipWeightClass,
 ) {
 	// Mechyrdia
-	BLITZ(Faction.MECHYRDIA, ShipWeightClass.ESCORT),
+	MICRO(Faction.MECHYRDIA, ShipWeightClass.ESCORT),
+	NANO(Faction.MECHYRDIA, ShipWeightClass.ESCORT),
+	PICO(Faction.MECHYRDIA, ShipWeightClass.ESCORT),
 	
 	GLADIUS(Faction.MECHYRDIA, ShipWeightClass.DESTROYER),
 	PILUM(Faction.MECHYRDIA, ShipWeightClass.DESTROYER),

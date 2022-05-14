@@ -1,7 +1,6 @@
 package starshipfights.game
 
 import kotlinx.browser.document
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
@@ -377,7 +376,6 @@ sealed class Popup<out T> {
 	}
 	
 	class CancellableLoadingScreen<T>(private val loadingText: String, private val loadAction: suspend () -> T) : Popup<T?>() {
-		@OptIn(ExperimentalCoroutinesApi::class)
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (T?) -> Unit) {
 			p {
 				style = "text-align:center"

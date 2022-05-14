@@ -3,17 +3,17 @@ package starshipfights.game
 import starshipfights.data.Id
 
 private class ShipWeaponIdCounter {
-	private var numCannons = 1
-	private var numLances = 1
-	private var numHangars = 1
-	private var numTorpedoes = 1
+	private var numCannons = 0
+	private var numLances = 0
+	private var numHangars = 0
+	private var numTorpedoes = 0
 	
 	fun nextId(shipWeapon: ShipWeapon): Id<ShipWeapon> = Id(
 		when (shipWeapon) {
-			is ShipWeapon.Cannon -> "cannons-${numCannons++}"
-			is ShipWeapon.Lance -> "lances-${numLances++}"
-			is ShipWeapon.Hangar -> "hangar-${numHangars++}"
-			is ShipWeapon.Torpedo -> "torpedo-${numTorpedoes++}"
+			is ShipWeapon.Cannon -> "cannons-${++numCannons}"
+			is ShipWeapon.Lance -> "lances-${++numLances}"
+			is ShipWeapon.Hangar -> "hangar-${++numHangars}"
+			is ShipWeapon.Torpedo -> "torpedo-${++numTorpedoes}"
 			else -> "super-weapon"
 		}
 	)
@@ -63,6 +63,25 @@ fun mechyrdiaShipWeapons(
 	repeat(dorsalLances) {
 		idCounter.add(weapons, ShipWeapon.Lance(1, FiringArc.FIRE_BROADSIDE, "Dorsal lance turrets"))
 	}
+	
+	return ShipArmaments(weapons)
+}
+
+fun mechyrdiaNanoClassWeapons(): ShipArmaments {
+	val idCounter = ShipWeaponIdCounter()
+	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
+	
+	idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_FORE_270, "Dorsal lance turrets"))
+	
+	return ShipArmaments(weapons)
+}
+
+fun mechyrdiaPicoClassWeapons(): ShipArmaments {
+	val idCounter = ShipWeaponIdCounter()
+	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
+	
+	idCounter.add(weapons, ShipWeapon.Cannon(2, FiringArc.FIRE_FORE_270, "Double-barrel cannon turret"))
+	idCounter.add(weapons, ShipWeapon.Torpedo(setOf(FiringArc.BOW), "Fore torpedo launcher"))
 	
 	return ShipArmaments(weapons)
 }

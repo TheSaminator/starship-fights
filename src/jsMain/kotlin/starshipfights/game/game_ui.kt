@@ -676,7 +676,7 @@ object GameUI {
 							}
 							ShipModuleStatus.DESTROYED -> {
 								span {
-									style = "color:#e22"
+									style = "color:#d22"
 									+"${module.getDisplayName(ship.ship)} Destroyed"
 								}
 								br

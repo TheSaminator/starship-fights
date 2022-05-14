@@ -9,12 +9,10 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import kotlinx.serialization.ExperimentalSerializationApi
 import org.w3c.dom.HTMLScriptElement
 
 val rootPathWs = "ws" + window.location.origin.removePrefix("http")
 
-@OptIn(ExperimentalSerializationApi::class)
 val clientMode: ClientMode = try {
 	jsonSerializer.decodeFromString(
 		ClientMode.serializer(),

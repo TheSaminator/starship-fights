@@ -2,7 +2,9 @@ package starshipfights.game
 
 val ShipType.armaments: ShipArmaments
 	get() = when (this) {
-		ShipType.BLITZ -> mechyrdiaShipWeapons(1, false, 1, 0, 0, 0)
+		ShipType.MICRO -> mechyrdiaShipWeapons(1, false, 1, 0, 0, 0)
+		ShipType.NANO -> mechyrdiaNanoClassWeapons()
+		ShipType.PICO -> mechyrdiaPicoClassWeapons()
 		ShipType.GLADIUS -> mechyrdiaShipWeapons(2, false, 1, 0, 0, 1)
 		ShipType.PILUM -> mechyrdiaShipWeapons(2, false, 0, 1, 0, 1)
 		ShipType.SICA -> mechyrdiaShipWeapons(2, false, 0, 0, 1, 1)
@@ -21,7 +23,7 @@ val ShipType.armaments: ShipArmaments
 		ShipType.EARTH -> mechyrdiaShipWeapons(3, false, 1, 1, 1, 1)
 		ShipType.LANGUAVARTH -> mechyrdiaShipWeapons(3, false, 1, 2, 0, 1)
 		ShipType.MECHYRDIA -> mechyrdiaShipWeapons(3, false, 3, 0, 0, 1)
-		ShipType.NOVA_ROMA -> mechyrdiaShipWeapons(3, false, 0, 3, 0, 1)
+		ShipType.NOVA_ROMA -> mechyrdiaShipWeapons(0, true, 0, 3, 0, 1)
 		ShipType.TYLA -> mechyrdiaShipWeapons(3, false, 1, 0, 2, 1)
 		
 		ShipType.JAGER -> ndrcShipWeapons(2, true, 0, false, 0, 2)
@@ -43,7 +45,7 @@ val ShipType.armaments: ShipArmaments
 		ShipType.TIAMAT -> diadochiShipWeapons(2, false, 1, 0, 1, 1)
 		ShipType.CHARYBDIS -> diadochiShipWeapons(3, false, 3, 0, 0, 0)
 		ShipType.SCYLLA -> diadochiShipWeapons(3, false, 1, 0, 2, 0)
-		ShipType.AEDON -> diadochiShipWeapons(0, true, 3, 0, 0, 0)
+		ShipType.AEDON -> diadochiShipWeapons(0, true, 3, 0, 0, 3)
 		
 		ShipType.GANNAN -> fulkreykkShipWeapons(0, true, 0, 0)
 		ShipType.LODOVIK -> fulkreykkShipWeapons(4, false, 0, 0)

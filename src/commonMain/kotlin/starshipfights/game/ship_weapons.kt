@@ -475,8 +475,8 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition
 		),
 		boundary = if (weapon.isLine)
 			PickBoundary.AlongLine(
-				pointA = position.location + (normalDistance(position.facing) * weapon.minRange),
-				pointB = position.location + (normalDistance(position.facing) * weapon.maxRange)
+				pointA = position.location + polarDistance(weapon.minRange, position.facing),
+				pointB = position.location + polarDistance(weapon.maxRange, position.facing)
 			)
 		else
 			PickBoundary.WeaponsFire(

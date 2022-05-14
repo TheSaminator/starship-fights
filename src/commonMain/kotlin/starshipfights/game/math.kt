@@ -92,20 +92,6 @@ inline val Distance.angle: Double
 inline val Distance.normal: Distance
 	get() = Distance(vector.normal)
 
-inline fun Position.projectOnLineSegment(a: Position, b: Position): Position? {
-	val ab = b - a
-	val ar = this - a
-	
-	val abHat = ab.normal
-	val abLen = ab.length
-	
-	val proj = ar dot abHat
-	if (proj !in 0.0..abLen)
-		return null
-	
-	return proj * abHat + a
-}
-
 inline fun Position.clampOnLineSegment(a: Position, b: Position): Position {
 	val ab = b - a
 	val ar = this - a

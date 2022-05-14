@@ -10,7 +10,7 @@
 			const scriptElem = document.createElement("script");
 			scriptElem.async = true;
 			scriptElem.src = scriptLoc;
-			scriptElem.addEventListener("load", resolve);
+			scriptElem.addEventListener("load", () => resolve());
 
 			document.body.append(scriptElem);
 		});
