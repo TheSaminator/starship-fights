@@ -50,16 +50,12 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_MATCHMAKING)
 		User.put(user)
 		
-		closeReason.invokeOnCompletion {
-			DocumentTable.launch {
-				val cancelUser = User.get(user.id)!!
-				if (cancelUser.status == UserStatus.IN_MATCHMAKING)
-					User.put(
-						cancelUser.copy(
-							status = UserStatus.AVAILABLE
-						)
-					)
-			}
+		DocumentTable.launch {
+			closeReason.join()
+			delay(100L)
+			val cancelUser = User.get(user.id)!!
+			if (cancelUser.status == UserStatus.IN_MATCHMAKING)
+				User.set(cancelUser.id, setValue(User::status, UserStatus.AVAILABLE))
 		}
 		
 		if (matchmakingEndpoint(user))
@@ -81,10 +77,9 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_BATTLE)
 		User.put(user)
 		
-		closeReason.invokeOnCompletion {
-			DocumentTable.launch {
-				User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
-			}
+		DocumentTable.launch {
+			closeReason.join()
+			User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
 		}
 		
 		gameEndpoint(user, token)
