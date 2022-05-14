@@ -5,6 +5,7 @@ import io.ktor.html.*
 import io.ktor.http.*
 import io.ktor.routing.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.litote.kmongo.setValue
 import starshipfights.auth.getUser
@@ -27,6 +28,8 @@ fun Routing.installGame() {
 	}
 	
 	post("/play") {
+		delay(500L) // nasty hack
+		
 		val user = call.getUser() ?: redirect("/login")
 		
 		val clientMode = when (user.status) {
