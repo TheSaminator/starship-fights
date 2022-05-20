@@ -110,19 +110,35 @@ fun main() {
 				get("{static-content...}") {
 					val staticContentPath = call.parameters.getAll("static-content")?.joinToString("/") ?: return@get
 					val contentPath = "/static/$staticContentPath"
-					val gzipContentPath = "$contentPath.gz"
+					
+					val brContentPath = "$contentPath.br"
+					val gzContentPath = "$contentPath.gz"
 					
 					val contentType = ContentType.fromFileExtension(contentPath.substringAfterLast('.')).firstOrNull()
 					
 					val acceptedEncodings = call.request.acceptEncodingItems().map { it.value }.toSet()
+					
+					if (CompressedFileType.BROTLI.encoding in acceptedEncodings) {
+						val brContent = ResourceLoader.getResource(brContentPath)
+						if (brContent != null) {
+							call.attributes.put(Compression.SuppressionAttribute, true)
+							
+							call.response.header(HttpHeaders.ContentEncoding, CompressedFileType.BROTLI.encoding)
+							
+							call.respondBytes(brContent.readBytes(), contentType)
+							
+							return@get
+						}
+					}
+					
 					if (CompressedFileType.GZIP.encoding in acceptedEncodings) {
-						val gzipContent = ResourceLoader.getResource(gzipContentPath)
-						if (gzipContent != null) {
+						val gzContent = ResourceLoader.getResource(gzContentPath)
+						if (gzContent != null) {
 							call.attributes.put(Compression.SuppressionAttribute, true)
 							
 							call.response.header(HttpHeaders.ContentEncoding, CompressedFileType.GZIP.encoding)
 							
-							call.respondBytes(gzipContent.readBytes(), contentType)
+							call.respondBytes(gzContent.readBytes(), contentType)
 							
 							return@get
 						}

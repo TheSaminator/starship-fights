@@ -49,24 +49,24 @@ suspend fun ApplicationCall.privateInfo(): String {
 		}
 	}
 	
-	val (admiralShips, battleAdmirals, battleOpponents) = coroutineScope {
+	val (admiralShips, battleOpponents, battleAdmirals) = coroutineScope {
 		val getShips = userAdmirals.associate { admiral ->
 			admiral.id to async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiral.id).toList() }
-		}
-		val getAdmirals = userBattles.associate { record ->
-			val admiralId = if (record.hostUser == userId) record.hostAdmiral else record.guestAdmiral
-			record.id to userAdmirals.singleOrNull { it.id == admiralId }
 		}
 		val getOpponents = userBattles.associate { record ->
 			val (opponentId, opponentAdmiralId) = if (record.hostUser == userId) record.guestUser to record.guestAdmiral else record.hostUser to record.hostAdmiral
 			
 			record.id to (async { User.get(opponentId) } to async { Admiral.get(opponentAdmiralId) })
 		}
+		val getAdmirals = userBattles.associate { record ->
+			val admiralId = if (record.hostUser == userId) record.hostAdmiral else record.guestAdmiral
+			record.id to userAdmirals.singleOrNull { it.id == admiralId }
+		}
 		
 		Triple(
 			getShips.mapValues { (_, deferred) -> deferred.await() },
-			getAdmirals,
-			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } }
+			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } },
+			getAdmirals
 		)
 	}
 	
@@ -91,17 +91,17 @@ suspend fun ApplicationCall.privateInfo(): String {
 		appendLine("")
 		appendLine("## Session data")
 		appendLine("IP addresses are ${if (user.logIpAddresses) "stored" else "ignored"}")
-		userSessions.sortedByDescending { it.expiration }.forEach { session ->
+		for (session in userSessions.sortedByDescending { it.expiration }) {
 			appendLine("")
 			appendLine("### Session ${session.id}")
 			appendLine("Browser User-Agent: ${session.userAgent}")
 			appendLine("Client addresses${if (session.clientAddresses.isEmpty()) " are not stored" else ":"}")
-			session.clientAddresses.forEach { addr -> appendLine("* $addr") }
+			for (addr in session.clientAddresses) appendLine("* $addr")
 			appendLine("${if (session.expiration > now) "Will expire" else "Has expired"} at: ${session.expiration}")
 		}
 		appendLine("")
 		appendLine("## Battle-record data")
-		userBattles.sortedBy { it.whenEnded }.forEach { record ->
+		for (record in userBattles.sortedBy { it.whenEnded }) {
 			appendLine("")
 			appendLine("### Battle record ${record.id}")
 			appendLine("Battle size: ${record.battleInfo.size.displayName} (${record.battleInfo.size.numPoints})")
@@ -120,7 +120,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 		}
 		appendLine("")
 		appendLine("## Admiral data")
-		userAdmirals.forEach { admiral ->
+		for (admiral in userAdmirals) {
 			appendLine("")
 			appendLine("### ${admiral.fullName} (https://starshipfights.net/admiral/${admiral.id})")
 			appendLine("Admiral is ${if (admiral.isFemale) "female" else "male"}")
@@ -130,7 +130,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 			appendLine("Admiral can command ships as big as a ${admiral.rank.maxShipWeightClass.displayName}")
 			val ships = admiralShips[admiral.id].orEmpty()
 			appendLine("Admiral has ${ships.size} ships:")
-			ships.forEach { ship ->
+			for (ship in ships) {
 				appendLine("")
 				appendLine("#### ${ship.fullName} (${ship.id})")
 				appendLine("Ship is a ${ship.shipType.fullerDisplayName}")

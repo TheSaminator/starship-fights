@@ -95,8 +95,8 @@ class GameSession(gameState: GameState) {
 	
 	val state = stateMutable.asStateFlow()
 	
-	private val hostErrorMessages = Channel<String>()
-	private val guestErrorMessages = Channel<String>()
+	private val hostErrorMessages = Channel<String>(Channel.UNLIMITED)
+	private val guestErrorMessages = Channel<String>(Channel.UNLIMITED)
 	
 	private fun errorMessageChannel(player: GlobalSide) = when (player) {
 		GlobalSide.HOST -> hostErrorMessages
@@ -148,19 +148,20 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 	if (!opponentEntered) return
 	
 	val sendEventsJob = launch {
-		// Game state changes
-		launch {
-			gameSession.state.collect { state ->
-				sendObject(GameEvent.serializer(), GameEvent.StateChange(state))
+		listOf(
+			// Game state changes
+			launch {
+				gameSession.state.collect { state ->
+					sendObject(GameEvent.serializer(), GameEvent.StateChange(state))
+				}
+			},
+			// Invalid action messages
+			launch {
+				for (errorMessage in gameSession.errorMessages(playerSide)) {
+					sendObject(GameEvent.serializer(), GameEvent.InvalidAction(errorMessage))
+				}
 			}
-		}
-		
-		// Invalid action messages
-		launch {
-			for (errorMessage in gameSession.errorMessages(playerSide)) {
-				sendObject(GameEvent.serializer(), GameEvent.InvalidAction(errorMessage))
-			}
-		}
+		).joinAll()
 	}
 	
 	val receiveActionsJob = launch {
@@ -175,9 +176,7 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 			if (isInternalPlayerAction(packet))
 				sendObject(GameEvent.serializer(), GameEvent.InvalidAction("Invalid packet sent over wire - packet type is for internal use only"))
 			else
-				launch {
-					gameSession.onPacket(playerSide, packet)
-				}
+				gameSession.onPacket(playerSide, packet)
 		}
 	}
 	
@@ -201,7 +200,7 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	
 	val destroyedShips = shipWrecks.filterValues { !it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
 	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val damagedShips = ships.filterValues { it.hullAmount < it.ship.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
 	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
 	
 	val hostAdmiralId = gameState.hostInfo.id.reinterpret<Admiral>()

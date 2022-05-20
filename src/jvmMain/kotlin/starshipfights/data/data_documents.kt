@@ -1,11 +1,13 @@
 package starshipfights.data
 
+import com.mongodb.client.model.BulkWriteOptions
 import com.mongodb.client.model.ReplaceOptions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import org.bson.conversions.Bson
 import org.litote.kmongo.coroutine.coroutine
+import org.litote.kmongo.insertOne
 import org.litote.kmongo.serialization.IdController
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -40,6 +42,7 @@ interface DocumentTable<T : DataDocument<T>> {
 	suspend fun unique(vararg properties: KProperty1<T, *>)
 	
 	suspend fun put(doc: T)
+	suspend fun put(docs: Iterable<T>)
 	suspend fun set(id: Id<T>, set: Bson): Boolean
 	suspend fun get(id: Id<T>): T?
 	suspend fun del(id: Id<T>)
@@ -90,6 +93,13 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	
 	override suspend fun put(doc: T) {
 		collection().replaceOneById(doc.id, doc, ReplaceOptions().upsert(true))
+	}
+	
+	override suspend fun put(docs: Iterable<T>) {
+		collection().bulkWrite(
+			docs.map { insertOne(it) },
+			BulkWriteOptions().ordered(false)
+		)
 	}
 	
 	override suspend fun set(id: Id<T>, set: Bson): Boolean {

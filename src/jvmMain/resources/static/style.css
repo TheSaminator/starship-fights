@@ -75,6 +75,11 @@ main > section, main > nav.mobile, main > aside.mobile {
 	z-index: 1;
 }
 
+aside.mobile img {
+	margin: auto;
+	display: block;
+}
+
 @media only screen and (min-width: 8in) {
 	html {
 		padding: 1.25rem 5vw;
@@ -128,6 +133,14 @@ main > section, main > nav.mobile, main > aside.mobile {
 
 	main > section:first-of-type {
 		margin: 0 auto 5vh;
+	}
+
+	main > section:last-of-type {
+		margin: 5vh auto 0;
+	}
+
+	main > section:only-of-type {
+		margin: 0 auto;
 	}
 
 	.mobile {

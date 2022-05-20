@@ -5,11 +5,13 @@ import starshipfights.data.Id
 
 enum class BattleSize(val numPoints: Int, val maxWeightClass: ShipWeightClass, val displayName: String) {
 	SKIRMISH(600, ShipWeightClass.CRUISER, "Skirmish"),
-	FIREFIGHT(800, ShipWeightClass.CRUISER, "Firefight"),
-	BATTLE(1000, ShipWeightClass.BATTLECRUISER, "Battle"),
-	GRAND_CLASH(1300, ShipWeightClass.BATTLESHIP, "Grand Clash"),
-	LEGENDARY_STRUGGLE(1600, ShipWeightClass.BATTLESHIP, "Legendary Struggle"),
-	CRUCIBLE_OF_HISTORY(2000, ShipWeightClass.COLOSSUS, "Crucible of History");
+	RAID(800, ShipWeightClass.CRUISER, "Raid"),
+	FIREFIGHT(1000, ShipWeightClass.BATTLECRUISER, "Firefight"),
+	BATTLE(1300, ShipWeightClass.BATTLECRUISER, "Battle"),
+	GRAND_CLASH(1600, ShipWeightClass.BATTLESHIP, "Grand Clash"),
+	APOCALYPSE(2000, ShipWeightClass.BATTLESHIP, "Apocalypse"),
+	LEGENDARY_STRUGGLE(2400, ShipWeightClass.COLOSSUS, "Legendary Struggle"),
+	CRUCIBLE_OF_HISTORY(3000, ShipWeightClass.COLOSSUS, "Crucible of History");
 }
 
 enum class BattleBackground(val displayName: String, val color: String) {

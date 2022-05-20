@@ -37,14 +37,13 @@ object DataRoutines {
 					val currTime = Instant.now().atZone(ZoneId.systemDefault())
 					if (currTime.dayOfWeek != prevTime.dayOfWeek)
 						launch {
-							AdmiralRank.values().forEach { rank ->
+							for (rank in AdmiralRank.values())
 								launch {
 									Admiral.update(
 										AdmiralRank eq rank,
 										inc(Admiral::money, rank.dailyWage)
 									)
 								}
-							}
 						}
 					prevTime = currTime
 					delay(900_000)

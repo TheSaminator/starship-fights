@@ -8,5 +8,6 @@ import org.w3c.xhr.ProgressEvent
 
 external open class OBJLoader(manager: LoadingManager = definedExternally) : Loader<Object3D> {
 	open fun load(url: String, onLoad: (mesh: Object3D) -> Unit = definedExternally, onProgress: (event: ProgressEvent) -> Unit = definedExternally, onError: (event: ErrorEvent) -> Unit = definedExternally)
+	open fun parse(text: String): Object3D
 	open fun setMaterials(materialCreator: MaterialCreator): OBJLoader
 }

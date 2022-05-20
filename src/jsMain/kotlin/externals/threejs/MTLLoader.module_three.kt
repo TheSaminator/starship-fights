@@ -13,4 +13,5 @@ external class MaterialCreator {
 
 external open class MTLLoader(manager: LoadingManager = definedExternally) : Loader<MaterialCreator> {
 	open fun load(url: String, onLoad: (mesh: MaterialCreator) -> Unit = definedExternally, onProgress: (event: ProgressEvent) -> Unit = definedExternally, onError: (event: ErrorEvent) -> Unit = definedExternally)
+	open fun parse(text: String, path: String): MaterialCreator
 }

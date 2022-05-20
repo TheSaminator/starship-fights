@@ -1,0 +1,9 @@
+newmtl felinae_5_caracal_class
+illum 1
+Ka 0.0 0.0 0.0
+Kd 0.8 0.8 0.8
+Ks 0.6 0.6 0.6
+Ns 6.9
+map_Ka felinae-5-caracal-class.diff.png
+map_Kd felinae-5-caracal-class.diff.png
+map_Ks felinae-5-caracal-class.spec.png

@@ -82,6 +82,8 @@ object RenderResources {
 			
 			if (isSmallLoad) return@coroutineScope
 			
+			initResCache()
+			
 			launch {
 				val texture = loadTexture(enemySignalUrl)
 				val material = SpriteMaterial(configure {
@@ -249,7 +251,10 @@ object RenderResources {
 						ShipRender(
 							ship.id,
 							markerFactory.generate(side).unsafeCast<Mesh>(),
-							mesh.clone(true).unsafeCast<Mesh>(),
+							mesh.clone(true).unsafeCast<Mesh>().apply {
+								receiveShadow = true
+								castShadow = true
+							},
 							when (side) {
 								LocalSide.GREEN -> outlineGreen
 								LocalSide.RED -> outlineRed

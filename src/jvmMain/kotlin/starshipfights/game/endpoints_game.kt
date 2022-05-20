@@ -28,7 +28,7 @@ fun Routing.installGame() {
 	}
 	
 	post("/play") {
-		delay(500L) // nasty hack
+		delay(750L) // nasty hack
 		
 		val user = call.getUser() ?: redirect("/login")
 		
@@ -50,12 +50,12 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_MATCHMAKING)
 		User.put(user)
 		
-		DocumentTable.launch {
-			closeReason.join()
-			delay(100L)
-			val cancelUser = User.get(user.id)!!
-			if (cancelUser.status == UserStatus.IN_MATCHMAKING)
-				User.set(cancelUser.id, setValue(User::status, UserStatus.AVAILABLE))
+		closeReason.invokeOnCompletion {
+			DocumentTable.launch {
+				delay(150L)
+				if (User.get(user.id)?.status == UserStatus.IN_MATCHMAKING)
+					User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
+			}
 		}
 		
 		if (matchmakingEndpoint(user))
@@ -77,9 +77,10 @@ fun Routing.installGame() {
 		val user = oldUser.copy(status = UserStatus.IN_BATTLE)
 		User.put(user)
 		
-		DocumentTable.launch {
-			closeReason.join()
-			User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
+		closeReason.invokeOnCompletion {
+			DocumentTable.launch {
+				User.set(user.id, setValue(User::status, UserStatus.AVAILABLE))
+			}
 		}
 		
 		gameEndpoint(user, token)

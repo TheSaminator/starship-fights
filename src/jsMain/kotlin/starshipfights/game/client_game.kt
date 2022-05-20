@@ -29,7 +29,9 @@ lateinit var mySide: GlobalSide
 
 private val pickContextDeferred = CompletableDeferred<PickContext>()
 
-private suspend fun GameRenderInteraction.execute() {
+private suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
+	GameUI.initGameUI(scope.uiResponder(playerActions))
+	
 	GameUI.drawGameUI(gameState.value)
 	
 	val gameStart = gameState.value.start
@@ -40,8 +42,6 @@ private suspend fun GameRenderInteraction.execute() {
 	camera.rotateX(PI / 4)
 	RenderScaling.toWorldRotation(playerStart.cameraFacing, camera)
 	
-	camera.add(PointLight("#ffffff", 0.3, 60, 1.5))
-	
 	val renderer = WebGLRenderer(configure {
 		canvas = document.getElementById("three-canvas")
 		antialias = true
@@ -49,6 +49,9 @@ private suspend fun GameRenderInteraction.execute() {
 	
 	renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
+	
+	renderer.shadowMap.enabled = true
+	renderer.shadowMap.type = VSMShadowMap
 	
 	val scene = Scene()
 	val battleGrid = RenderResources.battleGrid.generate(gameStart.battlefieldWidth to gameStart.battlefieldLength)
@@ -65,6 +68,7 @@ private suspend fun GameRenderInteraction.execute() {
 	
 	cameraControls.cameraParent.position.copy(RenderScaling.toWorldPosition(playerStart.cameraPosition))
 	
+	cameraControls.camera.add(PointLight("#ffffff", 0.3, 60, 1.5))
 	cameraControls.camera.add(DirectionalLight("#ffffff", 0.45).apply {
 		position.setScalar(0)
 		target = cameraControls.cameraParent
@@ -157,7 +161,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSid
 	return gameEnd.await()
 }
 
-private class GameUIResponderImpl(scope: CoroutineScope, private val actions: SendChannel<PlayerAction>, private val errors: SendChannel<String>) : GameUIResponder, CoroutineScope by scope {
+private class GameUIResponderImpl(scope: CoroutineScope, private val actions: SendChannel<PlayerAction>) : GameUIResponder, CoroutineScope by scope {
 	override fun doAction(action: PlayerAction) {
 		launch {
 			actions.send(action)
@@ -172,15 +176,9 @@ private class GameUIResponderImpl(scope: CoroutineScope, private val actions: Se
 			actions.send(action)
 		}
 	}
-	
-	override fun clientError(errorMessage: String) {
-		launch {
-			errors.send(errorMessage)
-		}
-	}
 }
 
-private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>, errors: SendChannel<String>) = GameUIResponderImpl(this, actions, errors)
+private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>) = GameUIResponderImpl(this, actions)
 
 suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 	interruptExit = true
@@ -197,10 +195,8 @@ suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 	val gameRendering = GameRenderInteraction(gameState, playerActions, errorMessages)
 	
 	coroutineScope {
-		GameUI.initGameUI(uiResponder(playerActions, errorMessages))
-		
 		val connectionJob = async { gameConnection.execute(token) }
-		val renderingJob = launch { gameRendering.execute() }
+		val renderingJob = launch { gameRendering.execute(this@coroutineScope) }
 		
 		val (finalWinner, finalMessage) = connectionJob.await()
 		renderingJob.cancel()

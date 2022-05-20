@@ -47,6 +47,101 @@ val ShipType.armaments: ShipArmaments
 		ShipType.SCYLLA -> diadochiShipWeapons(3, false, 1, 0, 2, 0)
 		ShipType.AEDON -> diadochiShipWeapons(0, true, 3, 0, 0, 3)
 		
+		ShipType.KODKOD -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 4,
+				FiringArc.ABEAM_PORT to 3,
+				FiringArc.ABEAM_STARBOARD to 3,
+			),
+			emptyMap()
+		)
+		ShipType.ONCILLA -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 2,
+			),
+			mapOf(
+				setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) to 1,
+				setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) to 1,
+			)
+		)
+		ShipType.MARGAY -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 2,
+				FiringArc.ABEAM_PORT to 2,
+				FiringArc.ABEAM_STARBOARD to 2,
+			),
+			mapOf(
+				FiringArc.FIRE_FORE_270 to 1,
+				setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) to 1,
+				setOf(FiringArc.ABEAM_PORT) to 1,
+				setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) to 1,
+				setOf(FiringArc.ABEAM_STARBOARD) to 1,
+			)
+		)
+		ShipType.OCELOT -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 4,
+				FiringArc.ABEAM_PORT to 4,
+				FiringArc.ABEAM_STARBOARD to 4,
+			),
+			mapOf(
+				FiringArc.FIRE_FORE_270 to 1,
+				FiringArc.FIRE_BROADSIDE to 1,
+			)
+		)
+		ShipType.BOBCAT -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 3,
+				FiringArc.ABEAM_PORT to 3,
+				FiringArc.ABEAM_STARBOARD to 3,
+			),
+			mapOf(
+				setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) to 3,
+				setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) to 3,
+				FiringArc.FIRE_BROADSIDE to 3,
+			)
+		)
+		ShipType.LYNX -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 5,
+				FiringArc.ABEAM_PORT to 5,
+				FiringArc.ABEAM_STARBOARD to 5,
+			),
+			emptyMap()
+		)
+		ShipType.LEOPARD -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 5,
+				FiringArc.ABEAM_PORT to 5,
+				FiringArc.ABEAM_STARBOARD to 5,
+			),
+			emptyMap()
+		)
+		ShipType.TIGER -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 3,
+				FiringArc.ABEAM_PORT to 3,
+				FiringArc.ABEAM_STARBOARD to 3,
+			),
+			mapOf(
+				setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) to 3,
+				setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) to 3,
+				FiringArc.FIRE_BROADSIDE to 3,
+			)
+		)
+		ShipType.CARACAL -> felinaeShipWeapons(
+			mapOf(
+				FiringArc.BOW to 10,
+				FiringArc.ABEAM_PORT to 10,
+				FiringArc.ABEAM_STARBOARD to 10,
+			),
+			mapOf(
+				setOf(FiringArc.BOW) to 5,
+				setOf(FiringArc.ABEAM_PORT) to 5,
+				setOf(FiringArc.ABEAM_STARBOARD) to 5,
+			)
+		)
+		
 		ShipType.GANNAN -> fulkreykkShipWeapons(0, true, 0, 0)
 		ShipType.LODOVIK -> fulkreykkShipWeapons(4, false, 0, 0)
 		ShipType.KARNAS -> fulkreykkShipWeapons(1, false, 2, 0)

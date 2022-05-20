@@ -139,11 +139,12 @@ interface AuthProvider {
 					val form = call.receiveValidatedParameters()
 					val currentUser = call.getUserSession()?.user ?: redirect("/login")
 					
+					val faction = Faction.valueOf(form.getOrFail("faction"))
 					val newAdmiral = Admiral(
 						owningUser = currentUser,
 						name = form["name"]?.takeIf { it.isNotBlank() && it.length <= ADMIRAL_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $ADMIRAL_NAME_MAX_LENGTH characters")),
-						isFemale = form.getOrFail("sex") == "female",
-						faction = Faction.valueOf(form.getOrFail("faction")),
+						isFemale = form.getOrFail("sex") == "female" || faction == Faction.FELINAE_FELICES,
+						faction = faction,
 						acumen = if (CurrentConfiguration.isDevEnv) 20_000 else 0,
 						money = 500
 					)
@@ -151,9 +152,7 @@ interface AuthProvider {
 					
 					coroutineScope {
 						launch { Admiral.put(newAdmiral) }
-						newShips.forEach {
-							launch { ShipInDrydock.put(it) }
-						}
+						launch { ShipInDrydock.put(newShips) }
 					}
 					
 					redirect("/admiral/${newAdmiral.id}")
@@ -178,7 +177,7 @@ interface AuthProvider {
 					
 					val newAdmiral = admiral.copy(
 						name = form["name"]?.takeIf { it.isNotBlank() && it.length <= ADMIRAL_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("That name is not valid - must not be blank, must not be longer than $ADMIRAL_NAME_MAX_LENGTH characters")),
-						isFemale = form["sex"] == "female"
+						isFemale = form["sex"] == "female" || admiral.faction == Faction.FELINAE_FELICES
 					)
 					
 					Admiral.put(newAdmiral)
@@ -264,7 +263,7 @@ interface AuthProvider {
 						redirect("/admiral/${admiralId}/manage" + withErrorMessage("You cannot afford that ship"))
 					
 					val shipNames = ownedShips.map { it.name }.toMutableSet()
-					val newShipName = newShipName(shipType.faction, shipType.weightClass, shipNames) ?: ShipNames.nameShip(shipType.faction, shipType.weightClass)
+					val newShipName = newShipName(shipType.faction, shipType.weightClass, shipNames) ?: nameShip(shipType.faction, shipType.weightClass)
 					
 					val newShip = ShipInDrydock(
 						name = newShipName,
@@ -498,7 +497,7 @@ object TestAuthProvider : AuthProvider {
 }
 
 class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvider {
-	val httpClient = HttpClient(Apache) {
+	private val httpClient = HttpClient(Apache) {
 		install(UserAgent) {
 			agent = discordLogin.userAgent
 		}

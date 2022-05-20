@@ -3,6 +3,7 @@ package starshipfights.game
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
 import kotlin.math.abs
+import kotlin.random.Random
 
 sealed interface ShipAbility {
 	val ship: Id<ShipInstance>
@@ -128,8 +129,10 @@ sealed class PlayerAbilityType {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Power) return null
 			
-			val data = ClientAbilityData.newShipPowerModes.remove(ship) ?: return null
 			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.ship.reactor !is StandardShipReactor) return null
+			
+			val data = ClientAbilityData.newShipPowerModes.remove(ship) ?: return null
 			if (!shipInstance.validatePowerMode(data)) return null
 			
 			return PlayerAbilityData.DistributePower(data)
@@ -139,6 +142,7 @@ sealed class PlayerAbilityType {
 			if (data !is PlayerAbilityData.DistributePower) return GameEvent.InvalidAction("Internal error from using player ability")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.ship.reactor !is StandardShipReactor) return GameEvent.InvalidAction("Invalid ship reactor type")
 			if (!shipInstance.validatePowerMode(data.powerMode)) return GameEvent.InvalidAction("Invalid power distribution")
 			
 			val prevShieldDamage = shipInstance.powerMode.shields - shipInstance.shieldAmount
@@ -151,6 +155,32 @@ sealed class PlayerAbilityType {
 				shieldAmount = if (shipInstance.canUseShields)
 					(data.powerMode.shields - prevShieldDamage).coerceAtLeast(0)
 				else 0,
+			)
+			val newShips = gameState.ships + mapOf(ship to newShipInstance)
+			
+			return GameEvent.StateChange(
+				gameState.copy(ships = newShips)
+			)
+		}
+	}
+	
+	@Serializable
+	data class ConfigurePower(override val ship: Id<ShipInstance>, val powerMode: FelinaeShipPowerMode) : PlayerAbilityType(), ShipAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Power) return null
+			
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.ship.reactor != FelinaeShipReactor) return null
+			
+			return PlayerAbilityData.ConfigurePower
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.ship.reactor != FelinaeShipReactor) return GameEvent.InvalidAction("Invalid ship reactor type")
+			
+			val newShipInstance = shipInstance.copy(
+				felinaeShipPowerMode = powerMode,
 			)
 			val newShips = gameState.ships + mapOf(ship to newShipInstance)
 			
@@ -220,11 +250,15 @@ sealed class PlayerAbilityType {
 			
 			if (data.newPosition.location.distanceToLineSegment(moveFrom, moveTo) > EPSILON) return GameEvent.InvalidAction("Illegal move - must be on facing line")
 			
-			val newShipInstance = shipInstance.copy(position = data.newPosition, isDoneCurrentPhase = true)
+			val newShipInstance = shipInstance.copy(
+				position = data.newPosition,
+				currentVelocity = (data.newPosition.location - shipInstance.position.location).length,
+				isDoneCurrentPhase = true
+			)
 			
 			// Identify enemy ships
 			val identifiedEnemyShips = gameState.ships.filterValues { enemyShip ->
-				!enemyShip.isIdentified && enemyShip.owner != playerSide && (enemyShip.position.location - newShipInstance.position.location).length <= SHIP_SENSOR_RANGE
+				enemyShip.owner != playerSide && (enemyShip.position.location - newShipInstance.position.location).length <= SHIP_SENSOR_RANGE
 			}
 			
 			// Be identified by enemy ships
@@ -232,7 +266,105 @@ sealed class PlayerAbilityType {
 				mapOf(ship to newShipInstance)
 			else emptyMap()
 			
-			val identifiedShips = shipsToBeIdentified.mapValues { (_, shipInstance) -> shipInstance.copy(isIdentified = true) }
+			val identifiedShips = shipsToBeIdentified
+				.filterValues { !it.isIdentified }
+				.mapValues { (_, shipInstance) -> shipInstance.copy(isIdentified = true) }
+			
+			// Ships that move off the battlefield are considered to disengage
+			val isDisengaged = newShipInstance.position.location.vector.let { (x, y) ->
+				val mx = gameState.start.battlefieldWidth / 2
+				val my = gameState.start.battlefieldLength / 2
+				abs(x) > mx || abs(y) > my
+			}
+			
+			val newChatEntries = gameState.chatBox + identifiedShips.map { (id, _) ->
+				ChatEntry.ShipIdentified(id, Moment.now)
+			} + (if (isDisengaged)
+				listOf(ChatEntry.ShipEscaped(ship, Moment.now))
+			else emptyList())
+			
+			val newShips = (gameState.ships + mapOf(ship to newShipInstance) + identifiedShips) - (if (isDisengaged)
+				setOf(ship)
+			else emptySet())
+			
+			val newWrecks = gameState.destroyedShips + (if (isDisengaged)
+				mapOf(ship to ShipWreck(newShipInstance.ship, newShipInstance.owner, true))
+			else emptyMap())
+			
+			return GameEvent.StateChange(
+				gameState.copy(
+					ships = newShips,
+					destroyedShips = newWrecks,
+					chatBox = newChatEntries,
+				)
+			)
+		}
+	}
+	
+	@Serializable
+	data class UseInertialessDrive(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Move) return null
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.isDoneCurrentPhase) return null
+			if (!shipInstance.canUseInertialessDrive) return null
+			val movement = shipInstance.movement
+			if (movement !is FelinaeShipMovement) return null
+			
+			val positionPickReq = PickRequest(
+				PickType.Location(gameState.ships.keys - ship, PickHelper.Circle(SHIP_BASE_SIZE), shipInstance.position.location),
+				PickBoundary.Ellipse(
+					shipInstance.position.location,
+					movement.inertialessDriveRange,
+					movement.inertialessDriveRange,
+					0.0
+				)
+			)
+			val positionPickRes = (pick(positionPickReq) as? PickResponse.Location) ?: return null
+			
+			return PlayerAbilityData.UseInertialessDrive(positionPickRes.position)
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			if (data !is PlayerAbilityData.UseInertialessDrive) return GameEvent.InvalidAction("Internal error from using player ability")
+			
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
+			
+			if (!shipInstance.canUseInertialessDrive) return GameEvent.InvalidAction("That ship cannot use its inertialess drive")
+			val movement = shipInstance.movement
+			if (movement !is FelinaeShipMovement) return GameEvent.InvalidAction("That ship does not have an inertialess drive")
+			
+			val oldPos = shipInstance.position.location
+			val newPos = data.newPosition
+			
+			val deltaPos = newPos - oldPos
+			val velocity = deltaPos.length
+			
+			if (velocity > movement.inertialessDriveRange) return GameEvent.InvalidAction("That move is out of range")
+			
+			val newFacing = deltaPos.angle
+			
+			val newShipInstance = shipInstance.copy(
+				position = ShipPosition(newPos, newFacing),
+				currentVelocity = velocity,
+				isDoneCurrentPhase = true,
+				usedInertialessDriveShots = shipInstance.usedInertialessDriveShots + 1
+			)
+			
+			// Identify enemy ships
+			val identifiedEnemyShips = gameState.ships.filterValues { enemyShip ->
+				enemyShip.owner != playerSide && (enemyShip.position.location - newShipInstance.position.location).length <= SHIP_SENSOR_RANGE
+			}
+			
+			// Be identified by enemy ships (Inertialess Drive automatically reveals your ship)
+			val shipsToBeIdentified = identifiedEnemyShips + if (!newShipInstance.isIdentified)
+				mapOf(ship to newShipInstance)
+			else emptyMap()
+			
+			val identifiedShips = shipsToBeIdentified
+				.filterValues { !it.isIdentified }
+				.mapValues { (_, shipInstance) -> shipInstance.copy(isIdentified = true) }
 			
 			// Ships that move off the battlefield are considered to disengage
 			val isDisengaged = newShipInstance.position.location.vector.let { (x, y) ->
@@ -372,10 +504,66 @@ sealed class PlayerAbilityType {
 	}
 	
 	@Serializable
+	data class DisruptionPulse(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Attack) return null
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (!shipInstance.canUseDisruptionPulse) return null
+			if (shipInstance.hasUsedDisruptionPulse) return null
+			
+			return PlayerAbilityData.DisruptionPulse
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only emit Disruption Pulses during Phase III")
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (!shipInstance.canUseDisruptionPulse) return GameEvent.InvalidAction("Cannot use Disruption Pulse")
+			if (shipInstance.hasUsedDisruptionPulse) return GameEvent.InvalidAction("Cannot use Disruption Pulse twice")
+			
+			val durability = shipInstance.durability
+			if (durability !is FelinaeShipDurability) return GameEvent.InvalidAction("That ship does not have a Disruption Pulse emitter")
+			
+			val targetedShips = gameState.ships.filterValues {
+				(it.position.location - shipInstance.position.location).length < durability.disruptionPulseRange
+			}
+			
+			val hangars = targetedShips.values.flatMap { target ->
+				target.fighterWings + target.bomberWings
+			}
+			
+			val changedShips = hangars.groupBy { it.ship }.mapNotNull { (shipId, hangarWings) ->
+				val changedShip = gameState.ships[shipId] ?: return@mapNotNull null
+				changedShip.copy(
+					armaments = ShipInstanceArmaments(
+						changedShip.armaments.weaponInstances + hangarWings.associate {
+							it.hangar to ShipWeaponInstance.Hangar(
+								changedShip.ship.armaments.weapons[it.hangar] as ShipWeapon.Hangar,
+								0.0
+							)
+						}
+					)
+				)
+			}.associateBy { it.id } + mapOf(
+				ship to shipInstance.copy(
+					hasUsedDisruptionPulse = true,
+					usedDisruptionPulseShots = shipInstance.usedDisruptionPulseShots + 1
+				)
+			)
+			
+			return GameEvent.StateChange(
+				gameState.copy(
+					ships = gameState.ships + changedShips
+				)
+			)
+		}
+	}
+	
+	@Serializable
 	data class RepairShipModule(override val ship: Id<ShipInstance>, val module: ShipModule) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
 			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.durability !is StandardShipDurability) return null
 			if (shipInstance.remainingRepairTokens <= 0) return null
 			if (!shipInstance.modulesStatus[module].canBeRepaired) return null
 			
@@ -385,6 +573,7 @@ sealed class PlayerAbilityType {
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only repair modules during Phase IV")
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.durability !is StandardShipDurability) return GameEvent.InvalidAction("That ship cannot manually repair subsystems")
 			if (shipInstance.remainingRepairTokens <= 0) return GameEvent.InvalidAction("That ship has no remaining repair tokens")
 			if (!shipInstance.modulesStatus[module].canBeRepaired) return GameEvent.InvalidAction("That module cannot be repaired")
 			
@@ -408,6 +597,7 @@ sealed class PlayerAbilityType {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
 			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.durability !is StandardShipDurability) return null
 			if (shipInstance.remainingRepairTokens <= 0) return null
 			if (shipInstance.numFires <= 0) return null
 			
@@ -417,12 +607,59 @@ sealed class PlayerAbilityType {
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.durability !is StandardShipDurability) return GameEvent.InvalidAction("That ship cannot manually extinguish fires")
 			if (shipInstance.remainingRepairTokens <= 0) return GameEvent.InvalidAction("That ship has no remaining repair tokens")
 			if (shipInstance.numFires <= 0) return GameEvent.InvalidAction("Cannot extinguish non-existent fires")
 			
 			val newShip = shipInstance.copy(
 				numFires = shipInstance.numFires - 1,
 				usedRepairTokens = shipInstance.usedRepairTokens + 1
+			)
+			
+			return GameEvent.StateChange(
+				gameState.copy(
+					ships = gameState.ships + mapOf(
+						ship to newShip
+					)
+				)
+			)
+		}
+	}
+	
+	@Serializable
+	data class Recoalesce(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Repair) return null
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (shipInstance.durability !is FelinaeShipDurability) return null
+			if (!shipInstance.canUseRecoalescence) return null
+			
+			return PlayerAbilityData.Recoalesce
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (shipInstance.durability !is FelinaeShipDurability) return GameEvent.InvalidAction("That ship cannot recoalesce its hull")
+			if (!shipInstance.canUseRecoalescence) return GameEvent.InvalidAction("That ship is not in Recoalescence mode")
+			
+			val newHullAmount = Random.nextInt(shipInstance.hullAmount, shipInstance.durability.maxHullPoints)
+			
+			val repairs = shipInstance.modulesStatus.statuses.filterValues {
+				it == ShipModuleStatus.DAMAGED || it == ShipModuleStatus.DESTROYED
+			}.keys
+			
+			var newModules = shipInstance.modulesStatus
+			for (repair in repairs) {
+				if (Random.nextBoolean())
+					newModules = newModules.repair(repair)
+			}
+			
+			val newShip = shipInstance.copy(
+				hullAmount = newHullAmount,
+				recoalescenceMaxHullDamage = shipInstance.recoalescenceMaxHullDamage + 1,
+				modulesStatus = newModules,
+				isDoneCurrentPhase = true
 			)
 			
 			return GameEvent.StateChange(
@@ -451,7 +688,13 @@ sealed class PlayerAbilityData {
 	data class DistributePower(val powerMode: ShipPowerMode) : PlayerAbilityData()
 	
 	@Serializable
+	object ConfigurePower : PlayerAbilityData()
+	
+	@Serializable
 	data class MoveShip(val newPosition: ShipPosition) : PlayerAbilityData()
+	
+	@Serializable
+	data class UseInertialessDrive(val newPosition: Position) : PlayerAbilityData()
 	
 	@Serializable
 	object ChargeLance : PlayerAbilityData()
@@ -463,10 +706,16 @@ sealed class PlayerAbilityData {
 	object RecallStrikeCraft : PlayerAbilityData()
 	
 	@Serializable
+	object DisruptionPulse : PlayerAbilityData()
+	
+	@Serializable
 	object RepairShipModule : PlayerAbilityData()
 	
 	@Serializable
 	object ExtinguishFire : PlayerAbilityData()
+	
+	@Serializable
+	object Recoalesce : PlayerAbilityData()
 }
 
 fun GameState.getPossibleAbilities(forPlayer: GlobalSide): List<PlayerAbilityType> = if (ready == forPlayer)
@@ -494,15 +743,24 @@ else when (phase) {
 	}
 	is GamePhase.Power -> {
 		val powerableShips = ships
-			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase }
+			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.ship.reactor is StandardShipReactor }
 			.keys
 			.map { PlayerAbilityType.DistributePower(it) }
+		
+		val configurableShips = ships
+			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.ship.reactor is FelinaeShipReactor }
+			.keys
+			.flatMap {
+				FelinaeShipPowerMode.values().map { mode ->
+					PlayerAbilityType.ConfigurePower(it, mode)
+				}
+			}
 		
 		val finishPowering = if (canFinishPhase(forPlayer))
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Power(phase.turn)))
 		else emptyList()
 		
-		powerableShips + finishPowering
+		powerableShips + configurableShips + finishPowering
 	}
 	is GamePhase.Move -> {
 		val movableShips = ships
@@ -510,11 +768,16 @@ else when (phase) {
 			.keys
 			.map { PlayerAbilityType.MoveShip(it) }
 		
+		val inertialessShips = ships
+			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.canUseInertialessDrive }
+			.keys
+			.map { PlayerAbilityType.UseInertialessDrive(it) }
+		
 		val finishMoving = if (canFinishPhase(forPlayer))
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Move(phase.turn)))
 		else emptyList()
 		
-		movableShips + finishMoving
+		movableShips + inertialessShips + finishMoving
 	}
 	is GamePhase.Attack -> {
 		val chargeableLances = ships
@@ -540,6 +803,11 @@ else when (phase) {
 				}
 			}
 		
+		val usableDisruptionPulses = ships
+			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.canUseDisruptionPulse }
+			.keys
+			.map { PlayerAbilityType.DisruptionPulse(it) }
+		
 		val recallableStrikeWings = ships
 			.filterValues { it.owner == forPlayer }
 			.flatMap { (id, ship) ->
@@ -554,11 +822,11 @@ else when (phase) {
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Attack(phase.turn)))
 		else emptyList()
 		
-		chargeableLances + usableWeapons + recallableStrikeWings + finishAttacking
+		chargeableLances + usableWeapons + recallableStrikeWings + usableDisruptionPulses + finishAttacking
 	}
 	is GamePhase.Repair -> {
 		val repairableModules = ships
-			.filterValues { it.owner == forPlayer }
+			.filterValues { it.owner == forPlayer && it.remainingRepairTokens > 0 }
 			.flatMap { (id, ship) ->
 				ship.modulesStatus.statuses.filterValues { it.canBeRepaired }.keys.map { module ->
 					PlayerAbilityType.RepairShipModule(id, module)
@@ -566,19 +834,24 @@ else when (phase) {
 			}
 		
 		val extinguishableFires = ships
-			.filterValues { it.owner == forPlayer }
-			.mapNotNull { (id, ship) ->
-				if (ship.numFires <= 0)
-					null
-				else
-					PlayerAbilityType.ExtinguishFire(id)
+			.filterValues { it.owner == forPlayer && it.remainingRepairTokens > 0 && it.numFires > 0 }
+			.keys
+			.map {
+				PlayerAbilityType.ExtinguishFire(it)
+			}
+		
+		val recoalescence = ships
+			.filterValues { it.owner == forPlayer && it.canUseRecoalescence }
+			.keys
+			.map {
+				PlayerAbilityType.Recoalesce(it)
 			}
 		
 		val finishRepairing = if (canFinishPhase(forPlayer))
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Repair(phase.turn)))
 		else emptyList()
 		
-		repairableModules + extinguishableFires + finishRepairing
+		repairableModules + extinguishableFires + recoalescence + finishRepairing
 	}
 }
 

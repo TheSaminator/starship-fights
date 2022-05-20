@@ -7,6 +7,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import starshipfights.data.admiralty.AdmiralNameFlavor
 import starshipfights.data.admiralty.AdmiralNames
+import starshipfights.game.Moment
 import starshipfights.game.ShipType
 import starshipfights.game.toUrlSlug
 
@@ -46,5 +47,11 @@ fun Routing.installPages() {
 		val isFemale = call.parameters["gender"]?.startsWith('f', ignoreCase = true) ?: false
 		
 		call.respondText(AdmiralNames.randomName(flavor, isFemale), ContentType.Text.Plain)
+	}
+	
+	// Cache utils
+	val cacheTime = String.format("%f", Moment.now.toMillis())
+	get("/cache-time") {
+		call.respondText(cacheTime, ContentType.Text.Plain, HttpStatusCode.OK)
 	}
 }

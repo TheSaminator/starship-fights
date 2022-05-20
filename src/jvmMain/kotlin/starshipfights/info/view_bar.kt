@@ -30,7 +30,7 @@ data class ShipViewSidebar(val shipType: ShipType) : Sidebar() {
 data class PageNavSidebar(val contents: List<NavItem>) : Sidebar() {
 	override fun TagConsumer<*>.display() {
 		div(classes = "list") {
-			contents.forEach {
+			for (it in contents) {
 				div(classes = "item") {
 					it.displayIn(this)
 				}

@@ -2,10 +2,7 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
-import kotlin.math.expm1
-import kotlin.math.floor
-import kotlin.math.roundToInt
-import kotlin.math.sqrt
+import kotlin.math.*
 import kotlin.random.Random
 
 enum class FiringArc {
@@ -13,10 +10,10 @@ enum class FiringArc {
 	
 	val displayName: String
 		get() = when (this) {
-			BOW -> "Bow"
+			BOW -> "Fore"
 			ABEAM_PORT -> "Port"
 			ABEAM_STARBOARD -> "Starboard"
-			STERN -> "Stern"
+			STERN -> "Aft"
 		}
 	
 	companion object {
@@ -117,6 +114,38 @@ sealed class ShipWeapon {
 		override fun instantiate() = ShipWeaponInstance.Hangar(this, 1.0)
 	}
 	
+	// FELINAE FELICES ADVANCED WEAPONS
+	
+	@Serializable
+	data class ParticleClawLauncher(
+		override val numShots: Int,
+		override val firingArcs: Set<FiringArc>,
+		override val groupLabel: String,
+	) : ShipWeapon() {
+		override val maxRange: Double
+			get() = 1750.0
+		
+		override val addsPointCost: Int
+			get() = numShots * 15
+		
+		override fun instantiate() = ShipWeaponInstance.ParticleClawLauncher(this)
+	}
+	
+	@Serializable
+	data class LightningYarn(
+		override val numShots: Int,
+		override val firingArcs: Set<FiringArc>,
+		override val groupLabel: String,
+	) : ShipWeapon() {
+		override val maxRange: Double
+			get() = 1250.0
+		
+		override val addsPointCost: Int
+			get() = numShots * 5 * (firingArcs.size + 1)
+		
+		override fun instantiate() = ShipWeaponInstance.LightningYarn(this)
+	}
+	
 	// HEAVY WEAPONS
 	
 	@Serializable
@@ -166,7 +195,7 @@ sealed class ShipWeapon {
 			get() = "Revelation Gun"
 		
 		override val addsPointCost: Int
-			get() = 76
+			get() = 66
 		
 		override fun instantiate() = ShipWeaponInstance.RevelationGun(numShots)
 	}
@@ -224,6 +253,13 @@ sealed class ShipWeaponInstance {
 	@Serializable
 	data class Hangar(override val weapon: ShipWeapon.Hangar, val wingHealth: Double) : ShipWeaponInstance()
 	
+	// FELINAE FELICES ADVANCED WEAPONS
+	@Serializable
+	data class ParticleClawLauncher(override val weapon: ShipWeapon.ParticleClawLauncher) : ShipWeaponInstance()
+	
+	@Serializable
+	data class LightningYarn(override val weapon: ShipWeapon.LightningYarn) : ShipWeaponInstance()
+	
 	// HEAVY WEAPONS
 	
 	@Serializable
@@ -262,16 +298,65 @@ fun cannonChanceToHit(attacker: ShipInstance, targeted: ShipInstance): Double {
 	return sqrt(SHIP_BASE_SIZE / relativeDistance.length) * attacker.firepower.cannonAccuracy
 }
 
-sealed class ImpactResult {
-	data class Damaged(val ship: ShipInstance, val amount: Int? = null, val critical: CritResult = CritResult.NoEffect) : ImpactResult()
-	data class Destroyed(val ship: ShipWreck) : ImpactResult()
+enum class DamageIgnoreType {
+	FELINAE_ARMOR
 }
 
-fun ShipInstance.impact(damage: Int) = if (damage > shieldAmount) {
+sealed class ImpactDamage {
+	abstract val amount: Int
+	abstract val ignore: DamageIgnoreType?
+	
+	data class Success(override val amount: Int) : ImpactDamage() {
+		override val ignore: DamageIgnoreType?
+			get() = null
+	}
+	
+	data class Failed(override val ignore: DamageIgnoreType) : ImpactDamage() {
+		override val amount: Int
+			get() = 0
+	}
+	
+	object OtherEffect : ImpactDamage() {
+		override val amount: Int
+			get() = 0
+		override val ignore: DamageIgnoreType?
+			get() = null
+	}
+}
+
+operator fun ImpactDamage.plus(amount: Int) = if (amount > 0) ImpactDamage.Success(this.amount + amount) else this
+
+sealed class ImpactResult {
+	data class Damaged(val ship: ShipInstance, val damage: ImpactDamage, val critical: CritResult = CritResult.NoEffect) : ImpactResult()
+	data class Destroyed(val ship: ShipWreck) : ImpactResult()
+	
+	companion object {
+		@Suppress("FunctionName")
+		fun Intact(ship: ShipInstance, ignoreType: DamageIgnoreType? = null) = Damaged(ship, if (ignoreType == null) ImpactDamage.OtherEffect else ImpactDamage.Failed(ignoreType), CritResult.NoEffect)
+	}
+}
+
+fun ShipInstance.felinaeArmorIgnoreDamageChance(): Double {
+	if (ship.shipType.faction != Faction.FELINAE_FELICES) return 0.0
+	
+	val maxVelocity = movement.moveSpeed
+	val curVelocity = currentVelocity
+	val ratio = curVelocity / maxVelocity
+	val exponent = -ratio / sqrt(1 + abs(4 * ratio))
+	return -expm1(exponent)
+}
+
+fun ShipInstance.impact(damage: Int, ignoreShields: Boolean = false) = if (durability is FelinaeShipDurability && Random.nextDouble() < felinaeArmorIgnoreDamageChance())
+	ImpactResult.Intact(this, DamageIgnoreType.FELINAE_ARMOR)
+else if (ignoreShields) {
+	if (damage >= hullAmount)
+		ImpactResult.Destroyed(ShipWreck(ship, owner))
+	else ImpactResult.Damaged(copy(hullAmount = hullAmount - damage), damage = ImpactDamage.Success(damage))
+} else if (damage > shieldAmount) {
 	if (damage - shieldAmount >= hullAmount)
 		ImpactResult.Destroyed(ShipWreck(ship, owner))
-	else ImpactResult.Damaged(copy(shieldAmount = 0, hullAmount = hullAmount - (damage - shieldAmount)), amount = damage)
-} else ImpactResult.Damaged(copy(shieldAmount = shieldAmount - damage), amount = damage)
+	else ImpactResult.Damaged(copy(shieldAmount = 0, hullAmount = hullAmount - (damage - shieldAmount)), damage = ImpactDamage.Success(damage))
+} else ImpactResult.Damaged(copy(shieldAmount = shieldAmount - damage), damage = ImpactDamage.Success(damage))
 
 @Serializable
 data class ShipHangarWing(
@@ -340,7 +425,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			if (Random.nextBoolean())
 				impact(1).applyCriticals(by, weaponId)
 			else
-				ImpactResult.Damaged(this, 0)
+				ImpactResult.Damaged(this, ImpactDamage.Success(0))
 		} else
 			impact(2).applyCriticals(by, weaponId)
 	}
@@ -349,8 +434,25 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			if (weapon.weapon.wing == StrikeCraftWing.FIGHTERS)
 				copy(fighterWings = fighterWings + setOf(ShipHangarWing(by.id, weaponId)))
 			else
-				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId)))
+				copy(bomberWings = bomberWings + setOf(ShipHangarWing(by.id, weaponId))),
+			ImpactDamage.OtherEffect
 		)
+	}
+	is ShipWeaponInstance.ParticleClawLauncher -> {
+		var impactResult = impact(weapon.weapon.numShots)
+		
+		repeat(weapon.weapon.numShots) {
+			if (Random.nextDouble() < cannonChanceToHit(by, this))
+				impactResult = when (val ir = impactResult) {
+					is ImpactResult.Damaged -> ir.withCritResult(ir.ship.doCriticalDamage())
+					else -> ir
+				}
+		}
+		
+		impactResult
+	}
+	is ShipWeaponInstance.LightningYarn -> {
+		impact(weapon.weapon.numShots, true).applyCriticals(by, weaponId)
 	}
 	is ShipWeaponInstance.MegaCannon -> {
 		impact((3..7).random()).applyCriticals(by, weaponId)
@@ -364,31 +466,34 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 				weaponAmount = (0..weaponAmount).random(),
 				shieldAmount = (0..shieldAmount).random(),
 			),
-			amount = 0
+			ImpactDamage.OtherEffect
 		)
 	}
 }
 
 fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, strikeWingDamage: MutableMap<ShipHangarWing, Double>): ImpactResult {
 	if (bomberWings.isEmpty())
-		return ImpactResult.Damaged(this, null)
+		return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
 	
 	val totalFighterHealth = fighterWings.sumOf { (carrierId, wingId) ->
 		(otherShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-	} + (if (canUseTurrets) ship.durability.turretDefense else 0.0)
+	} + (if (canUseTurrets) durability.turretDefense else 0.0)
 	
 	val totalBomberHealth = bomberWings.sumOf { (carrierId, wingId) ->
 		(otherShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
 	}
 	
 	if (totalBomberHealth < EPSILON)
-		return ImpactResult.Damaged(this, null)
+		return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
 	
 	val maxBomberWingOutput = smoothNegative(totalBomberHealth - totalFighterHealth)
 	val maxFighterWingOutput = smoothNegative(totalFighterHealth - totalBomberHealth)
 	
-	fighterWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput }
-	bomberWings.forEach { strikeWingDamage[it] = Random.nextDouble() * maxFighterWingOutput }
+	for (it in fighterWings)
+		strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput
+	
+	for (it in bomberWings)
+		strikeWingDamage[it] = Random.nextDouble() * maxFighterWingOutput
 	
 	val chanceOfShipDamage = smoothNegative(maxBomberWingOutput - maxFighterWingOutput)
 	val hits = floor(chanceOfShipDamage).let { floored ->
@@ -413,17 +518,17 @@ fun ImpactResult.Damaged.withCritResult(critical: CritResult): ImpactResult = wh
 	is CritResult.NoEffect -> this
 	is CritResult.FireStarted -> copy(
 		ship = critical.ship,
-		amount = amount,
+		damage = damage,
 		critical = critical
 	)
 	is CritResult.ModulesDisabled -> copy(
 		ship = critical.ship,
-		amount = amount,
+		damage = damage,
 		critical = critical
 	)
 	is CritResult.HullDamaged -> copy(
 		ship = critical.ship,
-		amount = amount?.let { it + critical.amount },
+		damage = damage + critical.amount,
 		critical = critical
 	)
 	is CritResult.Destroyed -> ImpactResult.Destroyed(critical.ship)
@@ -496,6 +601,8 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition
 		val weaponRangeMult = when (weapon) {
 			is ShipWeapon.Cannon -> firepower.rangeMultiplier
 			is ShipWeapon.Lance -> firepower.rangeMultiplier
+			is ShipWeapon.ParticleClawLauncher -> firepower.rangeMultiplier
+			is ShipWeapon.LightningYarn -> firepower.rangeMultiplier
 			else -> 1.0
 		}
 		
@@ -509,6 +616,34 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition
 				firingArcs = weapon.firingArcs,
 				canSelfSelect = side in targetSet
 			)
+		)
+	}
+}
+
+fun ImpactResult.toChatEntry(attacker: ShipAttacker, weapon: ShipWeaponInstance?) = when (this) {
+	is ImpactResult.Damaged -> when (damage) {
+		is ImpactDamage.Success -> ChatEntry.ShipAttacked(
+			ship.id,
+			attacker,
+			Moment.now,
+			damage.amount,
+			weapon?.weapon,
+			critical.report(),
+		)
+		is ImpactDamage.Failed -> ChatEntry.ShipAttackFailed(
+			ship.id,
+			attacker,
+			Moment.now,
+			weapon?.weapon,
+			damage.ignore
+		)
+		else -> null
+	}
+	is ImpactResult.Destroyed -> {
+		ChatEntry.ShipDestroyed(
+			ship.id,
+			Moment.now,
+			attacker,
 		)
 	}
 }
@@ -540,25 +675,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			}.toMap()
 			
 			val newChatMessages = chatBox + impacts.mapNotNull { (_, impact) ->
-				when (impact) {
-					is ImpactResult.Damaged -> impact.amount?.let { damage ->
-						ChatEntry.ShipAttacked(
-							impact.ship.id,
-							ShipAttacker.EnemyShip(newAttacker.id),
-							Moment.now,
-							damage,
-							weapon.weapon,
-							impact.critical.report(),
-						)
-					}
-					is ImpactResult.Destroyed -> {
-						ChatEntry.ShipDestroyed(
-							impact.ship.id,
-							Moment.now,
-							ShipAttacker.EnemyShip(newAttacker.id)
-						)
-					}
-				}
+				impact.toChatEntry(ShipAttacker.EnemyShip(newAttacker.id), weapon)
 			}
 			
 			GameEvent.StateChange(
@@ -581,23 +698,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			else emptyMap()
 			
 			val newChatMessages = chatBox + listOfNotNull(
-				when (impact) {
-					is ImpactResult.Damaged -> impact.amount?.let { damage ->
-						ChatEntry.ShipAttacked(
-							impact.ship.id,
-							ShipAttacker.EnemyShip(newAttacker.id),
-							Moment.now,
-							damage,
-							weapon.weapon,
-							impact.critical.report(),
-						)
-					}
-					is ImpactResult.Destroyed -> ChatEntry.ShipDestroyed(
-						impact.ship.id,
-						Moment.now,
-						ShipAttacker.EnemyShip(newAttacker.id)
-					)
-				}
+				impact.toChatEntry(ShipAttacker.EnemyShip(newAttacker.id), weapon)
 			)
 			
 			GameEvent.StateChange(
@@ -617,6 +718,8 @@ val ShipWeapon.displayName: String
 			setOf(FiringArc.ABEAM_STARBOARD) -> "Starboard "
 			setOf(FiringArc.BOW) -> "Fore "
 			setOf(FiringArc.STERN) -> "Rear "
+			setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) -> "Wide-Angle Port "
+			setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) -> "Wide-Angle Starboard "
 			else -> null
 		}.takeIf { this !is ShipWeapon.Hangar } ?: ""
 		
@@ -630,6 +733,8 @@ val ShipWeapon.displayName: String
 				StrikeCraftWing.BOMBERS -> "Bombers"
 			}
 			is ShipWeapon.Torpedo -> "Torpedo" + (if (weaponIsPlural) "es" else "")
+			is ShipWeapon.ParticleClawLauncher -> "Particle Claw" + (if (weaponIsPlural) "s" else "")
+			is ShipWeapon.LightningYarn -> "Lightning Yarn"
 			is ShipWeapon.MegaCannon -> "Mega Giga Cannon"
 			is ShipWeapon.RevelationGun -> "Revelation Gun"
 			is ShipWeapon.EmpAntenna -> "EMP Antenna"

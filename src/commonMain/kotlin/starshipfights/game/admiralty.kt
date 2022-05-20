@@ -67,6 +67,13 @@ fun AdmiralRank.getDisplayName(faction: Faction) = when (faction) {
 		AdmiralRank.HIGH_ADMIRAL -> "Vosh Raquor"
 		AdmiralRank.LORD_ADMIRAL -> "Yauh Raquor"
 	}
+	Faction.FELINAE_FELICES -> when (this) {
+		AdmiralRank.REAR_ADMIRAL -> "Domina Iunior"
+		AdmiralRank.VICE_ADMIRAL -> "Domina Vicaria"
+		AdmiralRank.ADMIRAL -> "Domina"
+		AdmiralRank.HIGH_ADMIRAL -> "Domina Senior"
+		AdmiralRank.LORD_ADMIRAL -> "Ducissa"
+	}
 	Faction.ISARNAREYKK -> when (this) {
 		AdmiralRank.REAR_ADMIRAL -> "Maer nu Ambaght"
 		AdmiralRank.VICE_ADMIRAL -> "Neid Fletsleydar"

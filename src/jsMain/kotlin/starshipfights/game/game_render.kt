@@ -12,7 +12,7 @@ object GameRender {
 		
 		shipGroup.clear()
 		
-		state.ships.forEach { (_, ship) ->
+		for (ship in state.ships.values) {
 			when (state.renderShipAs(ship, mySide)) {
 				ShipRenderMode.NONE -> {}
 				ShipRenderMode.SIGNAL -> shipGroup.add(RenderResources.enemySignal.generate(ship.position.location))

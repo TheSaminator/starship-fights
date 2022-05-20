@@ -77,7 +77,7 @@ sealed class Popup<out T> {
 				+"Select one of your admirals to continue:"
 			}
 			div(classes = "button-set col") {
-				admirals.forEach { admiral ->
+				for (admiral in admirals) {
 					button {
 						+admiral.fullName
 						+Entities.nbsp
@@ -152,7 +152,7 @@ sealed class Popup<out T> {
 			}
 			
 			div(classes = "button-set col") {
-				BattleSize.values().forEach { battleSize ->
+				for (battleSize in BattleSize.values()) {
 					if (battleSize <= maxBattleSize)
 						button {
 							+battleSize.displayName
@@ -185,7 +185,7 @@ sealed class Popup<out T> {
 			}
 			
 			div(classes = "button-set col") {
-				BattleBackground.values().forEach { bg ->
+				for (bg in BattleBackground.values()) {
 					button {
 						+bg.displayName
 						onClickFunction = { e ->
@@ -281,7 +281,7 @@ sealed class Popup<out T> {
 					th { +"Battle Background" }
 					th { +Entities.nbsp }
 				}
-				hosts.forEach { (id, joinable) ->
+				for ((id, joinable) in hosts) {
 					tr {
 						td {
 							style = "text-align:center"

@@ -18,6 +18,13 @@ enum class ShipWeightClass(
 	GRAND_CRUISER(4, 3),
 	COLOSSUS(5, 5),
 	
+	// Felinae Felices-specific
+	FF_ESCORT(1, 1),
+	FF_DESTROYER(2, 2),
+	FF_CRUISER(3, 3),
+	FF_BATTLECRUISER(4, 4),
+	FF_BATTLESHIP(5, 5),
+	
 	// Isarnareykk-specific
 	AUXILIARY_SHIP(1, 0),
 	LIGHT_CRUISER(2, 1),
@@ -31,7 +38,10 @@ enum class ShipWeightClass(
 	;
 	
 	val displayName: String
-		get() = name.lowercase().split('_').joinToString(separator = " ") { word -> word.replaceFirstChar { c -> c.uppercase() } }
+		get() = if (this in FF_ESCORT..FF_BATTLESHIP)
+			name.lowercase().split('_').joinToString(separator = " ") { word -> word.replaceFirstChar { c -> c.uppercase() } }.removePrefix("Ff ")
+		else
+			name.lowercase().split('_').joinToString(separator = " ") { word -> word.replaceFirstChar { c -> c.uppercase() } }
 	
 	val basePointCost: Int
 		get() = when (this) {
@@ -44,7 +54,13 @@ enum class ShipWeightClass(
 			BATTLE_BARGE -> 300
 			
 			GRAND_CRUISER -> 300
-			COLOSSUS -> 500
+			COLOSSUS -> 450
+			
+			FF_ESCORT -> 100
+			FF_DESTROYER -> 150
+			FF_CRUISER -> 250
+			FF_BATTLECRUISER -> 350
+			FF_BATTLESHIP -> 400
 			
 			AUXILIARY_SHIP -> 50
 			LIGHT_CRUISER -> 100
@@ -120,6 +136,21 @@ enum class ShipType(
 	
 	AEDON(Faction.MASRA_DRAETSEN, ShipWeightClass.COLOSSUS),
 	
+	// Felinae Felices
+	KODKOD(Faction.FELINAE_FELICES, ShipWeightClass.FF_ESCORT),
+	ONCILLA(Faction.FELINAE_FELICES, ShipWeightClass.FF_ESCORT),
+	
+	MARGAY(Faction.FELINAE_FELICES, ShipWeightClass.FF_DESTROYER),
+	OCELOT(Faction.FELINAE_FELICES, ShipWeightClass.FF_DESTROYER),
+	
+	BOBCAT(Faction.FELINAE_FELICES, ShipWeightClass.FF_CRUISER),
+	LYNX(Faction.FELINAE_FELICES, ShipWeightClass.FF_CRUISER),
+	
+	LEOPARD(Faction.FELINAE_FELICES, ShipWeightClass.FF_BATTLECRUISER),
+	TIGER(Faction.FELINAE_FELICES, ShipWeightClass.FF_BATTLECRUISER),
+	
+	CARACAL(Faction.FELINAE_FELICES, ShipWeightClass.FF_BATTLESHIP),
+	
 	// Isarnareykk
 	GANNAN(Faction.ISARNAREYKK, ShipWeightClass.AUXILIARY_SHIP),
 	LODOVIK(Faction.ISARNAREYKK, ShipWeightClass.AUXILIARY_SHIP),
@@ -162,7 +193,7 @@ enum class ShipType(
 		get() = "$displayName-class ${weightClass.displayName}"
 	
 	val fullerDisplayName: String
-		get() = "$displayName-class ${faction.demonymSingular} ${weightClass.displayName}"
+		get() = "$displayName-class ${faction.adjective} ${weightClass.displayName}"
 }
 
 val ShipType.pointCost: Int

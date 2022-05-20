@@ -47,14 +47,10 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 				img(src = user.anonymousAvatarUrl) {
 					style = "border-radius:50%"
 				}
-				p {
-					style = "text-align:center"
-					+"Anonymous User#0000"
-				}
 			}
-			user.getTrophies().forEach { trophy ->
+			for (trophy in user.getTrophies())
 				renderTrophy(trophy)
-			}
+			
 			if (user.showUserStatus) {
 				p {
 					style = "text-align:center"
@@ -103,11 +99,8 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 		section {
 			h1 { +user.profileName }
 			
-			user.profileBio.split('\n').forEachIndexed { i, p ->
-				if (i > 0)
-					br
-				+p
-			}
+			for (paragraph in user.profileBio.split('\n'))
+				p { +paragraph }
 		}
 		section {
 			h2 { +"Admirals" }
@@ -117,7 +110,7 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 					+"This user has the following admirals:"
 				}
 				ul {
-					admirals.sortedBy { it.name }.sortedBy { it.rank }.sortedBy { it.faction }.forEach { admiral ->
+					for (admiral in admirals.sortedBy { it.name }.sortedBy { it.rank }.sortedBy { it.faction }) {
 						li {
 							a("/admiral/${admiral.id}") { +admiral.fullName }
 						}
@@ -241,17 +234,17 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				}
 				val now = Instant.now()
 				val expiredSessions = mutableListOf<UserSession>()
-				allUserSessions.forEach { session ->
+				for (session in allUserSessions) {
 					if (session.expiration < now) {
 						expiredSessions += session
-						return@forEach
+						continue
 					}
 					
 					tr {
 						td { +session.userAgent }
 						if (currentUser.logIpAddresses)
 							td {
-								session.clientAddresses.forEachIndexed { i, clientAddress ->
+								for ((i, clientAddress) in session.clientAddresses.withIndex()) {
 									if (i != 0) br
 									+clientAddress
 								}
@@ -275,16 +268,16 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						a(href = "/logout-all") {
 							method = "post"
 							csrfToken(currentSession.id)
-							+"Logout All"
+							+"Logout All Other Sessions"
 						}
 					}
 				}
-				expiredSessions.forEach { session ->
+				for (session in expiredSessions) {
 					tr {
 						td { +session.userAgent }
 						if (currentUser.logIpAddresses)
 							td {
-								session.clientAddresses.forEachIndexed { i, clientAddress ->
+								for ((i, clientAddress) in session.clientAddresses.withIndex()) {
 									if (i != 0) br
 									+clientAddress
 								}
@@ -337,7 +330,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 					}
 				}
 				p {
-					Faction.values().forEach { faction ->
+					for (faction in Faction.values()) {
 						val factionId = "faction-${faction.toUrlSlug()}"
 						label {
 							htmlFor = factionId
@@ -345,6 +338,8 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 								id = factionId
 								value = faction.name
 								required = true
+								if (faction == Faction.FELINAE_FELICES)
+									attributes["data-force-gender"] = "female"
 							}
 							img(src = faction.flagUrl) {
 								style = "height:0.75em;width:1.2em"
@@ -390,7 +385,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 				}
 				h3 { +"Generate Random Name" }
 				p {
-					AdmiralNameFlavor.values().forEachIndexed { i, flavor ->
+					for ((i, flavor) in AdmiralNameFlavor.values().withIndex()) {
 						if (i != 0)
 							br
 						a(href = "#", classes = "generate-admiral-name") {
@@ -404,7 +399,7 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 				}
 			}
 			script {
-				unsafe { +"window.sfAdmiralNameGen = true;" }
+				unsafe { +"window.sfAdmiralNameGen = true; window.sfFactionSelect = true;" }
 			}
 		}
 	}
@@ -473,7 +468,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 				}
 				
 				val now = Instant.now()
-				ships.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }.forEach { ship ->
+				for (ship in ships.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }) {
 					tr {
 						td { +ship.shipData.fullName }
 						td {
@@ -517,7 +512,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 					th { +"Against" }
 					th { +"Result" }
 				}
-				records.sortedBy { it.whenEnded }.forEach { record ->
+				for (record in records.sortedBy { it.whenEnded }) {
 					tr {
 						td {
 							+"Started at "
@@ -617,31 +612,42 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					value = admiral.name
 					maxLength = "$ADMIRAL_NAME_MAX_LENGTH"
 				}
-				p {
-					label {
-						htmlFor = "sex-male"
-						radioInput(name = "sex") {
-							id = "sex-male"
-							value = "male"
-							required = true
-							checked = !admiral.isFemale
-						}
-						+"Male"
-					}
-					label {
-						htmlFor = "sex-female"
-						radioInput(name = "sex") {
+				if (admiral.faction == Faction.FELINAE_FELICES)
+					p {
+						style = "font-size:0.8em;font-style:italic;color:#555"
+						checkBoxInput {
+							style = "display:none"
 							id = "sex-female"
-							value = "female"
-							required = true
-							checked = admiral.isFemale
+							checked = true
 						}
-						+"Female"
+						+"The Felinae Felices are a female-only faction."
 					}
-				}
+				else
+					p {
+						label {
+							htmlFor = "sex-male"
+							radioInput(name = "sex") {
+								id = "sex-male"
+								value = "male"
+								required = true
+								checked = !admiral.isFemale
+							}
+							+"Male"
+						}
+						label {
+							htmlFor = "sex-female"
+							radioInput(name = "sex") {
+								id = "sex-female"
+								value = "female"
+								required = true
+								checked = admiral.isFemale
+							}
+							+"Female"
+						}
+					}
 				h3 { +"Generate Random Name" }
 				p {
-					AdmiralNameFlavor.values().forEachIndexed { i, flavor ->
+					for ((i, flavor) in AdmiralNameFlavor.values().withIndex()) {
 						if (i != 0)
 							br
 						a(href = "#", classes = "generate-admiral-name") {
@@ -703,7 +709,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 				}
 				
 				val now = Instant.now()
-				ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }.forEach { ship ->
+				for (ship in ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }) {
 					tr {
 						td {
 							+ship.shipData.fullName
@@ -752,7 +758,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 					th { +"Ship Class" }
 					th { +"Ship Cost" }
 				}
-				buyableShips.forEach { (st, price) ->
+				for ((st, price) in buyableShips) {
 					tr {
 						td {
 							a(href = "/info/${st.toUrlSlug()}") { +st.fullDisplayName }

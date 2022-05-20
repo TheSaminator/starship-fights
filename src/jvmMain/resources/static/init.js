@@ -114,6 +114,33 @@
 	});
 
 	window.addEventListener("load", function () {
+		// Enforce female-only Felinae Felices faction
+		if (!window.sfFactionSelect) return;
+
+		const factionInputs = document.getElementsByName("faction");
+		for (const factionInput of factionInputs) {
+			factionInput.addEventListener("click", () => {
+				const sexInputs = document.getElementsByName("sex");
+				if (factionInput.hasAttribute("data-force-gender")) {
+					const forceGender = factionInput.getAttribute("data-force-gender");
+					for (const sexInput of sexInputs) {
+						if (sexInput.value === forceGender) {
+							sexInput.checked = true;
+						} else {
+							sexInput.disabled = true;
+							sexInput.checked = false;
+						}
+					}
+				} else {
+					for (const sexInput of sexInputs) {
+						sexInput.disabled = false;
+					}
+				}
+			});
+		}
+	});
+
+	window.addEventListener("load", function () {
 		// Generate random admiral names
 		if (!window.sfAdmiralNameGen) return;
 
@@ -149,7 +176,7 @@
 				if (!maxLengthAttr) return;
 				const maxLength = Number(maxLengthAttr);
 
-				maxLengthIndicator.innerText = "" + textarea.value.length + "/" + maxLength;
+				maxLengthIndicator.innerHTML = "" + textarea.value.length + "/" + maxLength;
 			}
 
 			textarea.addEventListener("input", () => {

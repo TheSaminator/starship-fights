@@ -59,7 +59,7 @@ suspend fun ApplicationCall.error429(): HTML.() -> Unit = page("Too Many Request
 suspend fun ApplicationCall.error503(): HTML.() -> Unit = page("Internal Error", standardNavBar()) {
 	section {
 		h1 { +"Internal Error" }
-		p { +"The servers made a bit of a mistake. Please be patient while we fix our mess." }
+		p { +"The servers made a bit of a mistake. Please be patient while we clean up our mess." }
 	}
 	devModeCallId(callId)
 }

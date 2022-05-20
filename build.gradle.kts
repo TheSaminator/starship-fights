@@ -1,6 +1,25 @@
+import com.nixxcode.jvmbrotli.common.BrotliLoader
+import com.nixxcode.jvmbrotli.enc.BrotliOutputStream
+import com.nixxcode.jvmbrotli.enc.Encoder
+
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.zip.GZIPOutputStream
+
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+	
+	dependencies {
+		classpath("com.nixxcode.jvmbrotli:jvmbrotli:0.2.0")
+		
+		// why does this need to be done MANUALLY?!?!
+		classpath("com.nixxcode.jvmbrotli:jvmbrotli-win32-x86-amd64:0.2.0")
+		classpath("com.nixxcode.jvmbrotli:jvmbrotli-darwin-x86-amd64:0.2.0")
+		classpath("com.nixxcode.jvmbrotli:jvmbrotli-linux-x86-amd64:0.2.0")
+	}
+}
 
 plugins {
 	java
@@ -81,6 +100,8 @@ kotlin {
 				implementation("io.ktor:ktor-client-websockets:1.6.7")
 				
 				implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
+				
+				implementation("com.juul.indexeddb:core:0.2.3")
 			}
 		}
 	}
@@ -98,10 +119,11 @@ tasks.named<Copy>("jvmProcessResources") {
 	
 	doLast {
 		val pool = Executors.newWorkStealingPool()
-		val resourceTree = fileTree(mapOf("dir" to outputs.files.asPath + "/static/", "exclude" to "*.gz"))
+		val encoderParams = if (BrotliLoader.isBrotliAvailable()) Encoder.Parameters().setQuality(8) else null
+		val resourceTree = fileTree(mapOf("dir" to outputs.files.asPath + "/static/", "exclude" to listOf("*.gz", "*.br")))
 		val countDownLatch = CountDownLatch(resourceTree.count())
 		
-		resourceTree.forEach { file ->
+		for (file in resourceTree) {
 			pool.execute {
 				val bytes = file.readBytes()
 				val result = File("${file.absolutePath}.gz").outputStream()
@@ -109,7 +131,14 @@ tasks.named<Copy>("jvmProcessResources") {
 				gzipStream.write(bytes)
 				gzipStream.close()
 				
-				println("Done GZipping ${file.name}")
+				encoderParams?.let { encParams ->
+					val brResult = File("${file.absolutePath}.br").outputStream()
+					val brStream = BrotliOutputStream(brResult, encParams)
+					brStream.write(bytes)
+					brStream.close()
+				}
+				
+				println("Done compressing ${file.name}")
 				countDownLatch.countDown()
 			}
 		}

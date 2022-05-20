@@ -34,7 +34,6 @@ fun GameState.canFinishPhase(side: GlobalSide): Boolean {
 			
 			start.playerStart(side).deployableFleet.values.none { usedPoints + it.pointCost <= battleInfo.size.numPoints }
 		}
-		is GamePhase.Move -> ships.values.filter { it.owner == side }.all { it.isDoneCurrentPhase }
 		else -> true
 	}
 }
@@ -45,28 +44,34 @@ private fun GameState.afterPhase(): GameState {
 	val newChatEntries = mutableListOf<ChatEntry>()
 	
 	when (phase) {
+		is GamePhase.Move -> {
+			// Set velocity to 0 for halted ships
+			newShips = newShips.mapValues { (_, ship) ->
+				if (ship.ship.shipType.faction == Faction.FELINAE_FELICES && !ship.isDoneCurrentPhase)
+					ship.copy(currentVelocity = 0.0)
+				else ship
+			}
+			
+			// Recharge inertialess drive
+			newShips = newShips.mapValues { (_, ship) ->
+				if (ship.ship.canUseInertialessDrive && ship.usedInertialessDriveShots > 0 && ship.felinaeShipPowerMode != FelinaeShipPowerMode.INERTIALESS_DRIVE)
+					ship.copy(usedInertialessDriveShots = ship.usedInertialessDriveShots - 1)
+				else ship
+			}
+		}
 		is GamePhase.Attack -> {
 			val strikeWingDamage = mutableMapOf<ShipHangarWing, Double>()
 			
 			// Apply damage to ships from strike craft
 			newShips = newShips.mapNotNull strikeBombard@{ (id, ship) ->
-				when (val impact = ship.afterBombed(newShips, strikeWingDamage)) {
+				val impact = ship.afterBombed(newShips, strikeWingDamage)
+				newChatEntries += listOfNotNull(impact.toChatEntry(ShipAttacker.Bombers, null))
+				when (impact) {
 					is ImpactResult.Damaged -> {
-						impact.amount?.let { damage ->
-							newChatEntries += ChatEntry.ShipAttacked(
-								ship = id,
-								attacker = ShipAttacker.Bombers,
-								sentAt = Moment.now,
-								damageInflicted = damage,
-								weapon = null,
-								critical = impact.critical.report()
-							)
-						}
 						id to impact.ship
 					}
 					is ImpactResult.Destroyed -> {
 						newWrecks[id] = impact.ship
-						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Bombers)
 						null
 					}
 				}
@@ -84,21 +89,14 @@ private fun GameState.afterPhase(): GameState {
 				
 				val hits = Random.nextInt(0..ship.numFires)
 				
-				when (val impactResult = ship.impact(hits)) {
+				val impactResult = ship.impact(hits, true)
+				newChatEntries += listOfNotNull(impactResult.toChatEntry(ShipAttacker.Fire, null))
+				when (impactResult) {
 					is ImpactResult.Damaged -> {
-						newChatEntries += ChatEntry.ShipAttacked(
-							ship = id,
-							attacker = ShipAttacker.Fire,
-							sentAt = Moment.now,
-							damageInflicted = hits,
-							weapon = null,
-							critical = null
-						)
 						id to impactResult.ship
 					}
 					is ImpactResult.Destroyed -> {
 						newWrecks[id] = impactResult.ship
-						newChatEntries += ChatEntry.ShipDestroyed(id, Moment.now, ShipAttacker.Fire)
 						null
 					}
 				}
@@ -110,6 +108,8 @@ private fun GameState.afterPhase(): GameState {
 					weaponAmount = ship.powerMode.weapons,
 					shieldAmount = if (ship.canUseShields) (ship.shieldAmount..ship.powerMode.shields).random() else 0,
 					usedRepairTokens = 0,
+					
+					hasUsedDisruptionPulse = false,
 					
 					fighterWings = emptySet(),
 					bomberWings = emptySet(),

@@ -18,7 +18,6 @@ import starshipfights.data.Id
 interface GameUIResponder {
 	fun doAction(action: PlayerAction)
 	fun useAbility(ability: PlayerAbilityType)
-	fun clientError(errorMessage: String)
 }
 
 object GameUI {
@@ -161,7 +160,7 @@ object GameUI {
 	fun drawGameUI(state: GameState) {
 		chatHistory.clear()
 		chatHistory.append {
-			state.chatBox.sortedBy { it.sentAt.toMillis() }.forEach { entry ->
+			for (entry in state.chatBox.sortedBy { it.sentAt.toMillis() }) {
 				p {
 					title = "At ${entry.sentAt.date}"
 					
@@ -244,6 +243,8 @@ object GameUI {
 											is ShipWeapon.Lance -> "lances"
 											is ShipWeapon.Hangar -> "bombers"
 											is ShipWeapon.Torpedo -> "torpedoes"
+											is ShipWeapon.ParticleClawLauncher -> "particle claws"
+											is ShipWeapon.LightningYarn -> "lightning yarn"
 											ShipWeapon.MegaCannon -> "Mega Giga Cannon"
 											ShipWeapon.RevelationGun -> "Revelation Gun"
 											ShipWeapon.EmpAntenna -> "EMP antenna"
@@ -272,6 +273,58 @@ object GameUI {
 								ShipCritical.Fire -> ", starting a fire"
 								is ShipCritical.ModulesHit -> ", disabling ${entry.critical.module.joinToDisplayString { it.getDisplayName(ship) }}"
 								else -> ""
+							}
+							+"."
+						}
+						is ChatEntry.ShipAttackFailed -> {
+							val ship = state.getShipInfo(entry.ship)
+							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
+							+if (owner == LocalSide.RED)
+								"The enemy ship "
+							else
+								"Our ship, the "
+							strong {
+								style = "color:${owner.htmlColor}"
+								+ship.fullName
+							}
+							+" has ignored an attack from "
+							when (entry.attacker) {
+								is ShipAttacker.EnemyShip -> {
+									if (entry.weapon != null) {
+										+"the "
+										+when (entry.weapon) {
+											is ShipWeapon.Cannon -> "cannons"
+											is ShipWeapon.Lance -> "lances"
+											is ShipWeapon.Hangar -> "bombers"
+											is ShipWeapon.Torpedo -> "torpedoes"
+											is ShipWeapon.ParticleClawLauncher -> "particle claws"
+											is ShipWeapon.LightningYarn -> "lightning yarn"
+											ShipWeapon.MegaCannon -> "Mega Giga Cannon"
+											ShipWeapon.RevelationGun -> "Revelation Gun"
+											ShipWeapon.EmpAntenna -> "EMP antenna"
+										}
+										+" of "
+									}
+									+"the "
+									strong {
+										style = "color:${owner.other.htmlColor}"
+										+state.getShipInfo(entry.attacker.id).fullName
+									}
+								}
+								ShipAttacker.Fire -> {
+									+"onboard fires"
+								}
+								ShipAttacker.Bombers -> {
+									if (owner == LocalSide.RED)
+										+"our "
+									else
+										+"enemy "
+									+"bombers"
+								}
+							}
+							
+							+when (entry.damageIgnoreType) {
+								DamageIgnoreType.FELINAE_ARMOR -> " using its relativistic armor"
 							}
 							+"."
 						}
@@ -369,7 +422,7 @@ object GameUI {
 		}
 		
 		shipsOverlayScene.clear()
-		state.ships.forEach { (shipId, ship) ->
+		for ((shipId, ship) in state.ships) {
 			if (state.renderShipAs(ship, mySide) == ShipRenderMode.FULL)
 				shipsOverlayScene.add(CSS3DSprite(document.create.div {
 					drawShipLabel(state, abilities, shipId, ship)
@@ -417,28 +470,30 @@ object GameUI {
 					}
 				}
 				else -> {
-					val totalShield = ship.powerMode.shields
-					val activeShield = ship.shieldAmount
-					val downShield = totalShield - activeShield
-					
-					table {
-						style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:25px"
+					if (ship.canUseShields) {
+						val totalShield = ship.powerMode.shields
+						val activeShield = ship.shieldAmount
+						val downShield = totalShield - activeShield
 						
-						tr {
-							repeat(activeShield) {
-								td {
-									style = "background-color:#69F;height:15px;box-shadow:inset 0 0 0 3px #555"
+						table {
+							style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:25px"
+							
+							tr {
+								repeat(activeShield) {
+									td {
+										style = "background-color:#69F;height:15px;box-shadow:inset 0 0 0 3px #555"
+									}
 								}
-							}
-							repeat(downShield) {
-								td {
-									style = "background-color:#46A;height:15px;box-shadow:inset 0 0 0 3px #555"
+								repeat(downShield) {
+									td {
+										style = "background-color:#46A;height:15px;box-shadow:inset 0 0 0 3px #555"
+									}
 								}
 							}
 						}
 					}
 					
-					val totalHull = ship.ship.durability.maxHullPoints
+					val totalHull = ship.durability.maxHullPoints
 					val activeHull = ship.hullAmount
 					val downHull = totalHull - activeHull
 					
@@ -459,27 +514,30 @@ object GameUI {
 						}
 					}
 					
-					val totalWeapons = ship.powerMode.weapons
-					val activeWeapons = ship.weaponAmount
-					val downWeapons = totalWeapons - activeWeapons
-					
-					if (ship.owner == mySide)
-						table {
-							style = "width:100%;table-layout:fixed;background-color:#555;margin:0"
+					if (ship.ship.reactor is StandardShipReactor) {
+						if (ship.owner == mySide) {
+							val totalWeapons = ship.powerMode.weapons
+							val activeWeapons = ship.weaponAmount
+							val downWeapons = totalWeapons - activeWeapons
 							
-							tr {
-								repeat(activeWeapons) {
-									td {
-										style = "background-color:#F63;height:15px;box-shadow:inset 0 0 0 3px #555"
+							table {
+								style = "width:100%;table-layout:fixed;background-color:#555;margin:0"
+								
+								tr {
+									repeat(activeWeapons) {
+										td {
+											style = "background-color:#F63;height:15px;box-shadow:inset 0 0 0 3px #555"
+										}
 									}
-								}
-								repeat(downWeapons) {
-									td {
-										style = "background-color:#A42;height:15px;box-shadow:inset 0 0 0 3px #555"
+									repeat(downWeapons) {
+										td {
+											style = "background-color:#A42;height:15px;box-shadow:inset 0 0 0 3px #555"
+										}
 									}
 								}
 							}
 						}
+					}
 				}
 			}
 		}
@@ -558,7 +616,7 @@ object GameUI {
 			style = "height:69%;overflow-y:auto;font-size:0.9em"
 			
 			hr { style = "border-color:#555" }
-			deployableShips.forEach { (id, ship) ->
+			for ((id, ship) in deployableShips.toList().sortedBy { (_, ship) -> ship.pointCost }) {
 				p {
 					style = "text-align:center;margin:0"
 					+ship.name
@@ -648,23 +706,29 @@ object GameUI {
 					+ship.ship.shipType.fullerDisplayName
 					br
 					
-					if (ship.owner == mySide)
-						table {
-							style = "width:100%;table-layout:fixed;background-color:#555"
-							tr {
-								ShipSubsystem.values().forEach { subsystem ->
-									val amount = ship.powerMode[subsystem]
-									
-									repeat(amount) {
-										td {
-											style = "background-color:${subsystem.htmlColor};margin:1px;height:0.55em"
+					if (ship.owner == mySide) {
+						when (ship.ship.reactor) {
+							is StandardShipReactor -> table {
+								style = "width:100%;table-layout:fixed;background-color:#555"
+								tr {
+									for (subsystem in ShipSubsystem.values()) {
+										val amount = ship.powerMode[subsystem]
+										
+										repeat(amount) {
+											td {
+												style = "background-color:${subsystem.htmlColor};margin:1px;height:0.55em"
+											}
 										}
 									}
 								}
 							}
+							is FelinaeShipReactor -> p {
+								+"Reactor Priority: ${ship.felinaeShipPowerMode.displayName}"
+							}
 						}
+					}
 					
-					ship.modulesStatus.statuses.forEach { (module, status) ->
+					for ((module, status) in ship.modulesStatus.statuses) {
 						when (status) {
 							ShipModuleStatus.INTACT -> {}
 							ShipModuleStatus.DAMAGED -> {
@@ -681,6 +745,7 @@ object GameUI {
 								}
 								br
 							}
+							ShipModuleStatus.ABSENT -> {}
 						}
 					}
 					
@@ -697,20 +762,21 @@ object GameUI {
 					p {
 						style = "height:69%;margin:0"
 						
-						if (gameState.phase is GamePhase.Repair) {
+						if (gameState.phase is GamePhase.Repair && ship.durability is StandardShipDurability) {
 							+"${ship.remainingRepairTokens} Repair Tokens"
 							br
 						}
 						
-						shipAbilities.forEach { ability ->
+						for (ability in shipAbilities) {
 							when (ability) {
 								is PlayerAbilityType.DistributePower -> {
+									val shipReactor = ship.ship.reactor as StandardShipReactor
 									val shipPowerMode = ClientAbilityData.newShipPowerModes[ship.id] ?: ship.powerMode
 									
 									table {
 										style = "width:100%;table-layout:fixed;background-color:#555"
 										tr {
-											ShipSubsystem.values().forEach { subsystem ->
+											for (subsystem in ShipSubsystem.values()) {
 												val amount = shipPowerMode[subsystem]
 												
 												repeat(amount) {
@@ -724,14 +790,16 @@ object GameUI {
 									
 									p {
 										style = "text-align:center"
-										+"Power Output: ${ship.ship.reactor.powerOutput}"
+										+"Power Output: ${shipReactor.powerOutput}"
 										br
 										+"Remaining Transfers: ${ship.remainingGridEfficiency(shipPowerMode)}"
 									}
 									
-									ShipSubsystem.values().forEach { transferFrom ->
+									for (transferFrom in ShipSubsystem.values()) {
 										div(classes = "button-set row") {
-											ShipSubsystem.values().filter { it != transferFrom }.forEach { transferTo ->
+											for (transferTo in ShipSubsystem.values()) {
+												if (transferFrom == transferTo) continue
+												
 												button {
 													style = "font-size:0.8em;padding:0 0.25em"
 													title = "${transferFrom.displayName} to ${transferTo.displayName}"
@@ -788,14 +856,45 @@ object GameUI {
 										}
 									}
 								}
+								is PlayerAbilityType.ConfigurePower -> {
+									a(href = "#") {
+										+"Set Priority: ${ability.powerMode.displayName}"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
+									}
+									br
+								}
 								is PlayerAbilityType.MoveShip -> {
-									button {
+									a(href = "#") {
 										+"Move Ship"
 										onClickFunction = { e ->
 											e.preventDefault()
 											responder.useAbility(ability)
 										}
 									}
+									br
+								}
+								is PlayerAbilityType.UseInertialessDrive -> {
+									a(href = "#") {
+										+"Activate Inertialess Drive (${ship.remainingInertialessDriveJumps})"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
+									}
+									br
+								}
+								is PlayerAbilityType.DisruptionPulse -> {
+									a(href = "#") {
+										+"Activate Strike-Craft Disruption Pulse (${ship.remainingDisruptionPulseEmissions})"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
+									}
+									br
 								}
 								is PlayerAbilityType.RepairShipModule -> {
 									a(href = "#") {
@@ -817,10 +916,20 @@ object GameUI {
 									}
 									br
 								}
+								is PlayerAbilityType.Recoalesce -> {
+									a(href = "#") {
+										+"Activate Recoalescence"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
+									}
+									br
+								}
 							}
 						}
 						
-						combatAbilities.forEach { ability ->
+						for (ability in combatAbilities) {
 							br
 							
 							val weaponInstance = ship.armaments.weaponInstances.getValue(ability.weapon)
@@ -913,8 +1022,8 @@ object GameUI {
 			is GamePhase.Power -> {
 				val powerAbilities = otherAbilities.filterIsInstance<PlayerAbilityType.DistributePower>().associateBy { it.ship }
 				
-				ClientAbilityData.newShipPowerModes.forEach { (shipId, _) ->
-					val powerAbility = powerAbilities[shipId] ?: return@forEach
+				for (shipId in ClientAbilityData.newShipPowerModes.keys) {
+					val powerAbility = powerAbilities[shipId] ?: continue
 					responder.useAbility(powerAbility)
 					
 					shouldWait = true

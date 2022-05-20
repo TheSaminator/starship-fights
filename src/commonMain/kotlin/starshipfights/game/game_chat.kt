@@ -37,6 +37,15 @@ sealed class ChatEntry {
 	) : ChatEntry()
 	
 	@Serializable
+	data class ShipAttackFailed(
+		val ship: Id<ShipInstance>,
+		val attacker: ShipAttacker,
+		override val sentAt: Moment,
+		val weapon: ShipWeapon?,
+		val damageIgnoreType: DamageIgnoreType,
+	) : ChatEntry()
+	
+	@Serializable
 	data class ShipDestroyed(
 		val ship: Id<ShipInstance>,
 		override val sentAt: Moment,

@@ -4,6 +4,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
+import kotlinx.html.*
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
 import kotlin.math.exp
@@ -50,4 +51,10 @@ fun <T> Iterable<T>.joinToDisplayString(oxfordComma: Boolean = true, transform: 
 	1 -> transform(single())
 	2 -> "${transform(first())} and ${transform(last())}"
 	else -> "${take(size - 1).joinToString { transform(it) }}${if (oxfordComma) "," else ""} and ${transform(last())}"
+}
+
+inline fun <T : FlowOrPhrasingContent> T.foreign(language: String, crossinline block: SPAN.() -> Unit) = span {
+	lang = language
+	style = "font-style: italic"
+	block()
 }

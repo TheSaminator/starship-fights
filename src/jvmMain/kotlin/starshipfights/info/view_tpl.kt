@@ -21,12 +21,12 @@ fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Side
 	body {
 		div { id = "bg" }
 		
-		navBar?.let {
+		navBar?.let { nb ->
 			nav(classes = "desktop") {
 				div(classes = "list") {
-					it.forEach {
+					for (ni in nb) {
 						div(classes = "item") {
-							it.displayIn(this)
+							ni.displayIn(this)
 						}
 					}
 				}
@@ -50,12 +50,12 @@ fun page(pageTitle: String? = null, navBar: List<NavItem>? = null, sidebar: Side
 				content()
 			}
 			
-			navBar?.let {
+			navBar?.let { nb ->
 				nav(classes = "mobile") {
 					div(classes = "list") {
-						it.forEach {
+						for (ni in nb) {
 							div(classes = "item") {
-								it.displayIn(this)
+								ni.displayIn(this)
 							}
 						}
 					}

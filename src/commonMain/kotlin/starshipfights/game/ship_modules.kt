@@ -48,12 +48,13 @@ sealed class ShipModule {
 enum class ShipModuleStatus(val canBeUsed: Boolean, val canBeRepaired: Boolean) {
 	INTACT(true, false),
 	DAMAGED(false, true),
-	DESTROYED(false, false)
+	DESTROYED(false, false),
+	ABSENT(false, false)
 }
 
 @Serializable(with = ShipModulesStatusSerializer::class)
 data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
-	operator fun get(module: ShipModule) = statuses[module] ?: ShipModuleStatus.INTACT
+	operator fun get(module: ShipModule) = statuses[module] ?: ShipModuleStatus.ABSENT
 	
 	fun repair(module: ShipModule) = ShipModulesStatus(
 		statuses + if (this[module].canBeRepaired)
@@ -67,6 +68,7 @@ data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 				ShipModuleStatus.INTACT -> ShipModuleStatus.DAMAGED
 				ShipModuleStatus.DAMAGED -> ShipModuleStatus.DESTROYED
 				ShipModuleStatus.DESTROYED -> ShipModuleStatus.DESTROYED
+				ShipModuleStatus.ABSENT -> ShipModuleStatus.ABSENT
 			}
 		)
 	)
@@ -77,6 +79,7 @@ data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 				ShipModuleStatus.INTACT -> ShipModuleStatus.DAMAGED
 				ShipModuleStatus.DAMAGED -> ShipModuleStatus.DESTROYED
 				ShipModuleStatus.DESTROYED -> ShipModuleStatus.DESTROYED
+				ShipModuleStatus.ABSENT -> ShipModuleStatus.ABSENT
 			}
 		}
 	)
@@ -84,7 +87,7 @@ data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 	companion object {
 		fun forShip(ship: Ship) = ShipModulesStatus(
 			mapOf(
-				ShipModule.Shields to ShipModuleStatus.INTACT,
+				ShipModule.Shields to if (ship.hasShields) ShipModuleStatus.INTACT else ShipModuleStatus.ABSENT,
 				ShipModule.Engines to ShipModuleStatus.INTACT,
 				ShipModule.Turrets to ShipModuleStatus.INTACT,
 			) + ship.armaments.weapons.keys.associate {
@@ -118,7 +121,7 @@ sealed class CritResult {
 	
 	companion object {
 		fun fromImpactResult(impactResult: ImpactResult) = when (impactResult) {
-			is ImpactResult.Damaged -> impactResult.amount?.let { HullDamaged(impactResult.ship, it) } ?: NoEffect
+			is ImpactResult.Damaged -> impactResult.damage.amount.takeIf { it > 0 }?.let { HullDamaged(impactResult.ship, it) } ?: NoEffect
 			is ImpactResult.Destroyed -> Destroyed(impactResult.ship)
 		}
 	}
@@ -128,7 +131,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 	return when (Random.nextInt(0..6) + Random.nextInt(0..6)) { // Ranges in 0..12, probability density peaks at 6
 		0 -> {
 			// Damage ALL the modules!
-			val modulesDamaged = modulesStatus.statuses.keys.filter { it !is ShipModule.Weapon }
+			val modulesDamaged = modulesStatus.statuses.filter { (k, v) -> k !is ShipModule.Weapon && v != ShipModuleStatus.ABSENT }.keys
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -152,7 +155,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		}
 		3 -> {
 			// Damage 2 random modules
-			val modulesDamaged = modulesStatus.statuses.keys.filter { it !is ShipModule.Weapon }.shuffled().take(2)
+			val modulesDamaged = modulesStatus.statuses.filter { (k, v) -> k !is ShipModule.Weapon && v != ShipModuleStatus.ABSENT }.keys.shuffled().take(2)
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -176,15 +179,21 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		}
 		6 -> {
 			// Fire!
-			CritResult.FireStarted(
-				copy(numFires = numFires + 1)
-			)
+			if (canCatchFire)
+				CritResult.FireStarted(
+					copy(numFires = numFires + 1)
+				)
+			else
+				CritResult.NoEffect
 		}
 		7 -> {
 			// Two fires!
-			CritResult.FireStarted(
-				copy(numFires = numFires + 2)
-			)
+			if (canCatchFire)
+				CritResult.FireStarted(
+					copy(numFires = numFires + 2)
+				)
+			else
+				CritResult.NoEffect
 		}
 		8 -> {
 			// Damage turrets
@@ -205,13 +214,16 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		10 -> {
 			// Damage shields
 			val moduleDamaged = ShipModule.Shields
-			CritResult.ModulesDisabled(
-				copy(
-					shieldAmount = 0,
-					modulesStatus = modulesStatus.damage(moduleDamaged)
-				),
-				setOf(moduleDamaged)
-			)
+			if (ship.hasShields)
+				CritResult.ModulesDisabled(
+					copy(
+						shieldAmount = 0,
+						modulesStatus = modulesStatus.damage(moduleDamaged)
+					),
+					setOf(moduleDamaged)
+				)
+			else
+				CritResult.NoEffect
 		}
 		11 -> {
 			// Hull breach

@@ -211,7 +211,7 @@ suspend fun ApplicationCall.newUsersPage(): HTML.() -> Unit {
 			h1 { +"New Users" }
 			div {
 				style = "text-align:center"
-				newUsers.forEach { newUser ->
+				for (newUser in newUsers) {
 					div {
 						style = "display:inline-block;width:20%;padding:2%"
 						a(href = "/user/${newUser.id}") {

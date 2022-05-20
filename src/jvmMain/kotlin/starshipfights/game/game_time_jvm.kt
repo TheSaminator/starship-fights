@@ -2,14 +2,13 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import java.time.Instant
-import kotlin.math.roundToLong
 
 @Serializable(with = MomentSerializer::class)
 actual class Moment(val instant: Instant) {
 	actual constructor(millis: Double) : this(
 		Instant.ofEpochSecond(
 			(millis / 1000.0).toLong(),
-			((millis % 1000.0) * 1_000_000.0).roundToLong()
+			((millis % 1000.0) * 1_000_000.0).toLong()
 		)
 	)
 	

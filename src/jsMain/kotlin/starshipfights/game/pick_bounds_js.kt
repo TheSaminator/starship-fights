@@ -98,6 +98,19 @@ private fun Object3D.setLocation(context: PickContext, request: PickRequest, loc
 		material.unsafeCast<MeshBasicMaterial>().color = materialColor
 }
 
+private fun Raycaster.intersectXZPlane(pickRequest: PickRequest): Position? {
+	val denominator = -ray.direction.y.toDouble()
+	if (denominator > EPSILON) {
+		val t = ray.origin.y.toDouble() / denominator
+		if (t >= 0) {
+			val worldPos = Vector3().add(ray.direction).multiplyScalar(t).add(ray.origin)
+			return pickRequest.boundary.normalize(RenderScaling.toBattlePosition(worldPos))
+		}
+	}
+	
+	return null
+}
+
 private var handleCanvasMouseMove: (MouseEvent) -> Unit = { _ -> }
 private var handleCanvasMouseDown: (MouseEvent) -> Boolean = { _ -> false }
 private var handleWindowEscapeKey: (KeyboardEvent) -> Unit = { _ -> }
@@ -142,12 +155,13 @@ data class PickContext(
 	val getGameState: () -> GameState,
 )
 
-private fun PickRequest.locate(intersections: Array<Intersection>): Position? {
-	return when (type) {
-		is PickType.Location -> intersections.firstOrNull()?.point?.let { boundary.normalize(RenderScaling.toBattlePosition(it)) }
-		else -> error("PickRequest.locate cannot be used on non-PickType.Location picks!")
+private fun Position?.toIntersectionArray(): Array<Intersection> = listOfNotNull(
+	this?.let { pos ->
+		configure<Intersection> {
+			point = RenderScaling.toWorldPosition(pos)
+		}
 	}
-}
+).toTypedArray()
 
 private fun PickRequest.verify(context: PickContext, intersections: Array<Intersection>): PickResponse? {
 	return when (type) {
@@ -191,7 +205,7 @@ private fun beginPick(context: PickContext, pickRequest: PickRequest, responseHa
 			it.name = "bound"
 		}
 		
-		pickRequest.boundary.render().forEach { shape ->
+		for (shape in pickRequest.boundary.render()) {
 			val shapeGeometry = ShapeGeometry(shape)
 			val material = MeshBasicMaterial(configure {
 				side = DoubleSide
@@ -222,11 +236,8 @@ private fun beginPick(context: PickContext, pickRequest: PickRequest, responseHa
 	
 	when (pickRequest.type) {
 		is PickType.Location -> {
-			val plane = context.threeScene.getObjectByName("plane").unsafeCast<Group>()
-			
 			raycaster.initializeFromMouse(context.threeCamera)
-			val firstIntersections = raycaster.intersectObject(plane, true)
-			val firstLocation = pickRequest.locate(firstIntersections)
+			val firstLocation = raycaster.intersectXZPlane(pickRequest)
 			
 			val pickHelperMesh = pickRequest.type.helper.generateHologram()
 			pickHelperMesh.name = "pick-helper"
@@ -244,13 +255,12 @@ private fun beginPick(context: PickContext, pickRequest: PickRequest, responseHa
 			handleCanvasMouseMove = { _ ->
 				raycaster.initializeFromMouse(context.threeCamera)
 				
-				val intersections = raycaster.intersectObject(plane, true)
-				val location = pickRequest.locate(intersections)
+				val location = raycaster.intersectXZPlane(pickRequest)
 				
 				pickHelperMesh.setLocation(context, pickRequest, location)
 				drawnLine.drawLocation(pickRequest.type.drawLineFrom, location)
 				
-				threeCanvas.style.cursor = if (pickRequest.verify(context, intersections) != null)
+				threeCanvas.style.cursor = if (pickRequest.verify(context, location.toIntersectionArray()) != null)
 					"pointer"
 				else "not-allowed"
 			}
@@ -258,13 +268,12 @@ private fun beginPick(context: PickContext, pickRequest: PickRequest, responseHa
 			handleCanvasMouseDown = { _ ->
 				raycaster.initializeFromMouse(context.threeCamera)
 				
-				val intersections = raycaster.intersectObject(plane, true)
-				val location = pickRequest.locate(intersections)
+				val location = raycaster.intersectXZPlane(pickRequest)
 				
 				pickHelperMesh.setLocation(context, pickRequest, location)
 				drawnLine.drawLocation(pickRequest.type.drawLineFrom, location)
 				
-				responseHandler(pickRequest.verify(context, intersections))
+				responseHandler(pickRequest.verify(context, location.toIntersectionArray()))
 				true
 			}
 		}

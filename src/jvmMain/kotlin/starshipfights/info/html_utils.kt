@@ -24,14 +24,13 @@ fun FORM.csrfToken(cookie: Id<UserSession>) = hiddenInput {
 }
 
 fun interface SECTIONS {
-	fun section(classes: String?, body: SECTION.() -> Unit)
-	fun section(body: SECTION.() -> Unit) = section(null, body)
+	fun section(body: SECTION.() -> Unit)
 }
 
 fun MAIN.sectioned(): SECTIONS = MainSections(this)
 
 private class MainSections(private val delegate: MAIN) : SECTIONS {
-	override fun section(classes: String?, body: SECTION.() -> Unit) {
-		delegate.section(classes, body)
+	override fun section(body: SECTION.() -> Unit) {
+		delegate.section(block = body)
 	}
 }

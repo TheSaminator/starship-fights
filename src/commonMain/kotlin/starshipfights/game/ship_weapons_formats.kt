@@ -7,6 +7,8 @@ private class ShipWeaponIdCounter {
 	private var numLances = 0
 	private var numHangars = 0
 	private var numTorpedoes = 0
+	private var numParticleClaws = 0
+	private var numLightningYarn = 0
 	
 	fun nextId(shipWeapon: ShipWeapon): Id<ShipWeapon> = Id(
 		when (shipWeapon) {
@@ -14,6 +16,8 @@ private class ShipWeaponIdCounter {
 			is ShipWeapon.Lance -> "lances-${++numLances}"
 			is ShipWeapon.Hangar -> "hangar-${++numHangars}"
 			is ShipWeapon.Torpedo -> "torpedo-${++numTorpedoes}"
+			is ShipWeapon.ParticleClawLauncher -> "particle-claw-${++numParticleClaws}"
+			is ShipWeapon.LightningYarn -> "lightning-yarn-${++numLightningYarn}"
 			else -> "super-weapon"
 		}
 	)
@@ -160,6 +164,25 @@ fun diadochiShipWeapons(
 	
 	repeat(dorsalLances) {
 		idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_FORE_270, "Dorsal lance batteries"))
+	}
+	
+	return ShipArmaments(weapons)
+}
+
+fun felinaeShipWeapons(
+	particleClaws: Map<FiringArc, Int>,
+	lightningYarn: Map<Set<FiringArc>, Int>
+): ShipArmaments {
+	val idCounter = ShipWeaponIdCounter()
+	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
+	
+	for ((arc, num) in particleClaws) {
+		idCounter.add(weapons, ShipWeapon.ParticleClawLauncher(num, setOf(arc), "${arc.displayName} particle claws"))
+	}
+	
+	for ((arcs, num) in lightningYarn) {
+		val displayName = arcs.joinToString(separator = "/") { it.displayName }
+		idCounter.add(weapons, ShipWeapon.LightningYarn(num, arcs, "$displayName lightning yarn"))
 	}
 	
 	return ShipArmaments(weapons)

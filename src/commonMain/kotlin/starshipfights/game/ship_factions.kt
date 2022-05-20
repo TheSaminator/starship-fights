@@ -9,7 +9,7 @@ enum class Faction(
 	val shortNameIsDefinite: Boolean,
 	val navyName: String,
 	val polityName: String,
-	val demonymSingular: String,
+	val adjective: String,
 	val currencyName: String,
 	val shipPrefix: String,
 	val blurbDesc: TagConsumer<*>.() -> Unit,
@@ -19,21 +19,21 @@ enum class Faction(
 		shortNameIsDefinite = false,
 		navyName = "Mechyrdian Star Fleet",
 		polityName = "Empire of Mechyrdia",
-		demonymSingular = "Mechyrdian",
+		adjective = "Mechyrdian",
 		currencyName = "thrones",
-		shipPrefix = "CMS ", // Ciarstuos Mehurdiasi Štelnau
+		shipPrefix = "CMŠ ", // Ciarstuos Mehurdiasi Štelnau
 		blurbDesc = {
 			p {
 				+"Having spent much of its history coming under threat from oppressive theocracies, conquering hordes, rebelling sectors, and invading syndicalists, the Empire of Mechyrdia now enjoys a place in the stars as the foremost power of the galaxy."
 			}
 			p {
-				+"Don't be confused by the name \"Empire\", Mechyrdia is a free and liberal democratic republic. While they once had an emperor, Nicólei the First and Only, he declared that the people of Mechyrdia would inherit the throne, thus abolishing the monarchy upon his death. Now the Empire runs on a semi-presidential democracy; the government does not have any office named \"President\", rather there is a Chancellor, the head of state who is elected by the people, and a Prime Minister, the head of government who is appointed by the Chancellor and confirmed by the tricameral Senate. "
+				+"Do not be confused by the name \"Empire\", Mechyrdia is a free and liberal democratic republic. While they once had an emperor, Nicólei the First and Only, he declared that the people of Mechyrdia would inherit the throne, thus abolishing the monarchy upon his death. Now the Empire runs on a semi-presidential democracy; the government does not have any office named \"President\", rather there is a Chancellor, the head of state who is elected by the people, and a Prime Minister, the head of government who is appointed by the Chancellor and confirmed by the tricameral Senate. "
 			}
 			p {
 				+"But things are not so ideal for Mechyrdia. The western menace, the Diadochus Masra Draetsen, threatens to upend this peaceful order and conquer Mechyrdia, to succeed where their predecessors the Arkant Horde had failed. Their new leader, Ogus Khan, has made many connections with the disgraced nations of the galaxy, and will stop at nothing to see Mechyrdia fall. Isarnareykk is making waves in its neighboring states of Theudareykk and Stahlareykk, states that are now within Mechyrdia's sphere of influence. Vestigium forces are being spotted in deep space throughout the Empire, and the Corvus Cluster sect has ended its radio silence."
 			}
 			p {
-				+"External problems aren't the only issues faced by the Empire. Mechyrdia is also having internal troubles - corruption, erosion of liberty, concentration of wealth and power into an oligarchic elite - all problems that the current Chancellor, Marc Adlerówič Basileiów, and his populist Freedom Party are trying to fix. But his solutions are not without opposition, as various sectors of the Empire: Calibor, Vescar, Texandria, among others, are waging a campaign of passive resistance against Basileiów and his populist Chancery."
+				+"External problems are not the only issues faced by the Empire. Mechyrdia is also having internal troubles - corruption, erosion of liberty, concentration of wealth and power into an oligarchic elite - all problems that the current Chancellor, Marc Adlerówič Basileiów, and his populist Freedom Party are trying to fix. But his solutions are not without opposition, as various sectors of the Empire: Calibor, Vescar, Texandria, among others, are waging a campaign of passive resistance against Basileiów and his populist Chancery."
 			}
 			p {
 				+"It is the eleventh hour for the Empire of Mechyrdia; shall they enter a new golden age, or a new dark age? Only time will tell."
@@ -45,12 +45,14 @@ enum class Faction(
 		shortNameIsDefinite = true,
 		navyName = "Dutch Marines",
 		polityName = "Dutch Outer Space Company",
-		demonymSingular = "Dutch",
+		adjective = "Dutch",
 		currencyName = "guldens",
-		shipPrefix = "NKS ", // Nederlandse Koopschip
+		shipPrefix = "NKS ", // Nederlandse Koopvaardijschip
 		blurbDesc = {
 			p {
-				+"The history of the Dutch Outer Space Company extends almost as far back as that of the American Vestigium. Founded in 2079 to provide space-colonization services to the European continent, the Dutch Outer Space Company has come into frequent conflict with the Imperial States of America."
+				+"The history of the Dutch Outer Space Company (Dutch: "
+				foreign("nl") { +"Nederlandse der Ruimte Compagnie" }
+				+") extends almost as far back as that of the American Vestigium. Founded in 2079 to provide space-colonization services to the European continent, the Dutch Outer Space Company has come into frequent conflict with the Imperial States of America."
 			}
 			p {
 				+"They survived during, and fought back against, the Drakhassi and Tylan occupations, waging a guerilla war against the oppressive regimes, as well as supplying other local humans with weapons to rebel too. In doing so, they put aside their differences with the Americans and formed a united front."
@@ -68,7 +70,7 @@ enum class Faction(
 		shortNameIsDefinite = true,
 		navyName = "Masra Draetsen Khoy'qan",
 		polityName = "Diadochus Masra Draetsen",
-		demonymSingular = "Diadochi",
+		adjective = "Diadochi",
 		currencyName = "sylaphs",
 		shipPrefix = "", // The Diadochi don't use ship prefixes
 		blurbDesc = {
@@ -83,12 +85,71 @@ enum class Faction(
 			}
 		},
 	),
+	FELINAE_FELICES(
+		shortName = "Felinae Felices",
+		shortNameIsDefinite = true,
+		navyName = "Felinae Felices",
+		polityName = "Felinae Felices",
+		adjective = "Felinae",
+		currencyName = "PoliCreds",
+		shipPrefix = "NFF ", // Navis Felinarum Felicium
+		blurbDesc = {
+			p {
+				+"The "
+				foreign("la") { +"Felinae Felices" }
+				+" (fey-LEE-nye fey-LEE-case) are quite the unusual power among the stars. Not a proper nation or state, the "
+				foreign("la") { +"Felinae" }
+				+" are an organized crime syndicate originating in the Mechyrdian sector of Olympia. They are the second most powerful mafia-like organization in the Empire, second to only their allies of convenience, the "
+				foreign("la") { +"Res Nostra" }
+				+"."
+			}
+			p {
+				+"Formerly a rival of the "
+				foreign("la") { +"Res Nostra" }
+				+", the "
+				foreign("la") { +"Felinae Felices" }
+				+" have turned their attitude 180-degrees under their new "
+				foreign("la") { +"Maxima" }
+				+", Tanaquil Cassia Pulchra. Now, the "
+				foreign("la") { +"Felinae" }
+				+" work as shipbuilders for the "
+				foreign("la") { +"Res Nostra" }
+				+" and other crime syndicates in need of starship fleets, though many are unhappy with the ships they receive, since the "
+				foreign("la") { +"Felinae" }
+				+" only build cat-themed starships."
+			}
+			p {
+				+"While the "
+				foreign("la") { +"Res Nostra" }
+				+" maintain good publicity by being charitable to poor individuals, they do not share this same attitude with competing organizations. The primary reason why they accepted the offer to ally with the "
+				foreign("la") { +"Felinae Felices" }
+				+" is because the "
+				foreign("la") { +"Felinae" }
+				+" are one of the most technologically-advanced organizations in the galaxy. "
+				foreign("la") { +"Felinae" }
+				+" ships have inertialess drives like the Vestigium, but unlike the Vestigium, the syndicate's ships can activate it anywhere, even inside the gravity wells of star systems. Advanced relativistic armor that denies more damage the faster the ship is moving, and weapons such as Particle Claws that can deal multiple critical hits in a single attack, and Lightning Yarn that ignores shields entirely, represent the peak of "
+				foreign("la") { +"Felinae" }
+				+" high technology."
+			}
+			p {
+				+"The "
+				foreign("la") { +"Felinae Felices" }
+				+" are a rather secretive organization. Knowledge of their existence is deemed a \"conspiracy theory\" by Mechyrdian society, though some can not help but notice that a significant portion of powerful women have previously underwent genetic modification to have cat-ears on their heads. Believers in the conspiracies speculate on how the syndicate gains new members: some theorize that the "
+				foreign("la") { +"Felinae" }
+				+" kidnap, gene-mod, and brainwash people into serving them. Others think that the "
+				foreign("la") { +"Felinae" }
+				+" invite prominent political figures to join them, offering great power similar to what the Freesysadmins do. No one truly knows what the origin or purpose of the "
+				foreign("la") { +"Felinae Felices" }
+				+" is. The only thing that is known for certain, is that their cat-themed starships are making more and more frequent appearances throughout deep space."
+			}
+		},
+	),
 	ISARNAREYKK(
 		shortName = "Isarnareykk",
 		shortNameIsDefinite = false,
 		navyName = "Isarnareyksk Styurnamariyn",
 		polityName = "Isarnareyksk Federation",
-		demonymSingular = "Isarnareyksk",
+		adjective = "Isarnareyksk",
 		currencyName = "marks",
 		shipPrefix = "ISS ", // Isarnareyksk Styurnamariyn nu Skyf
 		blurbDesc = {
@@ -114,7 +175,7 @@ enum class Faction(
 		shortNameIsDefinite = true,
 		navyName = "Imperial States Space Force",
 		polityName = "Imperial States of America",
-		demonymSingular = "American",
+		adjective = "American",
 		currencyName = "dollars",
 		shipPrefix = "ASC ", // American Space Craft
 		blurbDesc = {
@@ -151,6 +212,7 @@ val Faction.meshTag: String
 		Faction.MECHYRDIA -> "mechyrdia"
 		Faction.NDRC -> "ndrc"
 		Faction.MASRA_DRAETSEN -> "diadochi"
+		Faction.FELINAE_FELICES -> "felinae"
 		Faction.ISARNAREYKK -> "fulkreykk"
 		Faction.VESTIGIUM -> "usa"
 	}
