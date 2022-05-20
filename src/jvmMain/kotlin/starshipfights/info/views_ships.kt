@@ -13,10 +13,10 @@ private val shipsPageSidebar: PageNavSidebar
 		}
 	)
 
-suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Game Manual", standardNavBar(), shipsPageSidebar) {
+suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Strategema Nauticum", standardNavBar(), shipsPageSidebar) {
 	section {
 		h1 {
-			foreign("la") { +"Stratagema Nauticum" }
+			foreign("la") { +"Strategema Nauticum" }
 		}
 		p {
 			+"Here you will find an index of all ship classes in Starship Fights, with links to pages that show ship stats and appearances."
