@@ -5,7 +5,7 @@ import kotlin.random.Random
 enum class AdmiralNameFlavor {
 	MECHYRDIA, TYLA, CALIBOR, OLYMPIA, // Mechyrdia-aligned
 	DUTCH, // NdRC-aliged
-	DIADOCHI, // Masra Draetsen-aligned
+	NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI, // Masra Draetsen-aligned
 	FULKREYKK, // Isarnareykk-aligned
 	AMERICAN, HISPANIC_AMERICAN; // Vestigium-aligned
 	
@@ -16,7 +16,8 @@ enum class AdmiralNameFlavor {
 			CALIBOR -> "Caliborese"
 			OLYMPIA -> "Olympian"
 			DUTCH -> "Dutch"
-			DIADOCHI -> "Diadochi"
+			NORTHERN_DIADOCHI -> "Northern Diadochi"
+			SOUTHERN_DIADOCHI -> "Southern Diadochi"
 			FULKREYKK -> "Thedish"
 			AMERICAN -> "American"
 			HISPANIC_AMERICAN -> "Hispanic-American"
@@ -465,7 +466,15 @@ object AdmiralNames {
 		"Jimpaq",
 		"Bivat",
 		"Durash",
-		"Elifas"
+		"Elifas",
+		"Ogus",
+		"Yuli",
+		"Saret",
+		"Mher",
+		"Tyver",
+		"Ghraq",
+		"Niran",
+		"Galik"
 	)
 	
 	private val diadochiFemaleNames = listOf(
@@ -484,9 +493,10 @@ object AdmiralNames {
 		"Althani",
 		"Tzyrina",
 		"Daghasi",
+		"Kloya",
 	)
 	
-	private val diadochiEpithetParts = listOf(
+	private val northernDiadochiEpithetParts = listOf(
 		"Skull",
 		"Blood",
 		"Death",
@@ -511,7 +521,44 @@ object AdmiralNames {
 		"Talon",
 	)
 	
-	private fun randomDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + diadochiEpithetParts.random() + diadochiEpithetParts.random().lowercase()
+	private fun randomNorthernDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + " " + northernDiadochiEpithetParts.random() + northernDiadochiEpithetParts.random().lowercase()
+	
+	private val southernDiadochiClans = listOf(
+		"Arkai",
+		"Avado",
+		"Djahhim",
+		"Khankhen",
+		"Porok",
+		"Miras",
+		"Terok",
+		"Empok",
+		"Noragh",
+		"Nuunian",
+		"Soung",
+		"Akhero",
+		"Qozaq",
+		"Kherus",
+		"Axina",
+		"Ghaizas",
+		"Saxha",
+		"Meshu",
+		"Khopesh",
+		"Qitemar",
+		"Vang",
+		"Lugal",
+		"Galla",
+		"Hheka",
+		"Nesut",
+		"Koquon",
+		"Molekh"
+	)
+	
+	private fun randomSouthernDiadochiClan() = when {
+		Random.nextInt(5) == 0 -> southernDiadochiClans.random() + "-" + southernDiadochiClans.random()
+		else -> southernDiadochiClans.random()
+	}
+	
+	private fun randomSouthernDiadochiName(isFemale: Boolean) = (if (isFemale) diadochiFemaleNames else diadochiMaleNames).random() + (if (isFemale && Random.nextBoolean()) " ka-" else " am-") + diadochiMaleNames.random() + " " + randomSouthernDiadochiClan()
 	
 	private val thedishMaleNames = listOf(
 		"Praethoris",
@@ -751,7 +798,8 @@ object AdmiralNames {
 		AdmiralNameFlavor.CALIBOR -> randomCaliboreseName(isFemale)
 		AdmiralNameFlavor.OLYMPIA -> randomLatinName(isFemale)
 		AdmiralNameFlavor.DUTCH -> randomDutchName(isFemale)
-		AdmiralNameFlavor.DIADOCHI -> randomDiadochiName(isFemale)
+		AdmiralNameFlavor.NORTHERN_DIADOCHI -> randomNorthernDiadochiName(isFemale)
+		AdmiralNameFlavor.SOUTHERN_DIADOCHI -> randomSouthernDiadochiName(isFemale)
 		AdmiralNameFlavor.FULKREYKK -> randomThedishName(isFemale)
 		AdmiralNameFlavor.AMERICAN -> randomAmericanName(isFemale)
 		AdmiralNameFlavor.HISPANIC_AMERICAN -> randomHispanicName(isFemale)
