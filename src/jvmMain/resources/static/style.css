@@ -87,6 +87,8 @@ aside.mobile img {
 		--h1-size: 2.6em;
 		--h2-size: 2.2em;
 		--h3-size: 1.8em;
+
+		background-color: #fdfde6;
 	}
 
 	div#bg {
@@ -98,10 +100,13 @@ aside.mobile img {
 		top: 0;
 		left: 0;
 
-		background-image: url("/static/images/background.jpg");
+		background-image: url("/static/images/background.svg");
 		background-attachment: fixed;
+		background-repeat: no-repeat;
 		background-position: center;
-		background-size: cover;
+		background-size: contain;
+
+		filter: blur(8px);
 
 		z-index: 0;
 	}
