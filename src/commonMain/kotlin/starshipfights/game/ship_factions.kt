@@ -116,7 +116,7 @@ enum class Faction(
 				foreign("la") { +"Res Nostra" }
 				+" and other crime syndicates in need of starship fleets, though many are unhappy with the ships they receive, since the "
 				foreign("la") { +"Felinae" }
-				+" only build cat-themed starships."
+				+" only build cat-themed starships with very little in the way of customizability."
 			}
 			p {
 				+"While the "
@@ -134,11 +134,11 @@ enum class Faction(
 			p {
 				+"The "
 				foreign("la") { +"Felinae Felices" }
-				+" are a rather secretive organization. Knowledge of their existence is deemed a \"conspiracy theory\" by Mechyrdian society, though some can not help but notice that a significant portion of powerful women have previously underwent genetic modification to have cat-ears on their heads. Believers in the conspiracies speculate on how the syndicate gains new members: some theorize that the "
+				+" are a rather secretive organization. The people who observe them, whether they be high-ranking members of anti-mafia organizations or obsessive conspiracy theorists, speculate on how the syndicate gains new members: some believe that the "
 				foreign("la") { +"Felinae" }
 				+" kidnap, gene-mod, and brainwash people into serving them. Others think that the "
 				foreign("la") { +"Felinae" }
-				+" invite prominent political figures to join them, offering great power similar to what the Freesysadmins do. No one truly knows what the origin or purpose of the "
+				+" invite prominent political figures to join them, offering great power similar to what the Freesysadmins do. No one truly knows what the origin or grand goal of the "
 				foreign("la") { +"Felinae Felices" }
 				+" is. The only thing that is known for certain, is that their cat-themed starships are making more and more frequent appearances throughout deep space."
 			}
