@@ -12,6 +12,7 @@ import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
+import io.ktor.util.*
 import io.ktor.websocket.*
 import org.slf4j.event.Level
 import starshipfights.auth.AuthProvider
@@ -24,6 +25,8 @@ import java.util.concurrent.atomic.AtomicLong
 
 object ResourceLoader {
 	fun getResource(resource: String): InputStream? = javaClass.getResourceAsStream(resource)
+	
+	val SHA256AttributeKey = AttributeKey<String>("SHA256Hash")
 }
 
 fun main() {
@@ -52,6 +55,14 @@ fun main() {
 			
 			format { call ->
 				"Call #${call.callId} Client ${call.request.origin.remoteHost} `${call.request.userAgent()}` Request ${call.request.httpMethod.value} ${call.request.uri} Response ${call.response.status()}"
+			}
+		}
+		
+		install(ConditionalHeaders) {
+			version { outgoingContent ->
+				outgoingContent.getProperty(ResourceLoader.SHA256AttributeKey)?.let { hash ->
+					listOf(EntityTagVersion(hash))
+				}.orEmpty()
 			}
 		}
 		
@@ -111,6 +122,10 @@ fun main() {
 					val staticContentPath = call.parameters.getAll("static-content")?.joinToString("/") ?: return@get
 					val contentPath = "/static/$staticContentPath"
 					
+					val hashContentPath = "$contentPath.sha256"
+					val sha256Hash = ResourceLoader.getResource(hashContentPath)?.reader()?.readText()
+					val configureContent: OutgoingContent.() -> Unit = { setProperty(ResourceLoader.SHA256AttributeKey, sha256Hash) }
+					
 					val brContentPath = "$contentPath.br"
 					val gzContentPath = "$contentPath.gz"
 					
@@ -125,7 +140,7 @@ fun main() {
 							
 							call.response.header(HttpHeaders.ContentEncoding, CompressedFileType.BROTLI.encoding)
 							
-							call.respondBytes(brContent.readBytes(), contentType)
+							call.respondBytes(brContent.readBytes(), contentType, configure = configureContent)
 							
 							return@get
 						}
@@ -138,13 +153,13 @@ fun main() {
 							
 							call.response.header(HttpHeaders.ContentEncoding, CompressedFileType.GZIP.encoding)
 							
-							call.respondBytes(gzContent.readBytes(), contentType)
+							call.respondBytes(gzContent.readBytes(), contentType, configure = configureContent)
 							
 							return@get
 						}
 					}
 					
-					ResourceLoader.getResource(contentPath)?.let { call.respondBytes(it.readBytes(), contentType) }
+					ResourceLoader.getResource(contentPath)?.let { call.respondBytes(it.readBytes(), contentType, configure = configureContent) }
 				}
 			}
 		}

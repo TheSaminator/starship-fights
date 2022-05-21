@@ -1,7 +1,8 @@
 import com.nixxcode.jvmbrotli.common.BrotliLoader
 import com.nixxcode.jvmbrotli.enc.BrotliOutputStream
 import com.nixxcode.jvmbrotli.enc.Encoder
-
+import java.security.MessageDigest
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.zip.GZIPOutputStream
@@ -119,13 +120,21 @@ tasks.named<Copy>("jvmProcessResources") {
 	
 	doLast {
 		val pool = Executors.newWorkStealingPool()
+		
 		val encoderParams = if (BrotliLoader.isBrotliAvailable()) Encoder.Parameters().setQuality(8) else null
-		val resourceTree = fileTree(mapOf("dir" to outputs.files.asPath + "/static/", "exclude" to listOf("*.gz", "*.br")))
+		val base64 = Base64.getUrlEncoder()
+		val hashDigest = ThreadLocal.withInitial { MessageDigest.getInstance("SHA-256") }
+		
+		val resourceTree = fileTree(mapOf("dir" to outputs.files.asPath + "/static/", "exclude" to listOf("*.gz", "*.br", "*.sha256")))
 		val countDownLatch = CountDownLatch(resourceTree.count())
 		
 		for (file in resourceTree) {
 			pool.execute {
 				val bytes = file.readBytes()
+				val hashFile = File("${file.absolutePath}.sha256").bufferedWriter()
+				hashFile.write(base64.encodeToString(hashDigest.get().digest(bytes)).trimEnd('='))
+				hashFile.close()
+				
 				val result = File("${file.absolutePath}.gz").outputStream()
 				val gzipStream = GZIPOutputStream(result)
 				gzipStream.write(bytes)
