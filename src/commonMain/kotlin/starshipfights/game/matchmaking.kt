@@ -21,7 +21,7 @@ enum class BattleBackground(val displayName: String, val color: String) {
 	GRAYBLUE_GRAYBROWN("Fulkreyksk Bloc", "#445566"),
 	MAGENTA_PURPLE("Aedon Vortex", "#773355"),
 	ORANGE_ORANGE("Solar Flare", "#775533"),
-	PURPLE_MAGENTA("Shroud Rift", "#663366"),
+	PURPLE_MAGENTA("Veil Rift", "#663366"),
 }
 
 @Serializable
