@@ -22,9 +22,9 @@ suspend fun Id<UserSession>.resolve(userAgent: String) = UserSession.get(this)?.
 
 fun newExpiration(): Instant = Instant.now().plus(2, ChronoUnit.HOURS)
 
-suspend fun UserSession.renewed(clientAddress: String) = copy(
+suspend fun UserSession.renewed(clientAddress: String, userData: User) = copy(
 	expiration = newExpiration(),
-	clientAddresses = if (User.get(user)?.logIpAddresses != true)
+	clientAddresses = if (!userData.logIpAddresses)
 		emptyList()
 	else if (clientAddresses.lastOrNull() != clientAddress)
 		clientAddresses + clientAddress
@@ -42,11 +42,10 @@ suspend fun ApplicationCall.getUserSession() = getUserAndSession().first
 
 suspend fun ApplicationCall.getUser() = getUserAndSession().second
 
-suspend fun ApplicationCall.getUserAndSession() = request.pipeline.attributes.getOrNull(UserAndSessionAttribute)
+suspend fun ApplicationCall.getUserAndSession() = attributes.getOrNull(UserAndSessionAttribute)
 	?: request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }
-		?.renewed(request.origin.remoteHost)
-		?.let { it to User.get(it.user)?.updated() }
-		?.also { request.pipeline.attributes.put(UserAndSessionAttribute, it) }
+		?.let { sess -> User.get(sess.user)?.let { user -> sess.renewed(request.origin.remoteHost, user) to user.updated() } }
+		?.also { attributes.put(UserAndSessionAttribute, it) }
 	?: (null to null)
 
 object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
