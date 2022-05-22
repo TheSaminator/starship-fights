@@ -36,11 +36,18 @@ suspend fun User.updated() = copy(
 	lastActivity = Instant.now()
 ).also { User.put(it) }
 
-suspend fun ApplicationCall.getUserSession() = request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }?.renewed(request.origin.remoteHost)
+val UserAndSessionAttribute = AttributeKey<Pair<UserSession?, User?>>("SfUserAndSession")
 
-suspend fun ApplicationCall.getUser() = getUserSession()?.user?.let { User.get(it) }?.updated()
+suspend fun ApplicationCall.getUserSession() = getUserAndSession().first
 
-suspend fun ApplicationCall.getUserAndSession() = getUserSession()?.let { it to User.get(it.user)?.updated() } ?: (null to null)
+suspend fun ApplicationCall.getUser() = getUserAndSession().second
+
+suspend fun ApplicationCall.getUserAndSession() = request.pipeline.attributes.getOrNull(UserAndSessionAttribute)
+	?: request.userAgent()?.let { sessions.get<Id<UserSession>>()?.resolve(it) }
+		?.renewed(request.origin.remoteHost)
+		?.let { it to User.get(it.user)?.updated() }
+		?.also { request.pipeline.attributes.put(UserAndSessionAttribute, it) }
+	?: (null to null)
 
 object UserSessionIdSerializer : SessionSerializer<Id<UserSession>> {
 	override fun serialize(session: Id<UserSession>): String {

@@ -10,11 +10,256 @@ html {
 	--h1-size: 1.6em;
 	--h2-size: 1.4em;
 	--h3-size: 1.2em;
+
+	/***************
+	* color params *
+	***************/
+
+	--selection-fg: #eee;
+	--selection-bg: rgba(51, 102, 204, 0.6);
+
+	--h1-border: #888;
+	--h1-shadow: #444;
+	--h1-backgr: #aaa;
+
+	--h2-border: #666;
+
+	--h3-unline: #888;
+
+	--list-a-fg: #369;
+	--list-a-h-fg: #fff;
+	--list-a-h-bg: #69c;
+
+	--a-fg: #36c;
+	--a-v-fg: #63c;
+
+	--tbl-border: #036;
+	--tbl-backgr: #eee;
+
+	--input-bg: #bbb;
+	--input-ul: #222;
+	--input-fg: #024;
+	--input-f-bg: #777;
+
+	--err-bg: #e77;
+	--err-fg: #422;
+	--err-ul: #211;
+
+	--btn-fg: #bdf;
+	--btn-bg: #06c;
+	--btn-h-bg: #05a;
+	--btn-a-bg: #048;
+
+	--evil-btn-fg: #fcc;
+	--evil-btn-bg: #c33;
+	--evil-btn-h-bg: #a22;
+	--evil-btn-a-bg: #811;
+
+	--btn-na-bg: #444;
+	--btn-na-fg: #bbb;
+
+	--iframe-border: #036;
+
+	/*************
+	* url params *
+	*************/
+
+	--panel: url("/static/images/panel.svg");
+	--bgimg: url("/static/images/background.jpg");
+	--extln: url("/static/images/external-link.svg");
+}
+
+html[data-theme="dark"] {
+	color: #ddd;
+	background-color: #555;
+
+	/***************
+	* color params *
+	***************/
+
+	--selection-fg: #111;
+	--selection-bg: rgba(102, 153, 255, 0.9);
+
+	--h1-border: #333;
+	--h1-shadow: #bbb;
+	--h1-backgr: #111;
+
+	--h2-border: #999;
+
+	--h3-unline: #777;
+
+	--list-a-fg: #9cf;
+	--list-a-h-fg: #333;
+	--list-a-h-bg: #9cf;
+
+	--a-fg: #69f;
+	--a-v-fg: #96f;
+
+	--tbl-border: #9cf;
+	--tbl-backgr: #111;
+
+	--input-bg: #444;
+	--input-ul: #ddd;
+	--input-fg: #bdf;
+	--input-f-bg: #888;
+
+	--err-bg: #844;
+	--err-fg: #fcc;
+	--err-ul: #422;
+
+	--btn-fg: #024;
+	--btn-bg: #39f;
+	--btn-h-bg: #7bf;
+	--btn-a-bg: #bdf;
+
+	--evil-btn-fg: #411;
+	--evil-btn-bg: #d33;
+	--evil-btn-h-bg: #e66;
+	--evil-btn-a-bg: #f99;
+
+	--btn-na-bg: #bbb;
+	--btn-na-fg: #444;
+
+	--iframe-border: #9cf;
+
+	/*************
+	* url params *
+	*************/
+
+	--panel: url("/static/images/panel-dark.svg");
+	--bgimg: url("/static/images/background-dark.jpg");
+	--extln: url("/static/images/external-link-dark.svg");
+}
+
+@media only screen and (prefers-color-scheme: dark) {
+	html[data-theme="light"] {
+		color: #222;
+		background-color: #aaa;
+
+		/***************
+		* color params *
+		***************/
+
+		--selection-fg: #eee;
+		--selection-bg: rgba(51, 102, 204, 0.6);
+
+		--h1-border: #888;
+		--h1-shadow: #444;
+		--h1-backgr: #aaa;
+
+		--h2-border: #666;
+
+		--h3-unline: #888;
+
+		--list-a-fg: #369;
+		--list-a-h-fg: #fff;
+		--list-a-h-bg: #69c;
+
+		--a-fg: #36c;
+		--a-v-fg: #63c;
+
+		--tbl-border: #036;
+		--tbl-backgr: #eee;
+
+		--input-bg: #bbb;
+		--input-ul: #222;
+		--input-fg: #024;
+		--input-f-bg: #777;
+
+		--err-bg: #e77;
+		--err-fg: #422;
+		--err-ul: #211;
+
+		--btn-fg: #bdf;
+		--btn-bg: #06c;
+		--btn-h-bg: #05a;
+		--btn-a-bg: #048;
+
+		--evil-btn-fg: #fcc;
+		--evil-btn-bg: #c33;
+		--evil-btn-h-bg: #a22;
+		--evil-btn-a-bg: #811;
+
+		--btn-na-bg: #444;
+		--btn-na-fg: #bbb;
+
+		--iframe-border: #036;
+
+		/*************
+		* url params *
+		*************/
+
+		--panel: url("/static/images/panel.svg");
+		--bgimg: url("/static/images/background.jpg");
+		--extln: url("/static/images/external-link.svg");
+	}
+
+	html {
+		color: #ddd;
+		background-color: #555;
+
+		/***************
+		* color params *
+		***************/
+
+		--selection-fg: #111;
+		--selection-bg: rgba(102, 153, 255, 0.9);
+
+		--h1-border: #333;
+		--h1-shadow: #bbb;
+		--h1-backgr: #111;
+
+		--h2-border: #999;
+
+		--h3-unline: #777;
+
+		--list-a-fg: #9cf;
+		--list-a-h-fg: #333;
+		--list-a-h-bg: #9cf;
+
+		--a-fg: #69f;
+		--a-v-fg: #96f;
+
+		--tbl-border: #9cf;
+		--tbl-backgr: #111;
+
+		--input-bg: #444;
+		--input-ul: #ddd;
+		--input-fg: #bdf;
+		--input-f-bg: #888;
+
+		--err-bg: #844;
+		--err-fg: #fcc;
+		--err-ul: #422;
+
+		--btn-fg: #024;
+		--btn-bg: #39f;
+		--btn-h-bg: #5af;
+		--btn-a-bg: #7bf;
+
+		--evil-btn-fg: #411;
+		--evil-btn-bg: #d33;
+		--evil-btn-h-bg: #e66;
+		--evil-btn-a-bg: #f99;
+
+		--btn-na-bg: #bbb;
+		--btn-na-fg: #444;
+
+		--iframe-border: #9cf;
+
+		/*************
+		* url params *
+		*************/
+
+		--panel: url("/static/images/panel-dark.svg");
+		--bgimg: url("/static/images/background-dark.jpg");
+		--extln: url("/static/images/external-link-dark.svg");
+	}
 }
 
 ::selection {
-	background-color: rgb(51, 102, 204, 0.6);
-	color: #eee;
+	background-color: var(--selection-bg);
+	color: var(--selection-fg);
 }
 
 div#bg {
@@ -31,25 +276,25 @@ h1, h2 {
 }
 
 h1 {
-	border: 0.1875rem solid #888;
-	box-shadow: inset 0 0 0 0.25rem #444;
+	border: 0.1875rem solid var(--h1-border);
+	box-shadow: inset 0 0 0 0.25rem var(--h1-shadow);
 	padding: 0.3125rem;
 
-	background-color: #aaa;
+	background-color: var(--h1-backgr);
 	font-variant: small-caps;
 	font-size: var(--h1-size);
 	font-weight: 800;
 }
 
 h2 {
-	border-bottom: 0.125rem solid #666;
+	border-bottom: 0.125rem solid var(--h2-border);
 	font-size: var(--h2-size);
 	font-weight: 600;
 }
 
 h3 {
 	text-decoration: underline;
-	text-decoration-color: #888;
+	text-decoration-color: var(--h3-unline);
 	font-size: var(--h3-size);
 	font-weight: 400;
 }
@@ -60,7 +305,7 @@ h3 {
 
 /*noinspection CssOverwrittenProperties*/
 main > section, main > nav.mobile, main > aside.mobile {
-	border-image-source: url("/static/images/panel.svg");
+	border-image-source: var(--panel);
 	border-image-slice: 40% fill;
 	border-image-width: 1em;
 	border-width: 1em;
@@ -98,7 +343,7 @@ aside.mobile img {
 		top: 0;
 		left: 0;
 
-		background-image: url("/static/images/background.jpg");
+		background-image: var(--bgimg);
 		background-attachment: fixed;
 		background-position: center;
 		background-size: cover;
@@ -112,7 +357,7 @@ aside.mobile img {
 
 	/*noinspection CssOverwrittenProperties*/
 	main > section, nav.desktop, aside.desktop {
-		border-image-source: url("/static/images/panel.svg");
+		border-image-source: var(--panel);
 		border-image-slice: 40% fill;
 		border-image-width: 2em;
 		border-width: 2em;
@@ -210,26 +455,26 @@ div.list > div.item > a {
 	text-align: center;
 
 	border-radius: 0.3em;
-	color: #369;
+	color: var(--list-a-fg);
 	text-decoration: none;
 }
 
 div.list > div.item > a:visited {
-	color: #369;
+	color: var(--list-a-fg);
 }
 
 div.list > div.item > a:hover {
-	color: #fff;
-	background-color: #69c;
+	color: var(--list-a-h-fg);
+	background-color: var(--list-a-h-bg);
 }
 
 a {
-	color: #36c;
+	color: var(--a-fg);
 	text-decoration: none;
 }
 
 a:visited {
-	color: #63c;
+	color: var(--a-v-fg);
 }
 
 a:hover {
@@ -237,15 +482,14 @@ a:hover {
 }
 
 a[href^="http://"]::after, a[href^="https://"]::after {
-	content: url(/static/images/external-link.svg);
+	content: var(--extln);
 	height: 1em;
 }
 
 table {
 	table-layout: fixed;
 	border-collapse: collapse;
-	border: 0.125rem solid #036;
-	background-color: #ccc;
+	border: 0.125rem solid var(--tbl-border);
 
 	width: 100%;
 }
@@ -261,8 +505,8 @@ table + table tr:first-child th {
 }
 
 td {
-	border: 0.125rem solid #036;
-	background-color: #eee;
+	border: 0.125rem solid var(--tbl-border);
+	background-color: var(--tbl-backgr);
 	font-size: 0.7em;
 	padding: 0.15em 0;
 
@@ -271,8 +515,8 @@ td {
 }
 
 th {
-	border: 0.125rem solid #036;
-	background-color: #036;
+	border: 0.125rem solid var(--tbl-border);
+	background-color: var(--tbl-border);
 	padding: 0.15em 0;
 
 	text-align: center;
@@ -282,7 +526,7 @@ th {
 	font-size: 0.8em;
 	font-variant: small-caps;
 	font-weight: 700;
-	color: #eee;
+	color: var(--tbl-backgr);
 }
 
 input[type=text],
@@ -290,11 +534,11 @@ input[type=password],
 input[type=email],
 textarea {
 	box-sizing: border-box;
-	background-color: #aaa;
+	background-color: var(--input-bg);
 	border: none;
-	border-bottom: 0.1em solid #222;
+	border-bottom: 0.1em solid var(--input-ul);
 
-	color: #024;
+	color: var(--input-fg);
 	font-size: 1.5em;
 
 	width: 100%;
@@ -310,23 +554,23 @@ input[type=password]:focus,
 input[type=email]:focus,
 textarea:focus {
 	outline: none;
-	background-color: #888;
+	background-color: var(--input-f-bg);
 }
 
 input[type=text]:invalid,
 input[type=password]:invalid,
 input[type=email]:invalid,
 textarea:invalid {
-	color: #422;
-	background-color: #e77;
-	border-bottom-color: #211;
+	color: var(--err-fg);
+	background-color: var(--err-bg);
+	border-bottom-color: var(--err-ul);
 }
 
 input[type=submit] {
-	background-color: #06c;
+	background-color: var(--btn-bg);
 	border: none;
 	border-radius: 0.3em;
-	color: #bdf;
+	color: var(--btn-fg);
 	cursor: pointer;
 	display: block;
 
@@ -336,18 +580,18 @@ input[type=submit] {
 }
 
 input[type=submit]:hover {
-	background-color: #05a;
+	background-color: var(--btn-h-bg);
 }
 
 input[type=submit]:active {
-	background-color: #048;
+	background-color: var(--btn-a-bg);
 }
 
 input[type=submit].evil {
-	background-color: #c33;
+	background-color: var(--evil-btn-bg);
 	border: none;
 	border-radius: 0.3em;
-	color: #fcc;
+	color: var(--evil-btn-fg);
 	cursor: pointer;
 	display: block;
 
@@ -357,19 +601,20 @@ input[type=submit].evil {
 }
 
 input[type=submit].evil:hover {
-	background-color: #a22;
+	background-color: var(--evil-btn-h-bg);
 }
 
 input[type=submit].evil:active {
-	background-color: #811;
+	background-color: var(--evil-btn-a-bg);
 }
 
 input[type=submit]:disabled,
 input[type=submit].evil:disabled {
-	background-color: #444;
+	background-color: var(--btn-na-bg);
+	color: var(--btn-na-fg);
 	cursor: not-allowed;
 }
 
 iframe {
-	border-color: #036;
+	border-color: var(--iframe-border);
 }

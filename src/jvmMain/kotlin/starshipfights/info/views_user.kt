@@ -176,6 +176,41 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 					+currentUser.profileBio
 				}
 				h3 {
+					+"Display Theme"
+				}
+				label {
+					radioInput(name = "theme") {
+						id = "system-theme"
+						value = "system"
+						required = true
+						checked = currentUser.preferredTheme == PreferredTheme.SYSTEM
+					}
+					+Entities.nbsp
+					+"System Choice"
+				}
+				br
+				label {
+					radioInput(name = "theme") {
+						id = "light-theme"
+						value = "light"
+						required = true
+						checked = currentUser.preferredTheme == PreferredTheme.LIGHT
+					}
+					+Entities.nbsp
+					+"Light Theme"
+				}
+				br
+				label {
+					radioInput(name = "theme") {
+						id = "dark-theme"
+						value = "dark"
+						required = true
+						checked = currentUser.preferredTheme == PreferredTheme.DARK
+					}
+					+Entities.nbsp
+					+"Dark Theme"
+				}
+				h3 {
 					+"Privacy Settings"
 				}
 				label {
@@ -221,6 +256,9 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				submitInput {
 					value = "Accept Changes"
 				}
+			}
+			script {
+				unsafe { +"window.sfThemeChoice = true;" }
 			}
 		}
 		section {

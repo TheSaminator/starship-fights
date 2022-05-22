@@ -24,6 +24,8 @@ data class User(
 	val profileName: String,
 	val profileBio: String,
 	
+	val preferredTheme: PreferredTheme = PreferredTheme.SYSTEM,
+	
 	val registeredAt: @Contextual Instant,
 	val lastActivity: @Contextual Instant,
 	val showUserStatus: Boolean,
@@ -44,6 +46,10 @@ data class User(
 		unique(User::discordId)
 		index(User::registeredAt)
 	})
+}
+
+enum class PreferredTheme {
+	SYSTEM, LIGHT, DARK;
 }
 
 enum class UserStatus {

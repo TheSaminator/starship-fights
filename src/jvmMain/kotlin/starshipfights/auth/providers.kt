@@ -25,6 +25,7 @@ import starshipfights.CurrentConfiguration
 import starshipfights.DiscordLogin
 import starshipfights.data.Id
 import starshipfights.data.admiralty.*
+import starshipfights.data.auth.PreferredTheme
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.data.createNonce
@@ -112,7 +113,8 @@ interface AuthProvider {
 						showUserStatus = form["showstatus"] == "yes",
 						logIpAddresses = form["logaddress"] == "yes",
 						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters")),
-						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters"))
+						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters")),
+						preferredTheme = form["theme"]?.uppercase()?.takeIf { it in PreferredTheme.values().map { it.name } }?.let { PreferredTheme.valueOf(it) } ?: currentUser.preferredTheme
 					)
 					User.put(newUser)
 					
@@ -445,7 +447,7 @@ object TestAuthProvider : AuthProvider {
 				if (call.getUserSession() != null)
 					redirect("/me")
 				
-				call.respondHtml(HttpStatusCode.OK, page("Authentication Test", call.standardNavBar(), CustomSidebar {
+				call.respondHtml(HttpStatusCode.OK, call.page("Authentication Test", call.standardNavBar(), CustomSidebar {
 					p {
 						+"This instance does not have Discord OAuth login set up. As a fallback, this authentication mode is used for testing only."
 					}
@@ -529,7 +531,7 @@ class ProductionAuthProvider(private val discordLogin: DiscordLogin) : AuthProvi
 	override fun installRouting(conf: Routing) {
 		with(conf) {
 			get("/login") {
-				call.respondHtml(HttpStatusCode.OK, page("Login with Discord", call.standardNavBar()) {
+				call.respondHtml(HttpStatusCode.OK, call.page("Login with Discord", call.standardNavBar()) {
 					section {
 						p {
 							style = "text-align:center"

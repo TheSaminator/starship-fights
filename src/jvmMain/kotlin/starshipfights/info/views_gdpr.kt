@@ -76,6 +76,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 		appendLine("Profile bio: \"\"\"")
 		appendLine(user.profileBio)
 		appendLine("\"\"\"")
+		appendLine("Display theme: ${user.preferredTheme}")
 		appendLine("")
 		appendLine("## Activity data")
 		appendLine("Registered at: ${user.registeredAt}")

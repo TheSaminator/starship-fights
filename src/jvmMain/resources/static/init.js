@@ -118,9 +118,9 @@
 		if (!window.sfFactionSelect) return;
 
 		const factionInputs = document.getElementsByName("faction");
+		const sexInputs = document.getElementsByName("sex");
 		for (const factionInput of factionInputs) {
 			factionInput.addEventListener("click", () => {
-				const sexInputs = document.getElementsByName("sex");
 				if (factionInput.hasAttribute("data-force-gender")) {
 					const forceGender = factionInput.getAttribute("data-force-gender");
 					for (const sexInput of sexInputs) {
@@ -214,6 +214,19 @@
 				document.body.append(form);
 				form.submit();
 			};
+		}
+	});
+
+	window.addEventListener("load", function () {
+		// Generate random admiral names
+		if (!window.sfThemeChoice) return;
+
+		const themeChoices = document.getElementsByName("theme");
+		for (let themeChoice of themeChoices) {
+			const theme = themeChoice.value;
+			themeChoice.addEventListener("click", () => {
+				document.documentElement.setAttribute("data-theme", theme);
+			});
 		}
 	});
 })();
