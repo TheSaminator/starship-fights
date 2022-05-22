@@ -75,7 +75,11 @@ interface AuthProvider {
 				session<Id<UserSession>>("session") {
 					validate { id ->
 						val userAgent = request.userAgent() ?: return@validate null
-						id.resolve(userAgent)?.renewed(request.origin.remoteHost)
+						id.resolve(userAgent)?.let { sess ->
+							User.get(sess.user)?.let { user ->
+								sess.renewed(request.origin.remoteHost, user)
+							}
+						}
 					}
 					challenge("/login")
 				}
