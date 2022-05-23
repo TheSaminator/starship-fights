@@ -2,5 +2,5 @@
 
 screen -S starshipfights -X quit
 git pull
-gradle shadowJar
-screen -dmS starshipfights gradle runShadow
+/opt/gradle/gradle-7.1/bin/gradle shadowJar
+screen -dmS starshipfights /opt/gradle/gradle-7.1/bin/gradle runShadow
