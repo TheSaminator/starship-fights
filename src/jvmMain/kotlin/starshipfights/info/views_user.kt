@@ -178,6 +178,9 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 				h3 {
 					+"Display Theme"
 				}
+				p {
+					+"Clicking one of the options here will preview the selected theme. It is still necessary to click Accept Changes to keep your choice of theme."
+				}
 				label {
 					radioInput(name = "theme") {
 						id = "system-theme"
