@@ -154,3 +154,8 @@ gradle-app.setting
 logs/
 mongodb/
 config.json
+
+### Hosting server-side
+.bash_history
+.cache/
+.kotlin/
