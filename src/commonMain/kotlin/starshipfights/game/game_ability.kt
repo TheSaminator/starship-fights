@@ -236,7 +236,7 @@ sealed class PlayerAbilityType {
 			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
 			
 			val moveOrigin = shipInstance.position.location
-			val newFacingNormal = (data.newPosition.location - moveOrigin).normal
+			val newFacingNormal = normalDistance(data.newPosition.facing)
 			val oldFacingNormal = normalDistance(shipInstance.position.facing)
 			val angleDiff = (oldFacingNormal angleBetween newFacingNormal)
 			

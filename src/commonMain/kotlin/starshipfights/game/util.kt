@@ -37,10 +37,6 @@ inline fun <T> pollFlow(intervalMs: Long = 50, crossinline poll: () -> T) = flow
 	}
 }
 
-operator fun <T> List<T>.times(multiplier: Int): List<T> = if (multiplier <= 0) emptyList()
-else if (multiplier == 1) this
-else this + (this * (multiplier - 1))
-
 fun Double.toPercent() = "${(this * 100).roundToInt()}%"
 
 fun smoothMinus1To1(x: Double, exponent: Double = 1.0) = x / (1 + abs(x).pow(exponent)).pow(1 / exponent)
