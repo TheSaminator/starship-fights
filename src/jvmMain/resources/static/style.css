@@ -36,7 +36,7 @@ html {
 	--tbl-border: #036;
 	--tbl-backgr: #eee;
 
-	--input-bg: #bbb;
+	--input-bg: #aaa;
 	--input-ul: #222;
 	--input-fg: #024;
 	--input-f-bg: #777;
@@ -98,7 +98,7 @@ html[data-theme="dark"] {
 	--tbl-border: #9cf;
 	--tbl-backgr: #111;
 
-	--input-bg: #444;
+	--input-bg: #555;
 	--input-ul: #ddd;
 	--input-fg: #bdf;
 	--input-f-bg: #888;
