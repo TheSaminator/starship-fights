@@ -39,6 +39,7 @@ fun main() {
 	val dataRoutines = DataRoutines.initializeRoutines()
 	
 	embeddedServer(Netty, port = CurrentConfiguration.port, host = CurrentConfiguration.host) {
+		install(IgnoreTrailingSlash)
 		install(XForwardedHeaderSupport)
 		
 		install(CallId) {

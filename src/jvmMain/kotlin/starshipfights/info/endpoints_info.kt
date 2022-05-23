@@ -54,4 +54,21 @@ fun Routing.installPages() {
 	get("/cache-time") {
 		call.respondText(cacheTime, ContentType.Text.Plain, HttpStatusCode.OK)
 	}
+	
+	// Sitemap
+	val sitemapUrls = (listOf(
+		"/",
+		"/about",
+		"/about/pp",
+		"/about/toc",
+		"/info",
+	) + ShipType.values().map {
+		"/info/${it.toUrlSlug()}"
+	}).map { "https://starshipfights.net$it" }
+	
+	val sitemap = sitemapUrls.joinToString(separator = "\n")
+	
+	get("/sitemap.txt") {
+		call.respondText(sitemap, ContentType.Text.Plain, HttpStatusCode.OK)
+	}
 }
