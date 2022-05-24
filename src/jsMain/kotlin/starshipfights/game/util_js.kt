@@ -2,11 +2,9 @@ package starshipfights.game
 
 import io.ktor.http.cio.websocket.*
 import kotlinx.browser.window
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
@@ -37,23 +35,6 @@ suspend fun EventTarget.awaitEvent(eventName: String, shouldPreventDefault: Bool
 	}
 	
 	addEventListener(eventName, listener)
-}
-
-suspend fun EventTarget.eventFlow(eventName: String, shouldPreventDefault: Boolean = false): Flow<Event> = callbackFlow {
-	val listener = object : EventListener {
-		override fun handleEvent(event: Event) {
-			if (shouldPreventDefault)
-				event.preventDefault()
-			
-			launch { send(event) }
-		}
-	}
-	
-	addEventListener(eventName, listener)
-	
-	awaitClose {
-		removeEventListener(eventName, listener)
-	}
 }
 
 suspend fun awaitAnimationFrame(): Double = suspendCancellableCoroutine { continuation ->

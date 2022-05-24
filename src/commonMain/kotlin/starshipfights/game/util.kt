@@ -1,9 +1,5 @@
 package starshipfights.game
 
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.isActive
 import kotlinx.html.*
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
@@ -22,20 +18,6 @@ val jsonSerializer = Json {
 const val EPSILON = 0.00_001
 
 fun <T : Enum<T>> T.toUrlSlug() = name.replace('_', '-').lowercase()
-
-inline fun <T> pollFlow(intervalMs: Long = 50, crossinline poll: () -> T) = flow {
-	var prev = poll()
-	emit(prev)
-	
-	while (currentCoroutineContext().isActive) {
-		delay(intervalMs)
-		val curr = poll()
-		if (curr != prev) {
-			prev = curr
-			emit(prev)
-		}
-	}
-}
 
 fun Double.toPercent() = "${(this * 100).roundToInt()}%"
 

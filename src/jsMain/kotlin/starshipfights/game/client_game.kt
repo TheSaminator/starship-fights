@@ -100,16 +100,22 @@ private suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 		}
 		
 		launch {
+			val doneDeploying = Job()
+			
+			launch {
+				doneDeploying.join()
+				
+				val pickContext = pickContextDeferred.await()
+				beginSelecting(pickContext)
+				handleSelections(pickContext)
+			}
+			
 			gameState.collect { state ->
 				GameRender.renderGameState(scene, state)
 				GameUI.drawGameUI(state)
 				
 				if (state.phase != GamePhase.Deploy)
-					launch {
-						val pickContext = pickContextDeferred.await()
-						beginSelecting(pickContext)
-						handleSelections(pickContext)
-					}
+					doneDeploying.complete()
 			}
 		}
 	}

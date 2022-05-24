@@ -1,13 +1,12 @@
 package starshipfights.game
 
 import kotlinx.browser.document
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.dom.addClass
 import kotlinx.dom.clear
-import kotlinx.dom.hasClass
 import kotlinx.dom.removeClass
 import kotlinx.html.*
 import kotlinx.html.dom.append
@@ -22,12 +21,10 @@ sealed class Popup<out T> {
 		consumer.render(context, callback)
 	}
 	
-	suspend fun display(): T {
-		pollFlow(100) { popup.hasClass("hide") }.takeWhile { !it }.collect()
-		
-		popupBox.clear()
-		
-		return suspendCancellableCoroutine { continuation ->
+	suspend fun display(): T = popupMutex.withLock {
+		suspendCancellableCoroutine { continuation ->
+			popupBox.clear()
+			
 			popupBox.append {
 				renderInto(this, continuation.context) {
 					hide()
@@ -44,6 +41,8 @@ sealed class Popup<out T> {
 	}
 	
 	companion object {
+		private val popupMutex = Mutex()
+		
 		private val popup by lazy {
 			document.getElementById("popup").unsafeCast<HTMLDivElement>()
 		}
