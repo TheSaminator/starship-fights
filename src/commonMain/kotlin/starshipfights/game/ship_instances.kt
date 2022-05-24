@@ -86,9 +86,9 @@ data class ShipInstance(
 		
 		return when (weapon) {
 			is ShipWeaponInstance.Cannon -> weaponAmount > 0
-			is ShipWeaponInstance.Hangar -> weapon.wingHealth > 0.0
 			is ShipWeaponInstance.Lance -> weapon.numCharges > EPSILON
 			is ShipWeaponInstance.Torpedo -> true
+			is ShipWeaponInstance.Hangar -> weapon.wingHealth > 0.0
 			is ShipWeaponInstance.ParticleClawLauncher -> true
 			is ShipWeaponInstance.LightningYarn -> true
 			is ShipWeaponInstance.MegaCannon -> weapon.remainingShots > 0

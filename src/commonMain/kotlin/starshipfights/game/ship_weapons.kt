@@ -571,7 +571,7 @@ fun criticalChance(attacker: ShipInstance, weaponId: Id<ShipWeapon>, targeted: S
 	} * attacker.firepower.criticalChance
 }
 
-fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition, side: GlobalSide): PickRequest = when (weapon) {
+fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon): PickRequest = when (weapon) {
 	is AreaWeapon -> PickRequest(
 		type = PickType.Location(
 			excludesNearShips = emptySet(),
@@ -594,9 +594,9 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition
 	)
 	else -> {
 		val targetSet = if ((weapon as? ShipWeapon.Hangar)?.wing == StrikeCraftWing.FIGHTERS)
-			setOf(side)
+			setOf(owner)
 		else
-			setOf(side.other)
+			setOf(owner.other)
 		
 		val weaponRangeMult = when (weapon) {
 			is ShipWeapon.Cannon -> firepower.rangeMultiplier
@@ -614,7 +614,7 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon, position: ShipPosition
 				minDistance = weapon.minRange,
 				maxDistance = weapon.maxRange * weaponRangeMult,
 				firingArcs = weapon.firingArcs,
-				canSelfSelect = side in targetSet
+				canSelfSelect = owner in targetSet
 			)
 		)
 	}

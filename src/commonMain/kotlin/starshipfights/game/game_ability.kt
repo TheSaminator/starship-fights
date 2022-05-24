@@ -443,7 +443,7 @@ sealed class PlayerAbilityType {
 			if (!shipInstance.canUseWeapon(weapon)) return null
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
 			
-			val pickResponse = pick(shipInstance.getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner))
+			val pickResponse = pick(shipInstance.getWeaponPickRequest(shipWeapon.weapon))
 			
 			return pickResponse?.let { PlayerAbilityData.UseWeapon(it) }
 		}
@@ -456,7 +456,7 @@ sealed class PlayerAbilityType {
 			if (!shipInstance.canUseWeapon(weapon)) return GameEvent.InvalidAction("That weapon cannot be used")
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			
-			val pickRequest = shipInstance.getWeaponPickRequest(shipWeapon.weapon, shipInstance.position, shipInstance.owner)
+			val pickRequest = shipInstance.getWeaponPickRequest(shipWeapon.weapon)
 			val pickResponse = data.target
 			
 			if (!gameState.isValidPick(pickRequest, pickResponse)) return GameEvent.InvalidAction("Invalid target")
