@@ -54,6 +54,12 @@ data class ShipInstance(
 			else -> false
 		} && felinaeShipPowerMode == FelinaeShipPowerMode.INERTIALESS_DRIVE
 	
+	val remainingInertialessDriveJumps: Int
+		get() = when (val movement = ship.movement) {
+			is FelinaeShipMovement -> movement.inertialessDriveShots - usedInertialessDriveShots
+			else -> 0
+		}
+	
 	val canUseDisruptionPulse: Boolean
 		get() = ship.canUseDisruptionPulse && modulesStatus[ShipModule.Turrets].canBeUsed && when (val durability = ship.durability) {
 			is FelinaeShipDurability -> usedDisruptionPulseShots < durability.disruptionPulseShots
@@ -63,12 +69,6 @@ data class ShipInstance(
 	val remainingDisruptionPulseEmissions: Int
 		get() = when (val durability = ship.durability) {
 			is FelinaeShipDurability -> durability.disruptionPulseShots - usedDisruptionPulseShots
-			else -> 0
-		}
-	
-	val remainingInertialessDriveJumps: Int
-		get() = when (val movement = ship.movement) {
-			is FelinaeShipMovement -> movement.inertialessDriveShots - usedInertialessDriveShots
 			else -> 0
 		}
 	

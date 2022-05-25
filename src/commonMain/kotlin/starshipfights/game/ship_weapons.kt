@@ -342,8 +342,8 @@ fun ShipInstance.felinaeArmorIgnoreDamageChance(): Double {
 	val maxVelocity = movement.moveSpeed
 	val curVelocity = currentVelocity
 	val ratio = curVelocity / maxVelocity
-	val exponent = -ratio / sqrt(1 + abs(4 * ratio))
-	return -expm1(exponent)
+	val exponent = ratio / sqrt(1 + abs(4 * ratio))
+	return -expm1(-exponent)
 }
 
 fun ShipInstance.impact(damage: Int, ignoreShields: Boolean = false) = if (durability is FelinaeShipDurability && Random.nextDouble() < felinaeArmorIgnoreDamageChance())
