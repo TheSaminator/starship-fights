@@ -73,8 +73,11 @@ sealed class Popup<out T> {
 			}
 			
 			p {
+				style = "text-alin:center"
+				
 				+"Select one of your admirals to continue:"
 			}
+			
 			div(classes = "button-set col") {
 				for (admiral in admirals) {
 					button {
@@ -92,6 +95,14 @@ sealed class Popup<out T> {
 					}
 				}
 			}
+			
+			p {
+				style = "text-alin:center"
+				
+				+"Or return to "
+				a(href = "/me") { +"your user page" }
+				+"."
+			}
 		}
 	}
 	
@@ -99,6 +110,7 @@ sealed class Popup<out T> {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (GlobalSide?) -> Unit) {
 			p {
 				style = "text-align:center"
+				
 				img(alt = "Starship Fights", src = RenderResources.LOGO_URL) {
 					style = "width:70%"
 				}
@@ -216,6 +228,7 @@ sealed class Popup<out T> {
 			}
 			table {
 				style = "table-layout:fixed;width:100%"
+				
 				tr {
 					th { +"HOST" }
 					th { +"GUEST" }
@@ -223,21 +236,37 @@ sealed class Popup<out T> {
 				tr {
 					td {
 						style = "text-align:center"
+						
 						img(alt = hostInfo.faction.shortName, src = hostInfo.faction.flagUrl) { style = "width:65%;" }
 					}
 					td {
 						style = "text-align:center"
+						
 						img(alt = guestInfo.faction.shortName, src = guestInfo.faction.flagUrl) { style = "width:65%;" }
 					}
 				}
 				tr {
 					td {
 						style = "text-align:center"
+						
 						+hostInfo.fullName
 					}
 					td {
 						style = "text-align:center"
+						
 						+guestInfo.fullName
+					}
+				}
+				tr {
+					td {
+						style = "text-align:center"
+						
+						+"(${hostInfo.user.username})"
+					}
+					td {
+						style = "text-align:center"
+						
+						+"(${guestInfo.user.username})"
 					}
 				}
 			}
@@ -272,6 +301,7 @@ sealed class Popup<out T> {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (String?) -> Unit) {
 			table {
 				style = "table-layout:fixed;width:100%"
+				
 				tr {
 					th { +"Host Player" }
 					th { +"Host Admiral" }
@@ -284,20 +314,24 @@ sealed class Popup<out T> {
 					tr {
 						td {
 							style = "text-align:center"
+							
 							+joinable.admiral.user.username
 						}
 						td {
 							style = "text-align:center"
+							
 							+joinable.admiral.fullName
 						}
 						td {
 							style = "text-align:center"
+							
 							img(alt = joinable.admiral.faction.shortName, src = joinable.admiral.faction.flagUrl) {
 								style = "width:4em;height:2.5em"
 							}
 						}
 						td {
 							style = "text-align:center"
+							
 							+joinable.battleInfo.size.displayName
 							+" ("
 							+joinable.battleInfo.size.numPoints.toString()
@@ -305,10 +339,12 @@ sealed class Popup<out T> {
 						}
 						td {
 							style = "text-align:center"
+							
 							+joinable.battleInfo.bg.displayName
 						}
 						td {
 							style = "text-align:center"
+							
 							a(href = "#") {
 								+"Join"
 								onClickFunction = { e ->
@@ -326,6 +362,7 @@ sealed class Popup<out T> {
 					td { +Entities.nbsp }
 					td {
 						style = "text-align:center"
+						
 						a(href = "#") {
 							+"Cancel"
 							onClickFunction = { e ->
