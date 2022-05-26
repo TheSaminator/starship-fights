@@ -538,6 +538,9 @@ fun ImpactResult.applyCriticals(attacker: ShipInstance, weaponId: Id<ShipWeapon>
 	return when (this) {
 		is ImpactResult.Destroyed -> this
 		is ImpactResult.Damaged -> {
+			if (damage is ImpactDamage.Failed)
+				return this
+			
 			val critChance = criticalChance(attacker, weaponId, ship)
 			if (Random.nextDouble() > critChance)
 				this

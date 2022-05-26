@@ -73,7 +73,7 @@ sealed class Popup<out T> {
 			}
 			
 			p {
-				style = "text-alin:center"
+				style = "text-align:center"
 				
 				+"Select one of your admirals to continue:"
 			}
@@ -97,7 +97,7 @@ sealed class Popup<out T> {
 			}
 			
 			p {
-				style = "text-alin:center"
+				style = "text-align:center"
 				
 				+"Or return to "
 				a(href = "/me") { +"your user page" }

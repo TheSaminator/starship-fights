@@ -390,6 +390,12 @@ object GameUI {
 						}
 						br
 						+"Phase II - Ship Movement"
+						br
+						+if (state.doneWithPhase == mySide)
+							"You have ended your phase"
+						else if (state.currentInitiative != mySide.other)
+							"You have the initiative!"
+						else "Your opponent has the initiative"
 					}
 					is GamePhase.Attack -> {
 						strong(classes = "heading") {
@@ -397,6 +403,12 @@ object GameUI {
 						}
 						br
 						+"Phase III - Weapons Fire"
+						br
+						+if (state.doneWithPhase == mySide)
+							"You have ended your phase"
+						else if (state.currentInitiative != mySide.other)
+							"You have the initiative!"
+						else "Your opponent has the initiative"
 					}
 					is GamePhase.Repair -> {
 						strong(classes = "heading") {

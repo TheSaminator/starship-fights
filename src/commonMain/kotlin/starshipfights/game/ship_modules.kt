@@ -56,9 +56,9 @@ enum class ShipModuleStatus(val canBeUsed: Boolean, val canBeRepaired: Boolean) 
 data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 	operator fun get(module: ShipModule) = statuses[module] ?: ShipModuleStatus.ABSENT
 	
-	fun repair(module: ShipModule) = ShipModulesStatus(
-		statuses + if (this[module].canBeRepaired)
-			mapOf(module to ShipModuleStatus.INTACT)
+	fun repair(module: ShipModule, repairUnrepairable: Boolean = false) = ShipModulesStatus(
+		statuses + if (this[module].canBeRepaired || (repairUnrepairable && !this[module].canBeUsed))
+			mapOf(module to ShipModuleStatus.values()[this[module].ordinal - 1])
 		else emptyMap()
 	)
 	

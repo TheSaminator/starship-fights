@@ -14,7 +14,8 @@ data class GameState(
 	val battleInfo: BattleInfo,
 	
 	val phase: GamePhase = GamePhase.Deploy,
-	val ready: GlobalSide? = null,
+	val doneWithPhase: GlobalSide? = null,
+	val calculatedInitiative: GlobalSide? = null,
 	
 	val ships: Map<Id<ShipInstance>, ShipInstance> = emptyMap(),
 	val destroyedShips: Map<Id<ShipInstance>, ShipWreck> = emptyMap(),
@@ -24,6 +25,9 @@ data class GameState(
 	fun getShipInfo(id: Id<ShipInstance>) = destroyedShips[id]?.ship ?: ships.getValue(id).ship
 	fun getShipOwner(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships.getValue(id).owner
 }
+
+val GameState.currentInitiative: GlobalSide?
+	get() = calculatedInitiative?.takeIf { it != doneWithPhase }
 
 fun GameState.canFinishPhase(side: GlobalSide): Boolean {
 	return when (phase) {
@@ -42,8 +46,13 @@ private fun GameState.afterPhase(): GameState {
 	var newShips = ships
 	val newWrecks = destroyedShips.toMutableMap()
 	val newChatEntries = mutableListOf<ChatEntry>()
+	var newInitiative: GameState.() -> InitiativePair = { InitiativePair(emptyMap()) }
 	
 	when (phase) {
+		is GamePhase.Power -> {
+			// Prepare for move phase
+			newInitiative = { calculateMovePhaseInitiative() }
+		}
 		is GamePhase.Move -> {
 			// Set velocity to 0 for halted ships
 			newShips = newShips.mapValues { (_, ship) ->
@@ -58,6 +67,9 @@ private fun GameState.afterPhase(): GameState {
 					ship.copy(usedInertialessDriveShots = ship.usedInertialessDriveShots - 1)
 				else ship
 			}
+			
+			// Prepare for attack phase
+			newInitiative = { calculateAttackPhaseInitiative() }
 		}
 		is GamePhase.Attack -> {
 			val strikeWingDamage = mutableMapOf<ShipHangarWing, Double>()
@@ -122,13 +134,20 @@ private fun GameState.afterPhase(): GameState {
 		}
 	}
 	
-	return copy(phase = phase.next(), ships = newShips.mapValues { (_, ship) -> ship.copy(isDoneCurrentPhase = false) }, destroyedShips = newWrecks, chatBox = chatBox + newChatEntries)
+	return copy(
+		phase = phase.next(),
+		ships = newShips.mapValues { (_, ship) ->
+			ship.copy(isDoneCurrentPhase = false)
+		},
+		destroyedShips = newWrecks,
+		chatBox = chatBox + newChatEntries
+	).withRecalculatedInitiative(newInitiative)
 }
 
-fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (ready == playerSide.other) {
-	afterPhase().copy(ready = null)
+fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (doneWithPhase == playerSide.other) {
+	afterPhase().copy(doneWithPhase = null)
 } else
-	copy(ready = playerSide)
+	copy(doneWithPhase = playerSide)
 
 private fun GameState.victoryMessage(winner: GlobalSide): String {
 	val winnerName = admiralInfo(winner).fullName

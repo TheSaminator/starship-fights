@@ -41,7 +41,7 @@ sealed class PlayerAbilityType {
 	data class DeployShip(val ship: Id<Ship>) : PlayerAbilityType() {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase != GamePhase.Deploy) return null
-			if (gameState.ready == playerSide) return null
+			if (gameState.doneWithPhase == playerSide) return null
 			val pickBoundary = gameState.start.playerStart(playerSide).deployZone
 			
 			val playerStart = gameState.start.playerStart(playerSide)
@@ -96,7 +96,7 @@ sealed class PlayerAbilityType {
 	@Serializable
 	data class UndeployShip(val ship: Id<ShipInstance>) : PlayerAbilityType() {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
-			return if (gameState.phase == GamePhase.Deploy && gameState.ready != playerSide) PlayerAbilityData.UndeployShip else null
+			return if (gameState.phase == GamePhase.Deploy && gameState.doneWithPhase != playerSide) PlayerAbilityData.UndeployShip else null
 		}
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
@@ -194,6 +194,8 @@ sealed class PlayerAbilityType {
 	data class MoveShip(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Move) return null
+			if (!gameState.canShipMove(ship)) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.isDoneCurrentPhase) return null
 			
@@ -231,6 +233,7 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.MoveShip) return GameEvent.InvalidAction("Internal error from using player ability")
+			if (!gameState.canShipMove(ship)) return GameEvent.InvalidAction("You do not have the initiative")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
@@ -296,7 +299,7 @@ sealed class PlayerAbilityType {
 					ships = newShips,
 					destroyedShips = newWrecks,
 					chatBox = newChatEntries,
-				)
+				).withRecalculatedInitiative { calculateMovePhaseInitiative() }
 			)
 		}
 	}
@@ -305,8 +308,11 @@ sealed class PlayerAbilityType {
 	data class UseInertialessDrive(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Move) return null
+			if (!gameState.canShipMove(ship)) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.isDoneCurrentPhase) return null
+			
 			if (!shipInstance.canUseInertialessDrive) return null
 			val movement = shipInstance.movement
 			if (movement !is FelinaeShipMovement) return null
@@ -327,6 +333,7 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.UseInertialessDrive) return GameEvent.InvalidAction("Internal error from using player ability")
+			if (!gameState.canShipMove(ship)) return GameEvent.InvalidAction("You do not have the initiative")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
@@ -392,7 +399,7 @@ sealed class PlayerAbilityType {
 					ships = newShips,
 					destroyedShips = newWrecks,
 					chatBox = newChatEntries,
-				)
+				).withRecalculatedInitiative { calculateMovePhaseInitiative() }
 			)
 		}
 	}
@@ -401,9 +408,11 @@ sealed class PlayerAbilityType {
 	data class ChargeLance(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.weaponAmount <= 0) return null
 			if (weapon in shipInstance.usedArmaments) return null
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
 			if (shipWeapon !is ShipWeaponInstance.Lance) return null
 			
@@ -412,9 +421,11 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only charge lances during Phase III")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.weaponAmount <= 0) return GameEvent.InvalidAction("Not enough power to charge lances")
 			if (weapon in shipInstance.usedArmaments) return GameEvent.InvalidAction("Cannot charge used lances")
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			if (shipWeapon !is ShipWeaponInstance.Lance) return GameEvent.InvalidAction("Cannot charge non-lance weapons")
 			
@@ -439,8 +450,10 @@ sealed class PlayerAbilityType {
 	data class UseWeapon(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (!shipInstance.canUseWeapon(weapon)) return null
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
 			
 			val pickResponse = pick(shipInstance.getWeaponPickRequest(shipWeapon.weapon))
@@ -452,8 +465,10 @@ sealed class PlayerAbilityType {
 			if (data !is PlayerAbilityData.UseWeapon) return GameEvent.InvalidAction("Internal error from using player ability")
 			
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only attack during Phase III")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That attacking ship does not exist")
 			if (!shipInstance.canUseWeapon(weapon)) return GameEvent.InvalidAction("That weapon cannot be used")
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			
 			val pickRequest = shipInstance.getWeaponPickRequest(shipWeapon.weapon)
@@ -469,8 +484,10 @@ sealed class PlayerAbilityType {
 	data class RecallStrikeCraft(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (weapon !in shipInstance.usedArmaments) return null
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
 			if (shipWeapon !is ShipWeaponInstance.Hangar) return null
 			
@@ -479,8 +496,10 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only recall strike craft during Phase III")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (weapon !in shipInstance.usedArmaments) return GameEvent.InvalidAction("Cannot recall unused strike craft")
+			
 			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			if (shipWeapon !is ShipWeaponInstance.Hangar) return GameEvent.InvalidAction("Cannot recall non-hangar weapons")
 			
@@ -507,6 +526,7 @@ sealed class PlayerAbilityType {
 	data class DisruptionPulse(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (!shipInstance.canUseDisruptionPulse) return null
 			if (shipInstance.hasUsedDisruptionPulse) return null
@@ -516,6 +536,7 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only emit Disruption Pulses during Phase III")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (!shipInstance.canUseDisruptionPulse) return GameEvent.InvalidAction("Cannot use Disruption Pulse")
 			if (shipInstance.hasUsedDisruptionPulse) return GameEvent.InvalidAction("Cannot use Disruption Pulse twice")
@@ -562,6 +583,7 @@ sealed class PlayerAbilityType {
 	data class RepairShipModule(override val ship: Id<ShipInstance>, val module: ShipModule) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.durability !is StandardShipDurability) return null
 			if (shipInstance.remainingRepairTokens <= 0) return null
@@ -572,6 +594,7 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only repair modules during Phase IV")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.durability !is StandardShipDurability) return GameEvent.InvalidAction("That ship cannot manually repair subsystems")
 			if (shipInstance.remainingRepairTokens <= 0) return GameEvent.InvalidAction("That ship has no remaining repair tokens")
@@ -596,6 +619,7 @@ sealed class PlayerAbilityType {
 	data class ExtinguishFire(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.durability !is StandardShipDurability) return null
 			if (shipInstance.remainingRepairTokens <= 0) return null
@@ -606,6 +630,7 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.durability !is StandardShipDurability) return GameEvent.InvalidAction("That ship cannot manually extinguish fires")
 			if (shipInstance.remainingRepairTokens <= 0) return GameEvent.InvalidAction("That ship has no remaining repair tokens")
@@ -630,6 +655,7 @@ sealed class PlayerAbilityType {
 	data class Recoalesce(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
 		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
+			
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (shipInstance.durability !is FelinaeShipDurability) return null
 			if (!shipInstance.canUseRecoalescence) return null
@@ -639,11 +665,16 @@ sealed class PlayerAbilityType {
 		
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
+			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.durability !is FelinaeShipDurability) return GameEvent.InvalidAction("That ship cannot recoalesce its hull")
 			if (!shipInstance.canUseRecoalescence) return GameEvent.InvalidAction("That ship is not in Recoalescence mode")
 			
-			val newHullAmount = Random.nextInt(shipInstance.hullAmount, shipInstance.durability.maxHullPoints)
+			val newHullAmountRange = (shipInstance.hullAmount + 1) until shipInstance.durability.maxHullPoints
+			val (newHullAmount, newMaxHullDamage) = if (newHullAmountRange.isEmpty())
+				shipInstance.hullAmount to shipInstance.recoalescenceMaxHullDamage
+			else
+				newHullAmountRange.random() to (shipInstance.recoalescenceMaxHullDamage + 1)
 			
 			val repairs = shipInstance.modulesStatus.statuses.filterValues {
 				it == ShipModuleStatus.DAMAGED || it == ShipModuleStatus.DESTROYED
@@ -652,12 +683,12 @@ sealed class PlayerAbilityType {
 			var newModules = shipInstance.modulesStatus
 			for (repair in repairs) {
 				if (Random.nextBoolean())
-					newModules = newModules.repair(repair)
+					newModules = newModules.repair(repair, repairUnrepairable = true)
 			}
 			
 			val newShip = shipInstance.copy(
 				hullAmount = newHullAmount,
-				recoalescenceMaxHullDamage = shipInstance.recoalescenceMaxHullDamage + 1,
+				recoalescenceMaxHullDamage = newMaxHullDamage,
 				modulesStatus = newModules,
 				isDoneCurrentPhase = true
 			)
@@ -718,7 +749,7 @@ sealed class PlayerAbilityData {
 	object Recoalesce : PlayerAbilityData()
 }
 
-fun GameState.getPossibleAbilities(forPlayer: GlobalSide): List<PlayerAbilityType> = if (ready == forPlayer)
+fun GameState.getPossibleAbilities(forPlayer: GlobalSide): List<PlayerAbilityType> = if (doneWithPhase == forPlayer)
 	emptyList()
 else when (phase) {
 	GamePhase.Deploy -> {
@@ -764,11 +795,13 @@ else when (phase) {
 	}
 	is GamePhase.Move -> {
 		val movableShips = ships
+			.filterKeys { canShipMove(it) }
 			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase }
 			.keys
 			.map { PlayerAbilityType.MoveShip(it) }
 		
 		val inertialessShips = ships
+			.filterKeys { canShipMove(it) }
 			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.canUseInertialessDrive }
 			.keys
 			.map { PlayerAbilityType.UseInertialessDrive(it) }
@@ -794,6 +827,7 @@ else when (phase) {
 			}
 		
 		val usableWeapons = ships
+			.filterKeys { canShipAttack(it) }
 			.filterValues { it.owner == forPlayer }
 			.flatMap { (id, ship) ->
 				ship.armaments.weaponInstances.keys.mapNotNull { weaponId ->
@@ -804,6 +838,7 @@ else when (phase) {
 			}
 		
 		val usableDisruptionPulses = ships
+			.filterKeys { canShipAttack(it) }
 			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.canUseDisruptionPulse }
 			.keys
 			.map { PlayerAbilityType.DisruptionPulse(it) }
@@ -840,7 +875,7 @@ else when (phase) {
 				PlayerAbilityType.ExtinguishFire(it)
 			}
 		
-		val recoalescence = ships
+		val recoalescibleShips = ships
 			.filterValues { it.owner == forPlayer && it.canUseRecoalescence }
 			.keys
 			.map {
@@ -851,7 +886,7 @@ else when (phase) {
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Repair(phase.turn)))
 		else emptyList()
 		
-		repairableModules + extinguishableFires + recoalescence + finishRepairing
+		repairableModules + extinguishableFires + recoalescibleShips + finishRepairing
 	}
 }
 
