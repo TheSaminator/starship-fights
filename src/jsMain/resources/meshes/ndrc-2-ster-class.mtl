@@ -1,9 +1,0 @@
-newmtl ndrc_2_ster_class
-illum 1
-Ka 0.0 0.0 0.0
-Kd 0.8 0.8 0.8
-Ks 0.6 0.6 0.6
-Ns 6.9
-map_Ka ndrc-2-ster-class.diff.png
-map_Kd ndrc-2-ster-class.diff.png
-map_Ks ndrc-2-ster-class.spec.png

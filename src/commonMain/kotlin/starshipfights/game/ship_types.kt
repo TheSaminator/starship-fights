@@ -111,7 +111,7 @@ enum class ShipType(
 	
 	// NdRC
 	JAGER(Faction.NDRC, ShipWeightClass.DESTROYER),
-	STER(Faction.NDRC, ShipWeightClass.DESTROYER),
+	NOVAATJE(Faction.NDRC, ShipWeightClass.DESTROYER),
 	ZWAARD(Faction.NDRC, ShipWeightClass.DESTROYER),
 	SLAGSCHIP(Faction.NDRC, ShipWeightClass.CRUISER),
 	VOORHOEDE(Faction.NDRC, ShipWeightClass.CRUISER),
@@ -127,11 +127,14 @@ enum class ShipType(
 	
 	CHERNOBOG(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
 	CIPACTLI(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
+	LAMASHTU(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
 	LOTAN(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
 	MORGOTH(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
 	TIAMAT(Faction.MASRA_DRAETSEN, ShipWeightClass.CRUISER),
 	
 	CHARYBDIS(Faction.MASRA_DRAETSEN, ShipWeightClass.GRAND_CRUISER),
+	KAKIA(Faction.MASRA_DRAETSEN, ShipWeightClass.GRAND_CRUISER),
+	MOLOCH(Faction.MASRA_DRAETSEN, ShipWeightClass.GRAND_CRUISER),
 	SCYLLA(Faction.MASRA_DRAETSEN, ShipWeightClass.GRAND_CRUISER),
 	
 	AEDON(Faction.MASRA_DRAETSEN, ShipWeightClass.COLOSSUS),
