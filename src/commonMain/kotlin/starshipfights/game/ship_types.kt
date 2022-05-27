@@ -54,7 +54,7 @@ enum class ShipWeightClass(
 			BATTLE_BARGE -> 300
 			
 			GRAND_CRUISER -> 300
-			COLOSSUS -> 450
+			COLOSSUS -> 370
 			
 			FF_ESCORT -> 100
 			FF_DESTROYER -> 150
