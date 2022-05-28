@@ -203,7 +203,7 @@ sealed class ShipWeapon {
 	@Serializable
 	object EmpAntenna : ShipWeapon(), AreaWeapon {
 		override val numShots: Int
-			get() = 4
+			get() = 5
 		
 		override val maxRange: Double
 			get() = 3_000.0
