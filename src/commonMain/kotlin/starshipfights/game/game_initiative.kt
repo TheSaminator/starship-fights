@@ -47,8 +47,11 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 						.filterValues { weaponInstance ->
 							when (val weapon = weaponInstance.weapon) {
 								is AreaWeapon -> true
-								else -> ships.values.any { target ->
-									target.position.location in ship.getWeaponPickRequest(weapon).boundary
+								else -> {
+									val pickRequest = ship.getWeaponPickRequest(weapon)
+									ships.values.any { target ->
+										target.owner in (pickRequest.type as PickType.Ship).allowSides && target.position.location in pickRequest.boundary
+									}
 								}
 							}
 						}

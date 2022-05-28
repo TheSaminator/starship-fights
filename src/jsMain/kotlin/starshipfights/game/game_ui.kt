@@ -364,7 +364,7 @@ object GameUI {
 					}
 				}
 			}
-		}
+		}.last().scrollIntoView()
 		
 		val abilities = state.getPossibleAbilities(mySide)
 		
