@@ -45,8 +45,11 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 				.sumOf { ship ->
 					val allWeapons = ship.armaments.weaponInstances
 						.filterValues { weaponInstance ->
-							ships.values.any { target ->
-								target.position.location in ship.getWeaponPickRequest(weaponInstance.weapon).boundary
+							when (val weapon = weaponInstance.weapon) {
+								is AreaWeapon -> true
+								else -> ships.values.any { target ->
+									target.position.location in ship.getWeaponPickRequest(weapon).boundary
+								}
 							}
 						}
 					val usableWeapons = allWeapons - ship.usedArmaments

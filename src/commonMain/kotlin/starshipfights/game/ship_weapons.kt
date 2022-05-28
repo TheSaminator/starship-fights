@@ -683,6 +683,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			
 			GameEvent.StateChange(
 				copy(ships = newShips, destroyedShips = newWrecks, chatBox = newChatMessages)
+					.withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
 		else -> {
@@ -706,6 +707,7 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			
 			GameEvent.StateChange(
 				copy(ships = newShips, destroyedShips = newWrecks, chatBox = newChatMessages)
+					.withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
 	}
