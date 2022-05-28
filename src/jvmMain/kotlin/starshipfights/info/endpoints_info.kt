@@ -60,7 +60,7 @@ fun Routing.installPages() {
 		"/",
 		"/about",
 		"/about/pp",
-		"/about/toc",
+		"/about/tnc",
 		"/info",
 	) + ShipType.values().map {
 		"/info/${it.toUrlSlug()}"
