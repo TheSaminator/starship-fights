@@ -91,7 +91,7 @@ enum class Faction(
 		navyName = "Felinae Felices",
 		polityName = "Felinae Felices",
 		adjective = "Felinae",
-		currencyName = "PoliCreds",
+		currencyName = "thrones",
 		shipPrefix = "NFF ", // Navis Felinarum Felicium
 		blurbDesc = {
 			p {
