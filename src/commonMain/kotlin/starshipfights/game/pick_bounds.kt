@@ -5,13 +5,27 @@ import starshipfights.data.Id
 import kotlin.math.PI
 import kotlin.math.abs
 
+fun FiringArc.getStartAngle(shipFacing: Double) = (when (this) {
+	FiringArc.BOW -> Vec2(1.0, -1.0)
+	FiringArc.ABEAM_PORT -> Vec2(-1.0, -1.0)
+	FiringArc.ABEAM_STARBOARD -> Vec2(1.0, 1.0)
+	FiringArc.STERN -> Vec2(-1.0, 1.0)
+} rotatedBy shipFacing).angle
+
+fun FiringArc.getEndAngle(shipFacing: Double) = (when (this) {
+	FiringArc.BOW -> Vec2(1.0, 1.0)
+	FiringArc.ABEAM_PORT -> Vec2(1.0, -1.0)
+	FiringArc.ABEAM_STARBOARD -> Vec2(-1.0, 1.0)
+	FiringArc.STERN -> Vec2(-1.0, -1.0)
+} rotatedBy shipFacing).angle
+
 fun GameState.isValidPick(request: PickRequest, response: PickResponse): Boolean {
 	if (request.type is PickType.Ship != response is PickResponse.Ship)
 		return false
 	
 	when (response) {
 		is PickResponse.Location -> {
-			request.type as PickType.Location
+			if (request.type !is PickType.Location) return false
 			
 			if (response.position !in request.boundary) return false
 			if (ships.values.any {
@@ -21,7 +35,7 @@ fun GameState.isValidPick(request: PickRequest, response: PickResponse): Boolean
 			return true
 		}
 		is PickResponse.Ship -> {
-			request.type as PickType.Ship
+			if (request.type !is PickType.Ship) return false
 			
 			if (response.id !in ships) return false
 			
@@ -98,15 +112,12 @@ sealed class PickBoundary {
 	}
 	
 	@Serializable
-	data class Ellipse(
+	data class Circle(
 		val center: Position,
-		val widthRadius: Double,
-		val lengthRadius: Double,
-		val rotationAngle: Double,
+		val radius: Double,
 	) : PickBoundary() {
 		override fun contains(point: Position): Boolean {
-			val distance = (point - center).vector rotatedBy rotationAngle scaleUneven Vec2(1 / widthRadius, 1 / lengthRadius)
-			return distance.magnitude <= 1.0
+			return (point - center).length < radius
 		}
 	}
 	
@@ -154,4 +165,61 @@ sealed class PickHelper {
 	
 	@Serializable
 	data class Circle(val radius: Double) : PickHelper()
+}
+
+fun PickBoundary.closestPointTo(position: Position): Position = when (this) {
+	is PickBoundary.AlongLine -> position.clampOnLineSegment(pointA, pointB)
+	is PickBoundary.Angle -> {
+		val distance = position - center
+		val midNormal = normalDistance(midAngle)
+		
+		if ((distance angleBetween midNormal) <= maxAngle)
+			position
+		else {
+			((midNormal rotatedBy (midNormal angleTo distance).coerceIn(-maxAngle, maxAngle)) * distance.length) + center
+		}
+	}
+	is PickBoundary.Circle -> {
+		val distance = position - center
+		if (distance.length <= radius)
+			position
+		else
+			(distance.normal * radius) + center
+	}
+	is PickBoundary.Rectangle -> {
+		Distance((position - center).vector.let { (x, y) ->
+			Vec2(x.coerceIn(-width2, width2), y.coerceIn(-length2, length2))
+		}) + center
+	}
+	is PickBoundary.WeaponsFire -> {
+		val distance = position - center
+		
+		val thetaHat = normalDistance(facing)
+		
+		val deltaTheta = thetaHat angleTo distance
+		val firingArc: FiringArc = when {
+			abs(deltaTheta) < PI / 4 -> FiringArc.BOW
+			abs(deltaTheta) > PI * 3 / 4 -> FiringArc.STERN
+			deltaTheta < 0 -> FiringArc.ABEAM_PORT
+			else -> FiringArc.ABEAM_STARBOARD
+		}
+		
+		if (firingArc in firingArcs) {
+			if (distance.length in minDistance..maxDistance)
+				position
+			else
+				(distance.normal * (if (distance.length < minDistance) minDistance else maxDistance)) + center
+		} else
+			firingArcs.flatMap {
+				val startNormal = normalDistance(it.getStartAngle(facing))
+				val endNormal = normalDistance(it.getEndAngle(facing))
+				
+				listOf(
+					(startNormal * minDistance) + center,
+					(endNormal * minDistance) + center,
+					(startNormal * maxDistance) + center,
+					(endNormal * maxDistance) + center,
+				)
+			}.minByOrNull { (it - position).length } ?: position
+	}
 }

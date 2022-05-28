@@ -336,20 +336,6 @@ suspend fun PickRequest.pick(context: PickContext): PickResponse? = pickMutex.wi
 	}
 }
 
-private fun FiringArc.getStartAngle(shipFacing: Double) = (when (this) {
-	FiringArc.BOW -> Vec2(1.0, -1.0)
-	FiringArc.ABEAM_PORT -> Vec2(-1.0, -1.0)
-	FiringArc.ABEAM_STARBOARD -> Vec2(1.0, 1.0)
-	FiringArc.STERN -> Vec2(-1.0, 1.0)
-} rotatedBy shipFacing).angle
-
-private fun FiringArc.getEndAngle(shipFacing: Double) = (when (this) {
-	FiringArc.BOW -> Vec2(1.0, 1.0)
-	FiringArc.ABEAM_PORT -> Vec2(1.0, -1.0)
-	FiringArc.ABEAM_STARBOARD -> Vec2(-1.0, 1.0)
-	FiringArc.STERN -> Vec2(-1.0, -1.0)
-} rotatedBy shipFacing).angle
-
 private fun PickBoundary.render(): List<Shape> {
 	return when (this) {
 		is PickBoundary.Angle -> {
@@ -380,17 +366,17 @@ private fun PickBoundary.render(): List<Shape> {
 				.lineTo(RenderScaling.toWorldLength(center.vector.x + width2), RenderScaling.toWorldLength(center.vector.y - length2))
 				.unsafeCast<Shape>()
 		)
-		is PickBoundary.Ellipse -> listOf(
+		is PickBoundary.Circle -> listOf(
 			Shape()
 				.ellipse(
 					RenderScaling.toWorldLength(center.vector.x),
 					RenderScaling.toWorldLength(center.vector.y),
-					RenderScaling.toWorldLength(widthRadius),
-					RenderScaling.toWorldLength(lengthRadius),
+					RenderScaling.toWorldLength(radius),
+					RenderScaling.toWorldLength(radius),
 					0,
 					2 * PI,
 					false,
-					rotationAngle
+					0
 				)
 				.unsafeCast<Shape>()
 		)
@@ -407,6 +393,21 @@ private fun PickBoundary.render(): List<Shape> {
 				.absarc(RenderScaling.toWorldLength(position.x), RenderScaling.toWorldLength(position.y), RenderScaling.toWorldLength(minDistance), startTheta, endTheta, false)
 				.absarc(RenderScaling.toWorldLength(position.x), RenderScaling.toWorldLength(position.y), RenderScaling.toWorldLength(maxDistance), endTheta, startTheta, true)
 				.unsafeCast<Shape>()
-		}
+		} + (if (canSelfSelect)
+			listOf(
+				Shape()
+					.ellipse(
+						RenderScaling.toWorldLength(center.vector.x),
+						RenderScaling.toWorldLength(center.vector.y),
+						RenderScaling.toWorldLength(SHIP_BASE_SIZE),
+						RenderScaling.toWorldLength(SHIP_BASE_SIZE),
+						0,
+						2 * PI,
+						false,
+						0
+					)
+					.unsafeCast<Shape>()
+			)
+		else emptyList())
 	}
 }

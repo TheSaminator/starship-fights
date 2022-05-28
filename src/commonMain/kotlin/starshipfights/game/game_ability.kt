@@ -319,11 +319,9 @@ sealed class PlayerAbilityType {
 			
 			val positionPickReq = PickRequest(
 				PickType.Location(gameState.ships.keys - ship, PickHelper.Circle(SHIP_BASE_SIZE), shipInstance.position.location),
-				PickBoundary.Ellipse(
+				PickBoundary.Circle(
 					shipInstance.position.location,
 					movement.inertialessDriveRange,
-					movement.inertialessDriveRange,
-					0.0
 				)
 			)
 			val positionPickRes = (pick(positionPickReq) as? PickResponse.Location) ?: return null

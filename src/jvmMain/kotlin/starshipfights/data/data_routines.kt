@@ -2,6 +2,8 @@ package starshipfights.data
 
 import kotlinx.coroutines.*
 import org.litote.kmongo.inc
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.ShipInDrydock
@@ -9,15 +11,16 @@ import starshipfights.data.admiralty.eq
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.game.AdmiralRank
-import starshipfights.sfLogger
 import java.time.Instant
 import java.time.ZoneId
 
 object DataRoutines {
+	private val logger: Logger = LoggerFactory.getLogger(javaClass)
+	
 	private val scope: CoroutineScope = CoroutineScope(
 		SupervisorJob() + CoroutineExceptionHandler { ctx, ex ->
 			val coroutine = ctx[CoroutineName]?.name?.let { "coroutine $it" } ?: "unnamed coroutine"
-			sfLogger.error("Caught unhandled exception in $coroutine", ex)
+			logger.error("Caught unhandled exception in $coroutine", ex)
 		}
 	)
 	
@@ -37,6 +40,7 @@ object DataRoutines {
 					val currTime = Instant.now().atZone(ZoneId.systemDefault())
 					if (currTime.dayOfWeek != prevTime.dayOfWeek)
 						launch {
+							logger.info("Paying admirals now")
 							for (rank in AdmiralRank.values())
 								launch {
 									Admiral.update(

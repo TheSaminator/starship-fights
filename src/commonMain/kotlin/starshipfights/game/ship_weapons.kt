@@ -471,23 +471,29 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 	}
 }
 
-fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, strikeWingDamage: MutableMap<ShipHangarWing, Double>): ImpactResult {
-	if (bomberWings.isEmpty())
-		return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
+fun ShipInstance.calculateBombing(otherShips: Map<Id<ShipInstance>, ShipInstance>, extraBombers: Double = 0.0, extraFighters: Double = 0.0): Double? {
+	if (bomberWings.isEmpty() && extraBombers < EPSILON)
+		return null
 	
 	val totalFighterHealth = fighterWings.sumOf { (carrierId, wingId) ->
 		(otherShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-	} + (if (canUseTurrets) durability.turretDefense else 0.0)
+	} + durability.turretDefense + extraFighters
 	
 	val totalBomberHealth = bomberWings.sumOf { (carrierId, wingId) ->
 		(otherShips[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
-	}
+	} + extraBombers
 	
 	if (totalBomberHealth < EPSILON)
-		return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
+		return null
 	
-	val maxBomberWingOutput = smoothNegative(totalBomberHealth - totalFighterHealth)
-	val maxFighterWingOutput = smoothNegative(totalFighterHealth - totalBomberHealth)
+	return totalBomberHealth - totalFighterHealth
+}
+
+fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, strikeWingDamage: MutableMap<ShipHangarWing, Double>): ImpactResult {
+	val calculatedBombing = calculateBombing(otherShips) ?: return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
+	
+	val maxBomberWingOutput = smoothNegative(calculatedBombing)
+	val maxFighterWingOutput = smoothNegative(-calculatedBombing)
 	
 	for (it in fighterWings)
 		strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput

@@ -35,6 +35,30 @@ fun GameState.calculateMovePhaseInitiative(): InitiativePair = InitiativePair(
 		}
 )
 
+fun GameState.isValidTarget(ship: ShipInstance, weapon: ShipWeaponInstance, pickRequest: PickRequest, target: ShipInstance): Boolean {
+	val targetPos = target.position.location
+	
+	return when (val weaponSpec = weapon.weapon) {
+		is AreaWeapon ->
+			target.owner != ship.owner && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length <= weaponSpec.areaRadius
+		else ->
+			target.owner in (pickRequest.type as PickType.Ship).allowSides && isValidPick(pickRequest, PickResponse.Ship(target.id))
+	}
+}
+
+inline fun <T> GameState.aggregateValidTargets(ship: ShipInstance, weapon: ShipWeaponInstance, aggregate: Iterable<ShipInstance>.((ShipInstance) -> Boolean) -> T): T {
+	val pickRequest = ship.getWeaponPickRequest(weapon.weapon)
+	return ships.values.aggregate { target -> isValidTarget(ship, weapon, pickRequest, target) }
+}
+
+fun GameState.hasValidTargets(ship: ShipInstance, weapon: ShipWeaponInstance): Boolean {
+	return aggregateValidTargets(ship, weapon) { any(it) }
+}
+
+fun GameState.getValidTargets(ship: ShipInstance, weapon: ShipWeaponInstance): List<ShipInstance> {
+	return aggregateValidTargets(ship, weapon) { filter(it) }
+}
+
 fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 	ships
 		.values
@@ -44,17 +68,7 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 				.filter { !it.isDoneCurrentPhase }
 				.sumOf { ship ->
 					val allWeapons = ship.armaments.weaponInstances
-						.filterValues { weaponInstance ->
-							when (val weapon = weaponInstance.weapon) {
-								is AreaWeapon -> true
-								else -> {
-									val pickRequest = ship.getWeaponPickRequest(weapon)
-									ships.values.any { target ->
-										target.owner in (pickRequest.type as PickType.Ship).allowSides && target.position.location in pickRequest.boundary
-									}
-								}
-							}
-						}
+						.filterValues { weapon -> hasValidTargets(ship, weapon) }
 					val usableWeapons = allWeapons - ship.usedArmaments
 					
 					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots }

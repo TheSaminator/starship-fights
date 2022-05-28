@@ -231,7 +231,9 @@ val ShipInstance.durability: ShipDurability
 		is FelinaeShipDurability -> d.copy(
 			maxHullPoints = d.maxHullPoints - recoalescenceMaxHullDamage,
 		)
-		else -> d
+		is StandardShipDurability -> d.copy(
+			turretDefense = if (canUseTurrets) d.turretDefense else 0.0
+		)
 	}
 
 val ShipInstance.firepower: ShipFirepower
