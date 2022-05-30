@@ -2,6 +2,7 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
+import kotlin.jvm.JvmInline
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -281,15 +282,17 @@ sealed class ShipWeaponInstance {
 	}
 }
 
+@JvmInline
 @Serializable
-data class ShipArmaments(
+value class ShipArmaments(
 	val weapons: Map<Id<ShipWeapon>, ShipWeapon>
 ) {
 	fun instantiate() = ShipInstanceArmaments(weapons.mapValues { (_, weapon) -> weapon.instantiate() })
 }
 
+@JvmInline
 @Serializable
-data class ShipInstanceArmaments(
+value class ShipInstanceArmaments(
 	val weaponInstances: Map<Id<ShipWeapon>, ShipWeaponInstance>
 )
 

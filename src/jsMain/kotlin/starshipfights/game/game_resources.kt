@@ -18,6 +18,9 @@ fun interface CustomRenderFactory<T> {
 	fun generate(parameter: T): Object3D
 }
 
+val ClientMode.isSmallLoad: Boolean
+	get() = this !is ClientMode.InGame && this !is ClientMode.InTrainingGame
+
 object RenderResources {
 	const val LOGO_URL = "/static/images/logo.svg"
 	

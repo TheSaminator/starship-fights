@@ -106,8 +106,8 @@ sealed class Popup<out T> {
 		}
 	}
 	
-	class MainMenuScreen(private val admiralInfo: InGameAdmiral) : Popup<GlobalSide?>() {
-		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (GlobalSide?) -> Unit) {
+	class MainMenuScreen(private val admiralInfo: InGameAdmiral) : Popup<MainMenuOption?>() {
+		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (MainMenuOption?) -> Unit) {
 			p {
 				style = "text-align:center"
 				
@@ -135,19 +135,27 @@ sealed class Popup<out T> {
 			
 			div(classes = "button-set col") {
 				button {
-					+"Host Battle"
+					+"Play Singleplayer Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
-						callback(GlobalSide.HOST)
+						callback(MainMenuOption.Singleplayer)
 					}
 				}
 				button {
-					+"Join Battle"
+					+"Host Multiplayer Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
-						callback(GlobalSide.GUEST)
+						callback(MainMenuOption.Multiplayer(GlobalSide.HOST))
+					}
+				}
+				button {
+					+"Join Multiplayer Battle"
+					onClickFunction = { e ->
+						e.preventDefault()
+						
+						callback(MainMenuOption.Multiplayer(GlobalSide.GUEST))
 					}
 				}
 			}
@@ -202,6 +210,47 @@ sealed class Popup<out T> {
 						onClickFunction = { e ->
 							e.preventDefault()
 							callback(bg)
+						}
+					}
+				}
+				button {
+					+"Cancel"
+					onClickFunction = { e ->
+						e.preventDefault()
+						callback(null)
+					}
+				}
+			}
+		}
+	}
+	
+	object ChooseEnemyFactionScreen : Popup<AIFactionChoice?>() {
+		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (AIFactionChoice?) -> Unit) {
+			p {
+				style = "text-align:center"
+				
+				+"Select an enemy faction"
+			}
+			
+			div(classes = "button-set col") {
+				button {
+					+"Random"
+					onClickFunction = { e ->
+						e.preventDefault()
+						callback(AIFactionChoice.Random)
+					}
+				}
+				for (faction in Faction.values()) {
+					button {
+						+faction.navyName
+						+Entities.nbsp
+						img(alt = faction.shortName, src = faction.flagUrl) {
+							style = "width:1.2em;height:0.75em"
+						}
+						
+						onClickFunction = { e ->
+							e.preventDefault()
+							callback(AIFactionChoice.Chosen(faction))
 						}
 					}
 				}
@@ -356,6 +405,7 @@ sealed class Popup<out T> {
 					}
 				}
 				tr {
+					td { +Entities.nbsp }
 					td { +Entities.nbsp }
 					td { +Entities.nbsp }
 					td { +Entities.nbsp }

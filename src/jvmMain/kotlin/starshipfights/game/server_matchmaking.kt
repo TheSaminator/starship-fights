@@ -30,6 +30,9 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 	if (inGameAdmiral.user.id != user.id) closeAndReturn("You do not own that admiral") { return false }
 	
 	when (val loginMode = playerLogin.login) {
+		is LoginMode.Train -> {
+			closeAndReturn("Invalid input: LoginMode.Train should redirect you directly to training endpoint") { return false }
+		}
 		is LoginMode.Host -> {
 			val battleInfo = loginMode.battleInfo
 			val hostInvitation = HostInvitation(inGameAdmiral, battleInfo)

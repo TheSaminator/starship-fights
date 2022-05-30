@@ -8,8 +8,10 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = MomentSerializer::class)
-expect class Moment(millis: Double) {
+expect class Moment(millis: Double) : Comparable<Moment> {
 	fun toMillis(): Double
+	
+	override fun compareTo(other: Moment): Int
 	
 	companion object {
 		val now: Moment

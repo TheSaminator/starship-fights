@@ -35,6 +35,16 @@ fun GameState.calculateMovePhaseInitiative(): InitiativePair = InitiativePair(
 		}
 )
 
+fun GameState.getValidAttackersWith(target: ShipInstance): Map<Id<ShipInstance>, Set<Id<ShipWeapon>>> {
+	return ships.mapValues { (_, ship) -> isValidAttackerWith(ship, target) }
+}
+
+fun GameState.isValidAttackerWith(attacker: ShipInstance, target: ShipInstance): Set<Id<ShipWeapon>> {
+	return attacker.armaments.weaponInstances.filterValues {
+		isValidTarget(attacker, it, attacker.getWeaponPickRequest(it.weapon), target)
+	}.keys
+}
+
 fun GameState.isValidTarget(ship: ShipInstance, weapon: ShipWeaponInstance, pickRequest: PickRequest, target: ShipInstance): Boolean {
 	val targetPos = target.position.location
 	

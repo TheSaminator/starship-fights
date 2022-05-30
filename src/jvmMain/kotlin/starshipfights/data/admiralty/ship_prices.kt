@@ -18,7 +18,7 @@ fun ShipType.buyPriceChecked(admiral: Admiral, ownedShips: List<ShipInDrydock>):
 }
 
 fun ShipType.buyPrice(admiral: Admiral, ownedShips: List<ShipInDrydock>): Int? {
-	if (weightClass.rank > admiral.rank.maxShipWeightClass.rank) return null
+	if (weightClass.tier > admiral.rank.maxShipWeightClass.tier) return null
 	if (weightClass.isUnique && ownedShips.any { it.shipType.weightClass == weightClass }) return null
 	return when {
 		admiral.faction == faction -> buyPrice

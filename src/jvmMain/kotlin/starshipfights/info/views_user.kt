@@ -509,7 +509,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 				}
 				
 				val now = Instant.now()
-				for (ship in ships.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }) {
+				for (ship in ships.sortedBy { it.name }.sortedBy { it.shipType.weightClass.tier }) {
 					tr {
 						td { +ship.shipData.fullName }
 						td {
@@ -618,7 +618,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 		.mapNotNull { type -> type.buyPriceChecked(admiral, ownedShips)?.let { price -> type to price } }
 		.sortedBy { (_, price) -> price }
 		.sortedBy { (type, _) -> type.name }
-		.sortedBy { (type, _) -> type.weightClass.rank }
+		.sortedBy { (type, _) -> type.weightClass.tier }
 		.sortedBy { (type, _) -> if (type.faction == admiral.faction) -1 else type.faction.ordinal }
 		.toMap()
 	
@@ -750,7 +750,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 				}
 				
 				val now = Instant.now()
-				for (ship in ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.rank }) {
+				for (ship in ownedShips.sortedBy { it.name }.sortedBy { it.shipType.weightClass.tier }) {
 					tr {
 						td {
 							+ship.shipData.fullName

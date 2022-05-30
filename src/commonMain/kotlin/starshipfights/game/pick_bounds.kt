@@ -175,9 +175,8 @@ fun PickBoundary.closestPointTo(position: Position): Position = when (this) {
 		
 		if ((distance angleBetween midNormal) <= maxAngle)
 			position
-		else {
-			((midNormal rotatedBy (midNormal angleTo distance).coerceIn(-maxAngle, maxAngle)) * distance.length) + center
-		}
+		else
+			((midNormal rotatedBy (midNormal angleTo distance).coerceIn(-maxAngle..maxAngle)) * distance.length) + center
 	}
 	is PickBoundary.Circle -> {
 		val distance = position - center
@@ -188,7 +187,7 @@ fun PickBoundary.closestPointTo(position: Position): Position = when (this) {
 	}
 	is PickBoundary.Rectangle -> {
 		Distance((position - center).vector.let { (x, y) ->
-			Vec2(x.coerceIn(-width2, width2), y.coerceIn(-length2, length2))
+			Vec2(x.coerceIn(-width2..width2), y.coerceIn(-length2..length2))
 		}) + center
 	}
 	is PickBoundary.WeaponsFire -> {

@@ -25,6 +25,7 @@ fun ClientMode.view(): HTML.() -> Unit = {
 		
 		when (this@view) {
 			is ClientMode.MatchmakingMenu -> title("Starship Fights | Lobby")
+			is ClientMode.InTrainingGame -> title("Starship Fights | Training")
 			is ClientMode.InGame -> title("Starship Fights | In-Game")
 			is ClientMode.Error -> title("Starship Fights | Error!")
 		}

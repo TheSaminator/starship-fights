@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import starshipfights.data.Id
+import kotlin.jvm.JvmInline
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -52,8 +53,9 @@ enum class ShipModuleStatus(val canBeUsed: Boolean, val canBeRepaired: Boolean) 
 	ABSENT(false, false)
 }
 
+@JvmInline
 @Serializable(with = ShipModulesStatusSerializer::class)
-data class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
+value class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 	operator fun get(module: ShipModule) = statuses[module] ?: ShipModuleStatus.ABSENT
 	
 	fun repair(module: ShipModule, repairUnrepairable: Boolean = false) = ShipModulesStatus(

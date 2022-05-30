@@ -40,6 +40,18 @@ data class Admiral(
 	})
 }
 
+fun genAI(faction: Faction, forBattleSize: BattleSize) = Admiral(
+	id = Id("advanced_robotical_admiral"),
+	owningUser = Id("fake_player_actually_an_AI"),
+	name = "M-5 Computational Unit",
+	isFemale = true,
+	faction = faction,
+	acumen = AdmiralRank.values().first {
+		it.maxShipWeightClass.tier >= forBattleSize.maxWeightClass.tier
+	}.minAcumen + 500,
+	money = 0
+)
+
 infix fun AdmiralRank.Companion.eq(rank: AdmiralRank): Bson = when (rank.ordinal) {
 	0 -> Admiral::acumen lt AdmiralRank.values()[1].minAcumen
 	AdmiralRank.values().size - 1 -> Admiral::acumen gte rank.minAcumen
@@ -111,7 +123,7 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 		if (shipTypes.isEmpty())
 			emptyList()
 		else
-			(0 until ((admiral.rank.maxShipWeightClass.rank - swc.rank + 1) * 2).coerceAtLeast(0)).map { i ->
+			(0 until ((admiral.rank.maxShipWeightClass.tier - swc.tier + 1) * 2).coerceAtLeast(0)).map { i ->
 				shipTypes[i % shipTypes.size]
 			}
 	}

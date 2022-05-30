@@ -25,11 +25,10 @@ class GameRenderInteraction(
 )
 
 lateinit var mySide: GlobalSide
-	private set
 
 private val pickContextDeferred = CompletableDeferred<PickContext>()
 
-private suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
+suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	GameUI.initGameUI(scope.uiResponder(playerActions))
 	
 	GameUI.drawGameUI(gameState.value)

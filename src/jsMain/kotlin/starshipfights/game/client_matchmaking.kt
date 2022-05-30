@@ -15,6 +15,7 @@ import kotlinx.html.dom.append
 import kotlinx.html.hiddenInput
 import kotlinx.html.js.form
 import kotlinx.html.style
+import starshipfights.data.Id
 
 suspend fun setupBackground() {
 	val camera = PerspectiveCamera(69, window.aspectRatio, 0.01, 1_000)
@@ -44,6 +45,31 @@ suspend fun setupBackground() {
 	}
 }
 
+private suspend fun enterTraining(admiral: Id<InGameAdmiral>, battleInfo: BattleInfo, faction: Faction?): Nothing {
+	interruptExit = false
+	
+	document.body!!.append.form(action = "/train", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
+		style = "display:none"
+		hiddenInput {
+			name = "admiral"
+			value = admiral.toString()
+		}
+		hiddenInput {
+			name = "battle-size"
+			value = battleInfo.size.toUrlSlug()
+		}
+		hiddenInput {
+			name = "battle-bg"
+			value = battleInfo.bg.toUrlSlug()
+		}
+		hiddenInput {
+			name = "enemy-faction"
+			value = faction?.toUrlSlug() ?: "-random"
+		}
+	}.submit()
+	awaitCancellation()
+}
+
 private suspend fun enterGame(connectToken: String): Nothing {
 	interruptExit = false
 	
@@ -59,13 +85,20 @@ private suspend fun enterGame(connectToken: String): Nothing {
 
 private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 	val playerLogin = Popup.getPlayerLogin(admirals)
+	val playerLoginSide = playerLogin.login.globalSide
+	
+	if (playerLoginSide == null) {
+		val (battleInfo, enemyFaction) = playerLogin.login as LoginMode.Train
+		enterTraining(playerLogin.admiral, battleInfo, enemyFaction)
+	}
+	
 	val admiral = admirals.single { it.id == playerLogin.admiral }
 	
 	try {
 		httpClient.webSocket("$rootPathWs/matchmaking") {
 			sendObject(PlayerLogin.serializer(), playerLogin)
 			
-			when (playerLogin.login.globalSide) {
+			when (playerLoginSide) {
 				GlobalSide.HOST -> {
 					var loadingText = "Awaiting join request..."
 					

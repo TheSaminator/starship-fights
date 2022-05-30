@@ -35,3 +35,6 @@ sealed class GamePhase {
 		override fun next() = Power(turn + 1)
 	}
 }
+
+val GamePhase.usesInitiative: Boolean
+	get() = this is GamePhase.Move || this is GamePhase.Attack

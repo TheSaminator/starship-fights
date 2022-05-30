@@ -160,7 +160,7 @@ object GameUI {
 	fun drawGameUI(state: GameState) {
 		chatHistory.clear()
 		chatHistory.append {
-			for (entry in state.chatBox.sortedBy { it.sentAt.toMillis() }) {
+			for (entry in state.chatBox.sortedBy { it.sentAt }) {
 				p {
 					title = "At ${entry.sentAt.date}"
 					
@@ -390,12 +390,6 @@ object GameUI {
 						}
 						br
 						+"Phase II - Ship Movement"
-						br
-						+if (state.doneWithPhase == mySide)
-							"You have ended your phase"
-						else if (state.currentInitiative != mySide.other)
-							"You have the initiative!"
-						else "Your opponent has the initiative"
 					}
 					is GamePhase.Attack -> {
 						strong(classes = "heading") {
@@ -403,12 +397,6 @@ object GameUI {
 						}
 						br
 						+"Phase III - Weapons Fire"
-						br
-						+if (state.doneWithPhase == mySide)
-							"You have ended your phase"
-						else if (state.currentInitiative != mySide.other)
-							"You have the initiative!"
-						else "Your opponent has the initiative"
 					}
 					is GamePhase.Repair -> {
 						strong(classes = "heading") {
@@ -417,6 +405,18 @@ object GameUI {
 						br
 						+"Phase IV - Onboard Repairs"
 					}
+				}
+				
+				if (state.phase.usesInitiative) {
+					br
+					+if (state.doneWithPhase == mySide)
+						"You have ended your phase"
+					else if (state.currentInitiative != mySide.other)
+						"You have the initiative!"
+					else "Your opponent has the initiative"
+				} else if (state.doneWithPhase == mySide) {
+					br
+					+"You have ended your phase"
 				}
 			}
 		}
@@ -588,8 +588,8 @@ object GameUI {
 				if (ship.bomberWings.isNotEmpty()) {
 					span {
 						val (borderColor, fillColor) = when (bomberSide) {
-							LocalSide.GREEN -> "#39F" to "#135"
-							LocalSide.RED -> "#F66" to "#522"
+							LocalSide.GREEN -> "#5F5" to "#262"
+							LocalSide.RED -> "#F55" to "#622"
 						}
 						
 						style = "display:inline-block;border:5px solid $borderColor;border-radius:15px;background-color:$fillColor;color:#fff"

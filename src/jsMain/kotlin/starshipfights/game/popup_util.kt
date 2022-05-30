@@ -1,5 +1,17 @@
 package starshipfights.game
 
+sealed class MainMenuOption {
+	object Singleplayer : MainMenuOption()
+	
+	data class Multiplayer(val side: GlobalSide) : MainMenuOption()
+}
+
+sealed class AIFactionChoice {
+	object Random : AIFactionChoice()
+	
+	data class Chosen(val faction: Faction) : AIFactionChoice()
+}
+
 private suspend fun Popup.Companion.getPlayerInfo(admirals: List<InGameAdmiral>): InGameAdmiral {
 	return Popup.ChooseAdmiralScreen(admirals).display()
 }
@@ -10,11 +22,20 @@ private suspend fun Popup.Companion.getBattleInfo(admiral: InGameAdmiral): Battl
 	return BattleInfo(battleSize, battleBackground)
 }
 
+private suspend fun Popup.Companion.getTrainingInfo(admiral: InGameAdmiral): LoginMode? {
+	val battleInfo = getBattleInfo(admiral) ?: return getLoginMode(admiral)
+	val faction = Popup.ChooseEnemyFactionScreen.display() ?: return getLoginMode(admiral)
+	return LoginMode.Train(battleInfo, (faction as? AIFactionChoice.Chosen)?.faction)
+}
+
 private suspend fun Popup.Companion.getLoginMode(admiral: InGameAdmiral): LoginMode? {
-	val globalSide = Popup.MainMenuScreen(admiral).display() ?: return null
-	return when (globalSide) {
-		GlobalSide.HOST -> LoginMode.Host(getBattleInfo(admiral) ?: return getLoginMode(admiral))
-		GlobalSide.GUEST -> LoginMode.Join
+	val mainMenuOption = Popup.MainMenuScreen(admiral).display() ?: return null
+	return when (mainMenuOption) {
+		MainMenuOption.Singleplayer -> getTrainingInfo(admiral)
+		is MainMenuOption.Multiplayer -> when (mainMenuOption.side) {
+			GlobalSide.HOST -> LoginMode.Host(getBattleInfo(admiral) ?: return getLoginMode(admiral))
+			GlobalSide.GUEST -> LoginMode.Join
+		}
 	}
 }
 

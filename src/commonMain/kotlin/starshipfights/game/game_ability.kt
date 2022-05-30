@@ -238,6 +238,9 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
 			
+			if ((gameState.ships - ship).any { (_, otherShip) -> (otherShip.position.location - data.newPosition.location).length <= SHIP_BASE_SIZE })
+				return GameEvent.InvalidAction("You cannot move that ship there")
+			
 			val moveOrigin = shipInstance.position.location
 			val newFacingNormal = normalDistance(data.newPosition.facing)
 			val oldFacingNormal = normalDistance(shipInstance.position.facing)
@@ -332,6 +335,9 @@ sealed class PlayerAbilityType {
 		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.UseInertialessDrive) return GameEvent.InvalidAction("Internal error from using player ability")
 			if (!gameState.canShipMove(ship)) return GameEvent.InvalidAction("You do not have the initiative")
+			
+			if ((gameState.ships - ship).any { (_, otherShip) -> (otherShip.position.location - data.newPosition).length <= SHIP_BASE_SIZE })
+				return GameEvent.InvalidAction("You cannot move that ship there")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.isDoneCurrentPhase) return GameEvent.InvalidAction("Ships cannot be moved twice")
@@ -432,7 +438,7 @@ sealed class PlayerAbilityType {
 					ships = gameState.ships + mapOf(
 						ship to shipInstance.copy(
 							weaponAmount = shipInstance.weaponAmount - 1,
-							armaments = shipInstance.armaments.copy(
+							armaments = ShipInstanceArmaments(
 								weaponInstances = shipInstance.armaments.weaponInstances + mapOf(
 									weapon to shipWeapon.copy(numCharges = shipWeapon.numCharges + shipInstance.firepower.lanceCharging)
 								)

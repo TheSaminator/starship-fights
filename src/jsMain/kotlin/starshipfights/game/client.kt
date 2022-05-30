@@ -46,11 +46,12 @@ fun main() {
 	
 	AppScope.launch {
 		Popup.LoadingScreen("Loading resources...") {
-			RenderResources.load(clientMode !is ClientMode.InGame)
+			RenderResources.load(clientMode.isSmallLoad)
 		}.display()
 		
 		when (clientMode) {
 			is ClientMode.MatchmakingMenu -> matchmakingMain(clientMode.admirals)
+			is ClientMode.InTrainingGame -> trainingMain(clientMode.initialState)
 			is ClientMode.InGame -> gameMain(clientMode.playerSide, clientMode.connectToken, clientMode.initialState)
 			is ClientMode.Error -> errorMain(clientMode.message)
 		}

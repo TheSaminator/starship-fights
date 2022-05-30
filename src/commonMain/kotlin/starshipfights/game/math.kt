@@ -17,7 +17,6 @@ inline operator fun Vec2.times(scale: Double) = Vec2(x * scale, y * scale)
 inline operator fun Vec2.div(scale: Double) = Vec2(x / scale, y / scale)
 
 inline operator fun Double.times(vec: Vec2) = vec * this
-inline operator fun Double.div(vec: Vec2) = vec / this
 
 inline operator fun Vec2.unaryPlus() = this
 inline operator fun Vec2.unaryMinus() = this * -1.0
@@ -25,11 +24,10 @@ inline operator fun Vec2.unaryMinus() = this * -1.0
 inline infix fun Vec2.dot(other: Vec2) = x * other.x + y * other.y
 inline infix fun Vec2.cross(other: Vec2) = x * other.y - y * other.x
 
-inline infix fun Vec2.angleBetween(other: Vec2) = acos((this dot other) / (this.magnitude * other.magnitude))
 inline infix fun Vec2.angleTo(other: Vec2) = atan2(this cross other, this dot other)
+inline infix fun Vec2.angleBetween(other: Vec2) = abs(this angleTo other)
 
 inline infix fun Vec2.rotatedBy(angle: Double) = normalVector(angle).let { (c, s) -> Vec2(c * x - s * y, c * y + s * x) }
-inline infix fun Vec2.scaleUneven(scalarVector: Vec2) = Vec2(x * scalarVector.x, y * scalarVector.y)
 
 inline fun normalVector(angle: Double) = Vec2(cos(angle), sin(angle))
 inline fun polarVector(radius: Double, angle: Double) = Vec2(radius * cos(angle), radius * sin(angle))
@@ -41,7 +39,12 @@ inline val Vec2.angle: Double
 	get() = atan2(y, x)
 
 inline val Vec2.normal: Vec2
-	get() = this / magnitude
+	get() {
+		val thisMagnitude = this.magnitude
+		return if (thisMagnitude == 0.0)
+			Vec2(0.0, 0.0)
+		else this / thisMagnitude
+	}
 
 // AFFINE vs DISPLACEMENT QUANTITIES
 
@@ -60,8 +63,6 @@ inline operator fun Distance.plus(other: Distance) = Distance(vector + other.vec
 inline operator fun Position.minus(relativeTo: Position) = Distance(vector - relativeTo.vector)
 inline operator fun Position.minus(distance: Distance) = Position(vector - distance.vector)
 inline operator fun Distance.minus(other: Distance) = Distance(vector - other.vector)
-
-inline fun Position.relativeTo(origin: Position, operation: (Distance) -> Distance) = operation(this - origin) + origin
 
 inline operator fun Distance.times(scale: Double) = Distance(vector * scale)
 inline operator fun Distance.div(scale: Double) = Distance(vector / scale)

@@ -2,7 +2,7 @@ package starshipfights.game
 
 enum class ShipWeightClass(
 	val meshIndex: Int,
-	val rank: Int
+	val tier: Int
 ) {
 	// General
 	ESCORT(1, 0),

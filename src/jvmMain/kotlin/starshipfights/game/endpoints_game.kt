@@ -42,6 +42,12 @@ fun Routing.installGame() {
 		call.respondHtml(HttpStatusCode.OK, clientMode.view())
 	}
 	
+	post("/train") {
+		val clientMode = call.getTrainingClientMode()
+		
+		call.respondHtml(HttpStatusCode.OK, clientMode.view())
+	}
+	
 	webSocket("/matchmaking") {
 		val oldUser = call.getUser() ?: closeAndReturn("You must be logged in to play") { return@webSocket }
 		if (oldUser.status != UserStatus.AVAILABLE)

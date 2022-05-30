@@ -39,7 +39,13 @@ data class PlayerLogin(
 
 @Serializable
 sealed class LoginMode {
-	abstract val globalSide: GlobalSide
+	abstract val globalSide: GlobalSide?
+	
+	@Serializable
+	data class Train(val battleInfo: BattleInfo, val enemyFaction: Faction?) : LoginMode() {
+		override val globalSide: GlobalSide?
+			get() = null
+	}
 	
 	@Serializable
 	data class Host(val battleInfo: BattleInfo) : LoginMode() {
