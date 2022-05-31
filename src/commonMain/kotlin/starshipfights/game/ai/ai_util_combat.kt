@@ -11,10 +11,11 @@ val combatTargetShipWeight by instinct { Random.nextDouble(0.5, 2.5) }
 val combatAvengeShipwrecks by instinct { Random.nextDouble(0.5, 4.5) }
 val combatAvengeShipWeight by instinct { Random.nextDouble(-0.5, 1.5) }
 
-val combatPrioritization by instinct { Random.nextDouble(-1.0, 1.0) }
+val combatPrioritization by instinct { Random.nextDouble(-1.5, 2.5) }
 
 val combatAvengeAttacks by instinct { Random.nextDouble(0.5, 4.5) }
 val combatForgiveTarget by instinct { Random.nextDouble(-1.5, 2.5) }
+val combatPreyOnTheWeak by instinct { Random.nextDouble(-1.5, 2.5) }
 
 val combatFrustratedByFailedAttacks by instinct { Random.nextDouble(-2.5, 5.5) }
 

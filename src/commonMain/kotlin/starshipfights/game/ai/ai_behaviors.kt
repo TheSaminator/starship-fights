@@ -136,19 +136,26 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 									}
 								else emptyList()
 							}.associateWith { (ship, weaponId, target) ->
-								weaponId.expectedAdvantageFromWeaponUsage(state, ship, target) * brain[shipAttackPriority forShip target.id].signedPow(instincts[combatPrioritization])
+								weaponId.expectedAdvantageFromWeaponUsage(state, ship, target) * smoothNegative(brain[shipAttackPriority forShip target.id].signedPow(instincts[combatPrioritization])) * (1 + target.calculateSuffering()).signedPow(instincts[combatPreyOnTheWeak])
 							}.weightedRandomOrNull()
 							
 							if (attackWith == null)
 								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 							else {
 								val (ship, weaponId, target) = attackWith
-								val targetPickResponse = if (ship.armaments.weaponInstances[weaponId]?.weapon is AreaWeapon)
-									PickResponse.Location(target.position.location)
-								else
-									PickResponse.Ship(target.id)
+								val targetPickResponse = when (val weaponSpec = ship.armaments.weaponInstances[weaponId]?.weapon) {
+									is AreaWeapon -> PickResponse.Location(ship.getWeaponPickRequest(weaponSpec).boundary.closestPointTo(target.position.location))
+									else -> PickResponse.Ship(target.id)
+								}
 								
 								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.UseWeapon(ship.id, weaponId), PlayerAbilityData.UseWeapon(targetPickResponse)))
+								
+								withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
+									logWarning("Error when attacking target ship ID ${target.id} with weapon $weaponId of ship ID ${ship.id} - $error")
+									
+									val nextState = gameState.value
+									phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
+								}
 							}
 						}
 						is GamePhase.Repair -> {

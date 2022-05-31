@@ -20,11 +20,11 @@ fun ShipPosition.score(gameState: GameState, shipInstance: ShipInstance, instinc
 	val canBeAttackedBy = ship.attackableWithDamageBy(gameState)
 	
 	val opportunityScore = canAttack.map { (targetId, potentialDamage) ->
-		brain[shipAttackPriority forShip targetId].signedPow(instincts[navTunnelVision]) * potentialDamage
+		smoothNegative(brain[shipAttackPriority forShip targetId]).signedPow(instincts[navTunnelVision]) * potentialDamage
 	}.sum() + (ship.calculateSuffering() * instincts[navLustForBlood])
 	
 	val vulnerabilityScore = canBeAttackedBy.map { (targetId, potentialDamage) ->
-		brain[shipAttackPriority forShip targetId].signedPow(instincts[navTunnelVision]) * potentialDamage
+		smoothNegative(brain[shipAttackPriority forShip targetId]).signedPow(instincts[navTunnelVision]) * potentialDamage
 	}.sum() * -expm1(-ship.calculateSuffering() * instincts[navSqueamishness])
 	
 	return instincts[navOptimality].pow(opportunityScore.signedPow(instincts[navAggression]) - vulnerabilityScore.signedPow(instincts[navPassivity]))
