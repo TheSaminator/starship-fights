@@ -127,7 +127,7 @@ sealed class ShipWeapon {
 			get() = 1750.0
 		
 		override val addsPointCost: Int
-			get() = numShots * 15
+			get() = numShots * 10
 		
 		override fun instantiate() = ShipWeaponInstance.ParticleClawLauncher(this)
 	}
@@ -142,7 +142,7 @@ sealed class ShipWeapon {
 			get() = 1250.0
 		
 		override val addsPointCost: Int
-			get() = numShots * 5 * (firingArcs.size + 1)
+			get() = numShots * 5 * firingArcs.size
 		
 		override fun instantiate() = ShipWeaponInstance.LightningYarn(this)
 	}
