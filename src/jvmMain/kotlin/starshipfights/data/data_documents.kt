@@ -7,8 +7,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import org.bson.conversions.Bson
 import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.insertOne
+import org.litote.kmongo.replaceOne
 import org.litote.kmongo.serialization.IdController
+import org.litote.kmongo.util.KMongoUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.coroutines.CoroutineContext
@@ -97,7 +98,9 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	
 	override suspend fun put(docs: Iterable<T>) {
 		collection().bulkWrite(
-			docs.map { insertOne(it) },
+			docs.map { doc ->
+				replaceOne(KMongoUtil.idFilterQuery(doc.id), doc, ReplaceOptions().upsert(true))
+			},
 			BulkWriteOptions().ordered(false)
 		)
 	}
