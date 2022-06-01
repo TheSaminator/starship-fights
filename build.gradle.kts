@@ -1,6 +1,8 @@
 import com.nixxcode.jvmbrotli.common.BrotliLoader
 import com.nixxcode.jvmbrotli.enc.BrotliOutputStream
 import com.nixxcode.jvmbrotli.enc.Encoder
+import groovy.json.JsonSlurper
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 import java.security.MessageDigest
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -31,7 +33,15 @@ plugins {
 }
 
 group = "io.github.thesaminator"
-version = "1.0-SNAPSHOT"
+version = "1.0"
+
+val isDevEnv: Boolean by extra {
+	val configFile = file("config.json")
+	if (!configFile.isFile)
+		true
+	else
+		((JsonSlurper().parse(configFile) as Map<*, *>)["isDevEnv"] as? Boolean) ?: true
+}
 
 repositories {
 	mavenCentral()
@@ -47,7 +57,17 @@ kotlin {
 	}
 	js(IR) {
 		binaries.executable()
-		browser()
+		browser {
+			commonWebpackConfig {
+				if (isDevEnv) {
+					mode = KotlinWebpackConfig.Mode.DEVELOPMENT
+					devtool = "source-map"
+				} else {
+					mode = KotlinWebpackConfig.Mode.PRODUCTION
+					devtool = null
+				}
+			}
+		}
 	}
 	sourceSets {
 		all {
@@ -116,6 +136,8 @@ tasks.named<Copy>("jvmProcessResources") {
 	val jsBrowserDistribution = tasks.named("jsBrowserDistribution")
 	from(jsBrowserDistribution) {
 		into("/static/game")
+		if (!isDevEnv)
+			exclude("starship-fights.js.map")
 	}
 	
 	doLast {
