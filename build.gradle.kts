@@ -33,7 +33,6 @@ plugins {
 }
 
 group = "io.github.thesaminator"
-version = "1.0"
 
 val isDevEnv: Boolean by extra {
 	val configFile = file("config.json")
