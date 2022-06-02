@@ -253,12 +253,12 @@ button {
 
 	background-color: #999;
 	border-radius: 3px;
-	color: #363;
+	color: #242;
 	font-size: 0.9em;
 }
 
 button:hover {
-	color: #6c6;
+	color: #7e7;
 }
 
 button:active {
@@ -307,7 +307,7 @@ button:disabled {
 
 	text-decoration: none;
 	text-align: center;
-	color: #484;
+	color: #242;
 }
 
 .button-set > button:hover {
@@ -358,7 +358,7 @@ button:disabled > img {
 }
 
 .panel a {
-	color: #6c6;
+	color: #7e7;
 	text-decoration: none;
 }
 
@@ -367,7 +367,7 @@ button:disabled > img {
 }
 
 .panel a:visited {
-	color: #6c6;
+	color: #7e7;
 }
 
 .error {
