@@ -182,7 +182,8 @@ div.ui-layer {
 	transform: translate(-50%, 0);
 
 	font-size: 1.25em;
-	color: #fff;
+	color: #ddd;
+	text-shadow: 0 0 2px #222;
 }
 
 #top-middle-info {
