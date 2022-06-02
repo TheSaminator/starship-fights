@@ -4,14 +4,13 @@ import starshipfights.data.Id
 import starshipfights.game.*
 import kotlin.math.expm1
 import kotlin.math.pow
-import kotlin.random.Random
 
-val navAggression by instinct { Random.nextDouble(0.5, 1.5) }
-val navPassivity by instinct { Random.nextDouble(0.5, 1.5) }
-val navLustForBlood by instinct { Random.nextDouble(-0.5, 0.5) }
-val navSqueamishness by instinct { Random.nextDouble(0.25, 1.25) }
-val navTunnelVision by instinct { Random.nextDouble(-0.25, 1.25) }
-val navOptimality by instinct { Random.nextDouble(1.25, 2.75) }
+val navAggression by instinct(0.5..1.5)
+val navPassivity by instinct(0.5..1.5)
+val navLustForBlood by instinct(-0.5..0.5)
+val navSqueamishness by instinct(0.25..1.25)
+val navTunnelVision by instinct(-0.25..1.25)
+val navOptimality by instinct(1.25..2.75)
 
 fun ShipPosition.score(gameState: GameState, shipInstance: ShipInstance, instincts: Instincts, brain: Brain): Double {
 	val ship = shipInstance.copy(position = this)

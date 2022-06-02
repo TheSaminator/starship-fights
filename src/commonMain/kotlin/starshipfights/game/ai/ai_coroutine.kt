@@ -1,7 +1,7 @@
 package starshipfights.game.ai
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
@@ -28,7 +28,8 @@ suspend fun aiPlayer(session: AISession, initialState: GameState) = coroutineSco
 	val aiPlayer = AIPlayer(
 		gameStateFlow,
 		session.actions,
-		errors
+		errors,
+		gameDone
 	)
 	
 	val behavingJob = launch {
@@ -47,8 +48,17 @@ suspend fun aiPlayer(session: AISession, initialState: GameState) = coroutineSco
 	
 	gameDone.join()
 	
-	behavingJob.cancelAndJoin()
-	handlingJob.cancelAndJoin()
+	try {
+		behavingJob.join()
+	} catch (_: CancellationException) {
+		// ignore it
+	}
+	
+	try {
+		handlingJob.join()
+	} catch (_: CancellationException) {
+		// ignore it again
+	}
 	
 	session.actions.close()
 }

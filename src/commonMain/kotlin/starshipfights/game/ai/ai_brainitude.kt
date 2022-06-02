@@ -14,13 +14,17 @@ import kotlin.properties.ReadOnlyProperty
 value class Instincts private constructor(private val numbers: MutableMap<String, Double>) {
 	constructor() : this(mutableMapOf())
 	
-	operator fun get(instinct: Instinct) = numbers.getOrPut(instinct.key, instinct.default)
+	operator fun get(instinct: Instinct) = numbers.getOrPut(instinct.key) { instinct.randRange.random() }
+	
+	companion object {
+		fun fromValues(values: Map<String, Double>) = Instincts(values.toMutableMap())
+	}
 }
 
-data class Instinct(val key: String, val default: () -> Double)
+data class Instinct(val key: String, val randRange: ClosedFloatingPointRange<Double>)
 
-fun instinct(default: () -> Double) = ReadOnlyProperty<Any?, Instinct> { _, property ->
-	Instinct(property.name, default)
+fun instinct(randRange: ClosedFloatingPointRange<Double>) = ReadOnlyProperty<Any?, Instinct> { _, property ->
+	Instinct(property.name, randRange)
 }
 
 @JvmInline

@@ -181,3 +181,9 @@ tasks.named<JavaExec>("run") {
 	dependsOn(tasks.named<Jar>("jvmJar"))
 	classpath(tasks.named<Jar>("jvmJar"))
 }
+
+tasks.create("runAiTest", JavaExec::class.java) {
+	group = "test"
+	classpath = sourceSets.getByName("test").runtimeClasspath
+	mainClass.set("starshipfights.game.ai.AITesting")
+}

@@ -50,7 +50,7 @@ fun GameState.isValidTarget(ship: ShipInstance, weapon: ShipWeaponInstance, pick
 	
 	return when (val weaponSpec = weapon.weapon) {
 		is AreaWeapon ->
-			target.owner != ship.owner && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length <= weaponSpec.areaRadius
+			target.owner != ship.owner && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length < weaponSpec.areaRadius
 		else ->
 			target.owner in (pickRequest.type as PickType.Ship).allowSides && isValidPick(pickRequest, PickResponse.Ship(target.id))
 	}

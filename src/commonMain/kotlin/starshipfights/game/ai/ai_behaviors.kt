@@ -1,13 +1,11 @@
 package starshipfights.game.ai
 
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.flow.produceIn
 import starshipfights.data.Id
 import starshipfights.game.*
 import kotlin.math.pow
@@ -17,8 +15,10 @@ data class AIPlayer(
 	val gameState: StateFlow<GameState>,
 	val doActions: SendChannel<PlayerAction>,
 	val getErrors: ReceiveChannel<String>,
+	val onGameEnd: CompletableJob
 )
 
+@OptIn(FlowPreview::class)
 suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 	try {
 		coroutineScope {
@@ -26,12 +26,10 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 			
 			val phasePipe = Channel<Pair<GamePhase, Boolean>>(Channel.CONFLATED)
 			
-			launch {
+			launch(onGameEnd) {
 				var prevSentAt = Moment.now
 				
-				gameState.collect { state ->
-					logInfo(jsonSerializer.encodeToString(Brain.serializer(), brain))
-					
+				for (state in gameState.produceIn(this)) {
 					phasePipe.send(state.phase to (state.doneWithPhase != mySide && (!state.phase.usesInitiative || state.currentInitiative != mySide.other)))
 					
 					for (msg in state.chatBox.takeLastWhile { msg -> msg.sentAt > prevSentAt }) {
@@ -72,7 +70,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 				}
 			}
 			
-			launch {
+			launch(onGameEnd) {
 				for ((phase, canAct) in phasePipe) {
 					if (!canAct) continue
 					
@@ -125,7 +123,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							}
 						}
 						is GamePhase.Attack -> {
-							val attackWith = state.ships.values.flatMap { ship ->
+							val potentialAttacks = state.ships.values.flatMap { ship ->
 								if (ship.owner == mySide)
 									ship.armaments.weaponInstances.keys.filter {
 										ship.canUseWeapon(it)
@@ -137,14 +135,26 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								else emptyList()
 							}.associateWith { (ship, weaponId, target) ->
 								weaponId.expectedAdvantageFromWeaponUsage(state, ship, target) * smoothNegative(brain[shipAttackPriority forShip target.id].signedPow(instincts[combatPrioritization])) * (1 + target.calculateSuffering()).signedPow(instincts[combatPreyOnTheWeak])
-							}.weightedRandomOrNull()
+							}
+							
+							val attackWith = potentialAttacks.weightedRandomOrNull()
 							
 							if (attackWith == null)
 								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 							else {
 								val (ship, weaponId, target) = attackWith
 								val targetPickResponse = when (val weaponSpec = ship.armaments.weaponInstances[weaponId]?.weapon) {
-									is AreaWeapon -> PickResponse.Location(ship.getWeaponPickRequest(weaponSpec).boundary.closestPointTo(target.position.location))
+									is AreaWeapon -> {
+										val pickRequest = ship.getWeaponPickRequest(weaponSpec)
+										val targetLocation = target.position.location
+										val closestValidLocation = pickRequest.boundary.closestPointTo(targetLocation)
+										
+										val chosenLocation = if ((targetLocation - closestValidLocation).length >= EPSILON)
+											closestValidLocation + ((closestValidLocation - targetLocation) * 0.2)
+										else closestValidLocation
+										
+										PickResponse.Location(chosenLocation)
+									}
 									else -> PickResponse.Ship(target.id)
 								}
 								
@@ -153,8 +163,18 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
 									logWarning("Error when attacking target ship ID ${target.id} with weapon $weaponId of ship ID ${ship.id} - $error")
 									
-									val nextState = gameState.value
-									phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
+									val remainingAllAreaWeapons = potentialAttacks.keys.map { (attacker, weaponId, _) ->
+										attacker to weaponId
+									}.toSet().all { (attacker, weaponId) ->
+										attacker.armaments.weaponInstances[weaponId]?.weapon is AreaWeapon
+									}
+									
+									if (remainingAllAreaWeapons)
+										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
+									else {
+										val nextState = gameState.value
+										phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
+									}
 								}
 							}
 						}

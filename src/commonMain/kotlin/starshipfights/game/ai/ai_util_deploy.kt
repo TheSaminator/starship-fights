@@ -3,11 +3,10 @@ package starshipfights.game.ai
 import starshipfights.data.Id
 import starshipfights.game.*
 import kotlin.math.sign
-import kotlin.random.Random
 
-val deployEscortFocus by instinct { Random.nextDouble(1.0, 5.0) }
-val deployCruiserFocus by instinct { Random.nextDouble(1.0, 5.0) }
-val deployBattleshipFocus by instinct { Random.nextDouble(1.0, 5.0) }
+val deployEscortFocus by instinct(1.0..5.0)
+val deployCruiserFocus by instinct(1.0..5.0)
+val deployBattleshipFocus by instinct(1.0..5.0)
 
 val ShipWeightClass.focus: Instinct
 	get() = when (this) {

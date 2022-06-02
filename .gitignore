@@ -154,6 +154,7 @@ gradle-app.setting
 logs/
 mongodb/
 config.json
+test_results.html
 
 ### Hosting server-side
 .bash_history
