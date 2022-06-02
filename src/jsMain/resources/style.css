@@ -274,7 +274,7 @@ button:disabled {
 	border-left: 2px solid #aaa;
 	border-right: 2px solid #888;
 	border-bottom: 2px solid #888;
-	color: #333;
+	color: #555;
 }
 
 .button-set {
@@ -316,7 +316,7 @@ button:disabled {
 }
 
 .button-set > button:disabled {
-	color: #222;
+	color: #555;
 	cursor: not-allowed;
 }
 
