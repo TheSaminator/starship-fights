@@ -127,12 +127,10 @@ private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSid
 				Popup.GameOver(LocalSide.GREEN, "Unfortunately, your opponent never entered the battle.", gameState.value).display()
 			
 			val sendActionsJob = launch {
-				while (true) {
-					val action = playerActions.receive()
+				for (action in playerActions)
 					launch {
 						sendObject(PlayerAction.serializer(), action)
 					}
-				}
 			}
 			
 			while (true) {
