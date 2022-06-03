@@ -1,7 +1,11 @@
 package starshipfights.game.ai
 
-actual fun logInfo(message: Any?) {
+actual fun logDebug(message: Any?) {
 	console.log(message)
+}
+
+actual fun logInfo(message: Any?) {
+	console.info(message)
 }
 
 actual fun logWarning(message: Any?) {

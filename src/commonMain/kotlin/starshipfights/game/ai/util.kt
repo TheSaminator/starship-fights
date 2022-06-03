@@ -9,6 +9,7 @@ import kotlin.math.pow
 import kotlin.math.sign
 import kotlin.random.Random
 
+expect fun logDebug(message: Any?)
 expect fun logInfo(message: Any?)
 expect fun logWarning(message: Any?)
 expect fun logError(message: Any?)

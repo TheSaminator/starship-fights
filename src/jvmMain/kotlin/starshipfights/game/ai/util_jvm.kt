@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory
 
 val aiLogger: Logger = LoggerFactory.getLogger("SF_AI")
 
+actual fun logDebug(message: Any?) {
+	aiLogger.debug(message.toString())
+}
+
 actual fun logInfo(message: Any?) {
 	aiLogger.info(message.toString())
 }
