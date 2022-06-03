@@ -92,7 +92,41 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 						}
 						is GamePhase.Power -> {
-							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
+							val repowerableShips = state.ships.values.filter { ship ->
+								ship.owner == mySide && !ship.isDoneCurrentPhase
+							}
+							
+							if (repowerableShips.isEmpty())
+								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
+							else for (ship in repowerableShips)
+								when (val reactor = ship.ship.reactor) {
+									FelinaeShipReactor -> {
+										val newPowerMode = if (ship.hullAmount < ship.durability.maxHullPoints)
+											FelinaeShipPowerMode.HULL_RECOALESCENSE
+										else
+											FelinaeShipPowerMode.INERTIALESS_DRIVE
+										
+										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.ConfigurePower(ship.id, newPowerMode), PlayerAbilityData.ConfigurePower))
+									}
+									is StandardShipReactor -> {
+										val enginesToShields = when {
+											ship.powerMode.engines == 0 -> -1
+											ship.shieldAmount == 0 -> 2
+											ship.shieldAmount < (ship.powerMode.shields / 2) -> 1
+											ship.shieldAmount < ship.powerMode.shields -> (0..1).random()
+											else -> 0
+										}.coerceIn(-reactor.gridEfficiency..reactor.gridEfficiency)
+										
+										val currPower = ship.powerMode
+										val nextPower = currPower + mapOf(
+											ShipSubsystem.SHIELDS to enginesToShields,
+											ShipSubsystem.ENGINES to -enginesToShields
+										)
+										
+										val chosenPower = if (ship.validatePowerMode(nextPower)) nextPower else currPower
+										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DistributePower(ship.id), PlayerAbilityData.DistributePower(chosenPower)))
+									}
+								}
 						}
 						is GamePhase.Move -> {
 							val movableShips = state.ships.values.filter { ship ->
