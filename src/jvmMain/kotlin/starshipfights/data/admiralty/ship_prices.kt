@@ -5,13 +5,13 @@ import starshipfights.game.ShipType
 import starshipfights.game.pointCost
 
 val ShipType.buyPrice: Int
-	get() = pointCost * 30 / 25
+	get() = pointCost * 6 / 5
 
 val ShipType.buyWhileDutchPrice: Int
-	get() = pointCost * 35 / 25
+	get() = pointCost * 7 / 5
 
 val ShipType.sellPrice: Int
-	get() = pointCost * 20 / 25
+	get() = pointCost * 4 / 5
 
 fun ShipType.buyPriceChecked(admiral: Admiral, ownedShips: List<ShipInDrydock>): Int? {
 	return buyPrice(admiral, ownedShips)?.takeIf { it <= admiral.money }
