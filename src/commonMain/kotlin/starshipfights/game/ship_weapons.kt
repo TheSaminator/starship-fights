@@ -700,18 +700,27 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			val targetedShip = ships[targetedShipId] ?: return GameEvent.InvalidAction("That ship does not exist")
 			
 			val impact = targetedShip.afterTargeted(attacker, weaponId)
-			val newAttacker = attacker.afterUsing(weaponId)
+			
+			val newAttacker = if (targetedShipId == attacker.id) {
+				if (impact is ImpactResult.Damaged)
+					impact.ship.afterUsing(weaponId)
+				else
+					null
+			} else
+				attacker.afterUsing(weaponId)
 			
 			val newShips = (if (impact is ImpactResult.Damaged)
 				ships + mapOf(targetedShipId to impact.ship)
-			else ships - targetedShipId) + mapOf(attacker.id to newAttacker)
+			else ships - targetedShipId) + (if (newAttacker != null)
+				mapOf(attacker.id to newAttacker)
+			else emptyMap())
 			
 			val newWrecks = destroyedShips + if (impact is ImpactResult.Destroyed)
 				mapOf(targetedShipId to impact.ship)
 			else emptyMap()
 			
 			val newChatMessages = chatBox + listOfNotNull(
-				impact.toChatEntry(ShipAttacker.EnemyShip(newAttacker.id), weapon)
+				impact.toChatEntry(ShipAttacker.EnemyShip(attacker.id), weapon)
 			)
 			
 			GameEvent.StateChange(
