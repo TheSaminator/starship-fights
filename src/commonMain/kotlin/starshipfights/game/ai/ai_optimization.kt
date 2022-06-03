@@ -244,7 +244,12 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 	)
 }
 
-suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, validBattleSizes: Set<BattleSize> = BattleSize.values().toSet(), validFactions: Set<Faction> = Faction.values().toSet()): Map<Instincts, Int> {
+data class InstinctGamePairing(
+	val host: Instincts,
+	val guest: Instincts
+)
+
+suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, validBattleSizes: Set<BattleSize> = BattleSize.values().toSet(), validFactions: Set<Faction> = Faction.values().toSet()): Map<InstinctGamePairing, Int> {
 	return coroutineScope {
 		instincts.associateWith { host ->
 			async {
@@ -258,7 +263,7 @@ suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, v
 								val guestFaction = validFactions.random()
 								
 								val gameState = generateOptimizationInitialState(hostFaction, guestFaction, BattleInfo(battleSize, BattleBackground.BLUE_BROWN))
-								val winner = withTimeoutOrNull(150_000L) {
+								val winner = withTimeoutOrNull(30_000L * numTrialsPerPairing) {
 									performTestSession(gameState, host, guest)
 								}
 								
@@ -270,10 +275,25 @@ suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, v
 									else -> 0
 								}
 							}
-						}.sumOf { it.await() }
+						}.map { guest to it.await() }
 					}
-				}.sumOf { it.await() }
+				}.flatMap { it.await() }.toMap()
 			}
-		}.mapValues { (_, it) -> it.await() }
+		}.mapValues { (_, it) -> it.await() }.flatten().mapKeys { (k, _) ->
+			InstinctGamePairing(k.first, k.second)
+		}
 	}
+}
+
+data class InstinctVictoryPairing(
+	val winner: Instincts,
+	val loser: Instincts
+)
+
+fun Map<InstinctGamePairing, Int>.victoriesFor(instincts: Instincts) = filterKeys { (host, _) -> host == instincts }.values.sum() - filterKeys { (_, guest) -> guest == instincts }.values.sum()
+
+fun Map<InstinctGamePairing, Int>.toVictoryMap() = keys.associate { (host, _) -> host to victoriesFor(host) }
+
+fun Map<InstinctGamePairing, Int>.toVictoryPairingMap() = keys.associate { (host, guest) ->
+	InstinctVictoryPairing(host, guest) to ((get(InstinctGamePairing(host, guest)) ?: 0) - (get(InstinctGamePairing(guest, host)) ?: 0))
 }

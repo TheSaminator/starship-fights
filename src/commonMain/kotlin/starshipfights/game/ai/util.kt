@@ -40,6 +40,13 @@ fun <T : Any> Map<T, Double>.weightedRandomOrNull(random: Random = Random): T? {
 	else null
 }
 
+fun <T, U, V> Map<T, Map<U, V>>.flatten(): Map<Pair<T, U>, V> =
+	toList().flatMap { (k, v) ->
+		v.map { (l, w) ->
+			(k to l) to w
+		}
+	}.toMap()
+
 fun <T, U> Map<T, Set<U>>.transpose(): Map<U, Set<T>> =
 	flatMap { (k, v) -> v.map { it to k } }
 		.groupBy(Pair<U, T>::first, Pair<U, T>::second)

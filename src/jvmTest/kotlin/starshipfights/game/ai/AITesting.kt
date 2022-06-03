@@ -70,9 +70,13 @@ object AITesting {
 		
 		val allowedFactions = allowedFactionChoices[allowedFactionIndex]
 		
-		val instinctSuccessRate = runBlocking {
+		val instinctPairingSuccessRate = runBlocking {
 			performTrials(numTrials, instinctVectors, allowedBattleSizes, allowedFactions)
 		}
+		
+		val instinctVictories = instinctPairingSuccessRate.toVictoryPairingMap()
+		
+		val instinctSuccessRate = instinctPairingSuccessRate.toVictoryMap()
 		
 		val indexedInstincts = instinctSuccessRate
 			.toList()
@@ -94,8 +98,8 @@ object AITesting {
 				p { +"Battle Sizes Allowed: ${allowedBattleSizes.singleOrNull()?.displayName ?: "All"}" }
 				p { +"Factions Allowed: ${allowedFactions.singleOrNull()?.polityName ?: "All"}" }
 				h2 { +"Instincts Vectors and Battle Results" }
+				val cellStyle = "border: 1px solid rgba(0, 0, 0, 0.6)"
 				table {
-					val cellStyle = "border: 1px solid rgba(0, 0, 0, 0.6)"
 					thead {
 						tr {
 							th(scope = ThScope.row) {
@@ -104,18 +108,17 @@ object AITesting {
 							}
 							th(scope = ThScope.col) {
 								style = cellStyle
-								+"Battles Won as Host"
+								+"Battles Won"
 							}
-							allInstincts.forEach {
+							for (it in allInstincts)
 								th(scope = ThScope.col) {
 									style = cellStyle
 									+it.key
 								}
-							}
 						}
 					}
 					tbody {
-						indexedInstincts.forEach { (i, pair) ->
+						for ((i, pair) in indexedInstincts) {
 							val (instincts, successRate) = pair
 							tr {
 								th(scope = ThScope.row) {
@@ -126,15 +129,43 @@ object AITesting {
 									style = cellStyle
 									+"$successRate"
 								}
-								allInstincts.forEach { key ->
+								for (key in allInstincts)
 									td {
 										style = cellStyle
 										+"${instincts[key]}"
 									}
-								}
 							}
 						}
 					}
+				}
+				h2 { +"Instincts Pairing Battle Results" }
+				table {
+					tr {
+						th {
+							style = cellStyle
+							+"Winner \\ Loser"
+						}
+						for ((i, _) in indexedInstincts)
+							th(scope = ThScope.col) {
+								style = cellStyle
+								+"Instincts $i"
+							}
+					}
+					for ((i, v) in indexedInstincts)
+						tr {
+							th(scope = ThScope.row) {
+								style = cellStyle
+								+"Instincts $i"
+							}
+							for ((_, w) in indexedInstincts)
+								td {
+									val pairing = InstinctVictoryPairing(v.first, w.first)
+									val victories = instinctVictories[pairing] ?: 0
+									
+									style = cellStyle
+									+"$victories"
+								}
+						}
 				}
 			}
 		}
