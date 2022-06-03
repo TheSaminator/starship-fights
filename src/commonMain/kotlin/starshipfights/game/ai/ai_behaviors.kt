@@ -274,6 +274,7 @@ fun navigate(gameState: GameState, ship: ShipInstance, instincts: Instincts, bra
 	
 	val maxTurn = movement.turnAngle * 0.99
 	val maxMove = movement.moveSpeed * 0.99
+	val minMove = movement.moveSpeed * 0.51
 	
 	val positions = (listOf(
 		normalDistance(currAngle) rotatedBy -maxTurn,
@@ -284,7 +285,7 @@ fun navigate(gameState: GameState, ship: ShipInstance, instincts: Instincts, bra
 	).flatMap {
 		listOf(
 			ShipPosition(currPos + (it * maxMove), it.angle),
-			ShipPosition(currPos + (it * (maxMove / 2)), it.angle),
+			ShipPosition(currPos + (it * minMove), it.angle),
 		)
 	} + listOf(ship.position)).filter { shipPos ->
 		(gameState.ships - ship.id).none { (_, otherShip) ->
@@ -341,7 +342,7 @@ fun pursue(gameState: GameState, ship: ShipInstance): PlayerAction.UseAbility {
 	val maxTurn = ship.movement.turnAngle * 0.99
 	val turnNormal = normalDistance(ship.position.facing) rotatedBy angleTo.coerceIn(-maxTurn..maxTurn)
 	
-	val move = (ship.movement.moveSpeed * if (turnNormal angleBetween (targetLocation - myLocation) < EPSILON) 0.999 else 0.501) * turnNormal
+	val move = (ship.movement.moveSpeed * if (turnNormal angleBetween (targetLocation - myLocation) < EPSILON) 0.99 else 0.51) * turnNormal
 	val newLoc = ship.position.location + move
 	
 	val position = ShipPosition(newLoc, move.angle)
