@@ -1,9 +1,6 @@
 package starshipfights.game.ai
 
-import starshipfights.game.FelinaeShipReactor
-import starshipfights.game.ShipInstance
-import starshipfights.game.ShipModuleStatus
-import starshipfights.game.durability
+import starshipfights.game.*
 
 val combatTargetShipWeight by instinct(0.5..2.5)
 
@@ -29,4 +26,8 @@ fun ShipInstance.calculateSuffering(): Double {
 			ShipModuleStatus.ABSENT -> 0.0
 		}
 	}
+}
+
+fun ShipInstance.expectedBoardingSuccess(against: ShipInstance): Double {
+	return smoothNegative((assaultModifier - against.defenseModifier).toDouble())
 }

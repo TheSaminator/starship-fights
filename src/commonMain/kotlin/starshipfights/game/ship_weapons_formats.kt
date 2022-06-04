@@ -68,7 +68,7 @@ fun mechyrdiaShipWeapons(
 		idCounter.add(weapons, ShipWeapon.Lance(1, FiringArc.FIRE_BROADSIDE, "Dorsal lance turrets"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun mechyrdiaNanoClassWeapons(): ShipArmaments {
@@ -77,7 +77,7 @@ fun mechyrdiaNanoClassWeapons(): ShipArmaments {
 	
 	idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_FORE_270, "Dorsal lance turrets"))
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun mechyrdiaPicoClassWeapons(): ShipArmaments {
@@ -87,7 +87,7 @@ fun mechyrdiaPicoClassWeapons(): ShipArmaments {
 	idCounter.add(weapons, ShipWeapon.Cannon(2, FiringArc.FIRE_FORE_270, "Double-barrel cannon turret"))
 	idCounter.add(weapons, ShipWeapon.Torpedo(setOf(FiringArc.BOW), "Fore torpedo launcher"))
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun ndrcShipWeapons(
@@ -123,7 +123,7 @@ fun ndrcShipWeapons(
 		idCounter.add(weapons, ShipWeapon.Lance(numBroadsideLances, setOf(FiringArc.ABEAM_STARBOARD), "Starboard lance battery"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun diadochiShipWeapons(
@@ -166,7 +166,7 @@ fun diadochiShipWeapons(
 		idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_FORE_270, "Dorsal lance batteries"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun felinaeShipWeapons(
@@ -185,7 +185,7 @@ fun felinaeShipWeapons(
 		idCounter.add(weapons, ShipWeapon.LightningYarn(num, arcs, "$displayName lightning yarn"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun fulkreykkShipWeapons(
@@ -214,7 +214,7 @@ fun fulkreykkShipWeapons(
 		idCounter.add(weapons, ShipWeapon.Lance(2, FiringArc.FIRE_BROADSIDE, "Broadside lance battery"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }
 
 fun vestigiumShipWeapons(
@@ -242,5 +242,5 @@ fun vestigiumShipWeapons(
 			idCounter.add(weapons, ShipWeapon.Hangar(StrikeCraftWing.BOMBERS, "Bomber complement"))
 	}
 	
-	return ShipArmaments(weapons)
+	return weapons
 }

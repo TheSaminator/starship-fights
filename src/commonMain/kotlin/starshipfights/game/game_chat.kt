@@ -46,6 +46,15 @@ sealed class ChatEntry {
 	) : ChatEntry()
 	
 	@Serializable
+	data class ShipBoarded(
+		val ship: Id<ShipInstance>,
+		val boarder: Id<ShipInstance>,
+		override val sentAt: Moment,
+		val critical: ShipCritical?,
+		val damageAmount: Int = 0,
+	) : ChatEntry()
+	
+	@Serializable
 	data class ShipDestroyed(
 		val ship: Id<ShipInstance>,
 		override val sentAt: Moment,
@@ -74,6 +83,9 @@ sealed class ShipCritical {
 	object Fire : ShipCritical()
 	
 	@Serializable
+	data class TroopsKilled(val number: Int) : ShipCritical()
+	
+	@Serializable
 	data class ModulesHit(val module: Set<ShipModule>) : ShipCritical()
 }
 
@@ -81,6 +93,7 @@ fun CritResult.report(): ShipCritical? = when (this) {
 	CritResult.NoEffect -> null
 	is CritResult.FireStarted -> ShipCritical.Fire
 	is CritResult.ModulesDisabled -> ShipCritical.ModulesHit(modules)
+	is CritResult.TroopsKilled -> ShipCritical.TroopsKilled(amount)
 	is CritResult.HullDamaged -> ShipCritical.ExtraDamage
 	is CritResult.Destroyed -> null
 }

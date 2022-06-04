@@ -21,6 +21,7 @@ data class ShipInstance(
 	val weaponAmount: Int = powerMode.weapons,
 	val shieldAmount: Int = powerMode.shields,
 	val hullAmount: Int = ship.durability.maxHullPoints,
+	val troopsAmount: Int = ship.durability.troopsDefense,
 	
 	val modulesStatus: ShipModulesStatus = ShipModulesStatus.forShip(ship),
 	val numFires: Int = 0,
@@ -38,6 +39,8 @@ data class ShipInstance(
 	
 	val fighterWings: Set<ShipHangarWing> = emptySet(),
 	val bomberWings: Set<ShipHangarWing> = emptySet(),
+	
+	val hasSentBoardingParty: Boolean = false,
 ) {
 	val canUseShields: Boolean
 		get() = ship.hasShields && modulesStatus[ShipModule.Shields].canBeUsed
@@ -45,8 +48,8 @@ data class ShipInstance(
 	val canUseTurrets: Boolean
 		get() = modulesStatus[ShipModule.Turrets].canBeUsed
 	
-	val canCatchFire: Boolean
-		get() = ship.shipType.faction != Faction.FELINAE_FELICES
+	val canSendBoardingParty: Boolean
+		get() = modulesStatus[ShipModule.Assault].canBeUsed && troopsAmount > 1 && !hasSentBoardingParty
 	
 	val canUseInertialessDrive: Boolean
 		get() = ship.canUseInertialessDrive && modulesStatus[ShipModule.Engines].canBeUsed && when (val movement = ship.movement) {
@@ -82,7 +85,7 @@ data class ShipInstance(
 		if (!modulesStatus[ShipModule.Weapon(weaponId)].canBeUsed)
 			return false
 		
-		val weapon = armaments.weaponInstances[weaponId] ?: return false
+		val weapon = armaments[weaponId] ?: return false
 		
 		return when (weapon) {
 			is ShipWeaponInstance.Cannon -> weaponAmount > 0
@@ -263,6 +266,8 @@ else
 	ShipRenderMode.SIGNAL
 
 const val SHIP_BASE_SIZE = 250.0
+
+const val SHIP_TRANSPORTARIUM_RANGE = 1_500.0
 
 const val SHIP_TORPEDO_RANGE = 2_000.0
 const val SHIP_CANNON_RANGE = 2_500.0

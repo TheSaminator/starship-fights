@@ -60,6 +60,13 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								if (targetedShip.owner != mySide)
 									brain[shipAttackPriority forShip targetedShip.id] += instincts[combatFrustratedByFailedAttacks]
 							}
+							is ChatEntry.ShipBoarded -> {
+								val targetedShip = state.ships[msg.ship] ?: continue
+								if (targetedShip.owner != mySide)
+									brain[shipAttackPriority forShip targetedShip.id] -= Random.nextDouble(msg.damageAmount - 0.5, msg.damageAmount + 0.5) * instincts[combatForgiveTarget]
+								else
+									brain[shipAttackPriority forShip msg.boarder] += Random.nextDouble(msg.damageAmount - 0.5, msg.damageAmount + 0.5) * instincts[combatAvengeAttacks]
+							}
 							is ChatEntry.ShipDestroyed -> {
 								val targetedShip = state.ships[msg.ship] ?: continue
 								if (targetedShip.owner == mySide && msg.destroyedBy is ShipAttacker.EnemyShip)
@@ -71,8 +78,8 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 			}
 			
 			launch(onGameEnd) {
-				for ((phase, canAct) in phasePipe) {
-					if (!canAct) continue
+				loop@ for ((phase, canAct) in phasePipe) {
+					if (!canAct) continue@loop
 					
 					val state = gameState.value
 					
@@ -92,13 +99,11 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 						}
 						is GamePhase.Power -> {
-							val repowerableShips = state.ships.values.filter { ship ->
+							val powerableShips = state.ships.values.filter { ship ->
 								ship.owner == mySide && !ship.isDoneCurrentPhase
 							}
 							
-							if (repowerableShips.isEmpty())
-								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
-							else for (ship in repowerableShips)
+							for (ship in powerableShips)
 								when (val reactor = ship.ship.reactor) {
 									FelinaeShipReactor -> {
 										val newPowerMode = if (ship.hullAmount < ship.durability.maxHullPoints)
@@ -127,6 +132,8 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DistributePower(ship.id), PlayerAbilityData.DistributePower(chosenPower)))
 									}
 								}
+							
+							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 						}
 						is GamePhase.Move -> {
 							val movableShips = state.ships.values.filter { ship ->
@@ -135,31 +142,32 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							
 							val smallestShipTier = movableShips.minOfOrNull { ship -> ship.ship.shipType.weightClass.tier }
 							
-							if (smallestShipTier == null)
+							if (smallestShipTier == null) {
 								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
-							else {
-								val movableSmallestShips = movableShips.filter { ship ->
-									ship.ship.shipType.weightClass.tier == smallestShipTier
-								}
-								
-								val moveThisShip = movableSmallestShips.associateWith { it.calculateSuffering() + 1.0 }.weightedRandom()
-								doActions.send(navigate(state, moveThisShip, instincts, brain))
-								
-								withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
-									logWarning("Error when moving ship ID ${moveThisShip.id} - $error")
-									doActions.send(
-										PlayerAction.UseAbility(
-											PlayerAbilityType.MoveShip(moveThisShip.id),
-											PlayerAbilityData.MoveShip(moveThisShip.position)
-										)
+								continue@loop
+							}
+							
+							val movableSmallestShips = movableShips.filter { ship ->
+								ship.ship.shipType.weightClass.tier == smallestShipTier
+							}
+							
+							val moveThisShip = movableSmallestShips.associateWith { it.calculateSuffering() + 1.0 }.weightedRandom()
+							doActions.send(navigate(state, moveThisShip, instincts, brain))
+							
+							withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
+								logWarning("Error when moving ship ID ${moveThisShip.id} - $error")
+								doActions.send(
+									PlayerAction.UseAbility(
+										PlayerAbilityType.MoveShip(moveThisShip.id),
+										PlayerAbilityData.MoveShip(moveThisShip.position)
 									)
-								}
+								)
 							}
 						}
 						is GamePhase.Attack -> {
 							val potentialAttacks = state.ships.values.flatMap { ship ->
 								if (ship.owner == mySide)
-									ship.armaments.weaponInstances.keys.filter {
+									ship.armaments.keys.filter {
 										ship.canUseWeapon(it)
 									}.flatMap { weaponId ->
 										weaponId.validTargets(state, ship).map { target ->
@@ -171,44 +179,74 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								weaponId.expectedAdvantageFromWeaponUsage(state, ship, target) * smoothNegative(brain[shipAttackPriority forShip target.id].signedPow(instincts[combatPrioritization])) * (1 + target.calculateSuffering()).signedPow(instincts[combatPreyOnTheWeak])
 							}
 							
-							val attackWith = potentialAttacks.weightedRandomOrNull()
-							
-							if (attackWith == null)
-								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
-							else {
-								val (ship, weaponId, target) = attackWith
-								val targetPickResponse = when (val weaponSpec = ship.armaments.weaponInstances[weaponId]?.weapon) {
-									is AreaWeapon -> {
-										val pickRequest = ship.getWeaponPickRequest(weaponSpec)
-										val targetLocation = target.position.location
-										val closestValidLocation = pickRequest.boundary.closestPointTo(targetLocation)
-										
-										val chosenLocation = if ((targetLocation - closestValidLocation).length >= EPSILON)
-											closestValidLocation + ((closestValidLocation - targetLocation) * 0.2)
-										else closestValidLocation
-										
-										PickResponse.Location(chosenLocation)
-									}
-									else -> PickResponse.Ship(target.id)
+							if (potentialAttacks.isEmpty() || Random.nextInt(3) == 0) {
+								val potentialBoardings = state.ships.values.flatMap { ship ->
+									if (ship.owner == mySide && ship.canSendBoardingParty) {
+										val pickRequest = ship.getBoardingPickRequest()
+										state.ships.values.filter { target ->
+											target.owner == mySide.other && target.position.location in pickRequest.boundary
+										}.map { target -> ship to target }
+									} else emptyList()
+								}.associateWith { (ship, target) ->
+									ship.expectedBoardingSuccess(target)
 								}
 								
-								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.UseWeapon(ship.id, weaponId), PlayerAbilityData.UseWeapon(targetPickResponse)))
+								val board = potentialBoardings.weightedRandomOrNull()
 								
-								withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
-									logWarning("Error when attacking target ship ID ${target.id} with weapon $weaponId of ship ID ${ship.id} - $error")
+								if (board != null) {
+									val (ship, target) = board
+									doActions.send(PlayerAction.UseAbility(PlayerAbilityType.BoardingParty(ship.id), PlayerAbilityData.BoardingParty(target.id)))
 									
-									val remainingAllAreaWeapons = potentialAttacks.keys.map { (attacker, weaponId, _) ->
-										attacker to weaponId
-									}.toSet().all { (attacker, weaponId) ->
-										attacker.armaments.weaponInstances[weaponId]?.weapon is AreaWeapon
-									}
-									
-									if (remainingAllAreaWeapons)
-										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
-									else {
+									withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
+										logWarning("Error when boarding target ship ID ${target.id} with assault parties of ship ID ${ship.id} - $error")
+										
 										val nextState = gameState.value
 										phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
 									}
+									
+									continue@loop
+								}
+							}
+							
+							val attackWith = potentialAttacks.weightedRandomOrNull()
+							
+							if (attackWith == null) {
+								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
+								continue@loop
+							}
+							
+							val (ship, weaponId, target) = attackWith
+							val targetPickResponse = when (val weaponSpec = ship.armaments[weaponId]?.weapon) {
+								is AreaWeapon -> {
+									val pickRequest = ship.getWeaponPickRequest(weaponSpec)
+									val targetLocation = target.position.location
+									val closestValidLocation = pickRequest.boundary.closestPointTo(targetLocation)
+									
+									val chosenLocation = if ((targetLocation - closestValidLocation).length >= EPSILON)
+										closestValidLocation + ((closestValidLocation - targetLocation) * 0.2)
+									else closestValidLocation
+									
+									PickResponse.Location(chosenLocation)
+								}
+								else -> PickResponse.Ship(target.id)
+							}
+							
+							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.UseWeapon(ship.id, weaponId), PlayerAbilityData.UseWeapon(targetPickResponse)))
+							
+							withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
+								logWarning("Error when attacking target ship ID ${target.id} with weapon $weaponId of ship ID ${ship.id} - $error")
+								
+								val remainingAllAreaWeapons = potentialAttacks.keys.map { (attacker, weaponId, _) ->
+									attacker to weaponId
+								}.toSet().all { (attacker, weaponId) ->
+									attacker.armaments[weaponId]?.weapon is AreaWeapon
+								}
+								
+								if (remainingAllAreaWeapons)
+									doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
+								else {
+									val nextState = gameState.value
+									phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
 								}
 							}
 						}
@@ -217,17 +255,18 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								it !is PlayerAbilityType.DonePhase
 							}.randomOrNull()
 							
-							if (repairAbility == null)
+							if (repairAbility == null) {
 								doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
-							else {
-								when (repairAbility) {
-									is PlayerAbilityType.RepairShipModule -> PlayerAbilityData.RepairShipModule
-									is PlayerAbilityType.ExtinguishFire -> PlayerAbilityData.ExtinguishFire
-									is PlayerAbilityType.Recoalesce -> PlayerAbilityData.Recoalesce
-									else -> null
-								}?.let { repairData ->
-									doActions.send(PlayerAction.UseAbility(repairAbility, repairData))
-								}
+								continue@loop
+							}
+							
+							when (repairAbility) {
+								is PlayerAbilityType.RepairShipModule -> PlayerAbilityData.RepairShipModule
+								is PlayerAbilityType.ExtinguishFire -> PlayerAbilityData.ExtinguishFire
+								is PlayerAbilityType.Recoalesce -> PlayerAbilityData.Recoalesce
+								else -> null
+							}?.let { repairData ->
+								doActions.send(PlayerAction.UseAbility(repairAbility, repairData))
 							}
 						}
 					}

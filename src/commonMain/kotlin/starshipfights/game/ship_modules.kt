@@ -9,8 +9,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import starshipfights.data.Id
 import kotlin.jvm.JvmInline
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 @Serializable
 sealed class ShipModule {
@@ -19,7 +17,21 @@ sealed class ShipModule {
 	@Serializable
 	data class Weapon(val weaponId: Id<ShipWeapon>) : ShipModule() {
 		override fun getDisplayName(ship: Ship): String {
-			return ship.armaments.weapons[weaponId]?.displayName ?: ""
+			return ship.armaments[weaponId]?.displayName ?: ""
+		}
+	}
+	
+	@Serializable
+	object Assault : ShipModule() {
+		override fun getDisplayName(ship: Ship): String {
+			return "Boarding Transportarium"
+		}
+	}
+	
+	@Serializable
+	object Defense : ShipModule() {
+		override fun getDisplayName(ship: Ship): String {
+			return "Internal Defenses"
 		}
 	}
 	
@@ -59,7 +71,7 @@ value class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 	operator fun get(module: ShipModule) = statuses[module] ?: ShipModuleStatus.ABSENT
 	
 	fun repair(module: ShipModule, repairUnrepairable: Boolean = false) = ShipModulesStatus(
-		statuses + if (this[module].canBeRepaired || (repairUnrepairable && !this[module].canBeUsed))
+		statuses + if (this[module].canBeRepaired || (repairUnrepairable && this[module] in ShipModuleStatus.DAMAGED..ShipModuleStatus.DESTROYED))
 			mapOf(module to ShipModuleStatus.values()[this[module].ordinal - 1])
 		else emptyMap()
 	)
@@ -89,10 +101,12 @@ value class ShipModulesStatus(val statuses: Map<ShipModule, ShipModuleStatus>) {
 	companion object {
 		fun forShip(ship: Ship) = ShipModulesStatus(
 			mapOf(
+				ShipModule.Assault to ShipModuleStatus.INTACT,
+				ShipModule.Defense to ShipModuleStatus.INTACT,
 				ShipModule.Shields to if (ship.hasShields) ShipModuleStatus.INTACT else ShipModuleStatus.ABSENT,
 				ShipModule.Engines to ShipModuleStatus.INTACT,
 				ShipModule.Turrets to ShipModuleStatus.INTACT,
-			) + ship.armaments.weapons.keys.associate {
+			) + ship.armaments.keys.associate {
 				ShipModule.Weapon(it) to ShipModuleStatus.INTACT
 			}
 		)
@@ -118,6 +132,7 @@ sealed class CritResult {
 	object NoEffect : CritResult()
 	data class FireStarted(val ship: ShipInstance) : CritResult()
 	data class ModulesDisabled(val ship: ShipInstance, val modules: Set<ShipModule>) : CritResult()
+	data class TroopsKilled(val ship: ShipInstance, val amount: Int) : CritResult()
 	data class HullDamaged(val ship: ShipInstance, val amount: Int) : CritResult()
 	data class Destroyed(val ship: ShipWreck) : CritResult()
 	
@@ -130,10 +145,10 @@ sealed class CritResult {
 }
 
 fun ShipInstance.doCriticalDamage(): CritResult {
-	if (!canCatchFire)
-		return doCriticalDamageUninflammable()
+	if (ship.shipType.faction == Faction.FELINAE_FELICES)
+		return doCriticalDamageFelinae()
 	
-	return when (Random.nextInt(0..6) + Random.nextInt(0..6)) { // Ranges in 0..12, probability density peaks at 6
+	return when ((0..8).random() + (0..8).random()) { // Ranges in 0..16, probability density peaks at 8
 		0 -> {
 			// Damage ALL the modules!
 			val modulesDamaged = modulesStatus.statuses.filter { (k, v) -> k !is ShipModule.Weapon && v != ShipModuleStatus.ABSENT }.keys
@@ -144,7 +159,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		}
 		1 -> {
 			// Damage 3 weapons
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(3).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(3).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -152,7 +167,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		}
 		2 -> {
 			// Damage 2 weapons
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(2).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(2).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -168,7 +183,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 		}
 		4 -> {
 			// Damage 1 weapon
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(1).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(1).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -183,18 +198,31 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 			)
 		}
 		6 -> {
+			// Damage transportarium
+			val moduleDamaged = ShipModule.Assault
+			CritResult.ModulesDisabled(
+				copy(modulesStatus = modulesStatus.damage(moduleDamaged)),
+				setOf(moduleDamaged)
+			)
+		}
+		7 -> {
+			// Lose a few troops
+			val deaths = (1..2).random()
+			killTroops(deaths)
+		}
+		8 -> {
 			// Fire!
 			CritResult.FireStarted(
 				copy(numFires = numFires + 1)
 			)
 		}
-		7 -> {
+		9 -> {
 			// Two fires!
 			CritResult.FireStarted(
 				copy(numFires = numFires + 2)
 			)
 		}
-		8 -> {
+		10 -> {
 			// Damage turrets
 			val moduleDamaged = ShipModule.Turrets
 			CritResult.ModulesDisabled(
@@ -202,7 +230,20 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 				setOf(moduleDamaged)
 			)
 		}
-		9 -> {
+		11 -> {
+			// Lose many troops
+			val deaths = (1..2).random() + (1..2).random()
+			killTroops(deaths)
+		}
+		12 -> {
+			// Damage security system
+			val moduleDamaged = ShipModule.Defense
+			CritResult.ModulesDisabled(
+				copy(modulesStatus = modulesStatus.damage(moduleDamaged)),
+				setOf(moduleDamaged)
+			)
+		}
+		13 -> {
 			// Damage random module
 			val moduleDamaged = modulesStatus.statuses.keys.filter { it !is ShipModule.Weapon }.random()
 			CritResult.ModulesDisabled(
@@ -210,7 +251,7 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 				setOf(moduleDamaged)
 			)
 		}
-		10 -> {
+		14 -> {
 			// Damage shields
 			val moduleDamaged = ShipModule.Shields
 			if (ship.hasShields)
@@ -224,22 +265,22 @@ fun ShipInstance.doCriticalDamage(): CritResult {
 			else
 				CritResult.NoEffect
 		}
-		11 -> {
+		15 -> {
 			// Hull breach
-			val damage = Random.nextInt(0..2) + Random.nextInt(1..3)
-			CritResult.fromImpactResult(impact(damage))
+			val damage = (0..2).random() + (1..3).random()
+			CritResult.fromImpactResult(impact(damage, true))
 		}
-		12 -> {
+		16 -> {
 			// Bulkhead collapse
-			val damage = Random.nextInt(2..4) + Random.nextInt(3..5)
-			CritResult.fromImpactResult(impact(damage))
+			val damage = (2..4).random() + (3..5).random()
+			CritResult.fromImpactResult(impact(damage, true))
 		}
 		else -> CritResult.NoEffect
 	}
 }
 
-private fun ShipInstance.doCriticalDamageUninflammable(): CritResult {
-	return when (Random.nextInt(0..5) + Random.nextInt(0..5)) {
+private fun ShipInstance.doCriticalDamageFelinae(): CritResult {
+	return when ((0..5).random() + (0..5).random()) {
 		0 -> {
 			// Damage ALL the modules!
 			val modulesDamaged = modulesStatus.statuses.filter { (k, v) -> k !is ShipModule.Weapon && v != ShipModuleStatus.ABSENT }.keys
@@ -250,7 +291,7 @@ private fun ShipInstance.doCriticalDamageUninflammable(): CritResult {
 		}
 		1 -> {
 			// Damage 3 weapons
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(3).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(3).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -258,7 +299,7 @@ private fun ShipInstance.doCriticalDamageUninflammable(): CritResult {
 		}
 		2 -> {
 			// Damage 2 weapons
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(2).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(2).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -274,7 +315,7 @@ private fun ShipInstance.doCriticalDamageUninflammable(): CritResult {
 		}
 		4 -> {
 			// Damage 1 weapon
-			val modulesDamaged = armaments.weaponInstances.keys.shuffled().take(1).map { ShipModule.Weapon(it) }
+			val modulesDamaged = armaments.keys.shuffled().take(1).map { ShipModule.Weapon(it) }
 			CritResult.ModulesDisabled(
 				copy(modulesStatus = modulesStatus.damageMany(modulesDamaged)),
 				modulesDamaged.toSet()
@@ -305,27 +346,18 @@ private fun ShipInstance.doCriticalDamageUninflammable(): CritResult {
 			)
 		}
 		8 -> {
-			// Damage shields
-			val moduleDamaged = ShipModule.Shields
-			if (ship.hasShields)
-				CritResult.ModulesDisabled(
-					copy(
-						shieldAmount = 0,
-						modulesStatus = modulesStatus.damage(moduleDamaged)
-					),
-					setOf(moduleDamaged)
-				)
-			else
-				CritResult.NoEffect
+			// Lose some troops
+			val deaths = (1..3).random()
+			killTroops(deaths)
 		}
 		9 -> {
 			// Hull breach
-			val damage = Random.nextInt(0..2) + Random.nextInt(1..3)
+			val damage = (0..2).random() + (1..3).random()
 			CritResult.fromImpactResult(impact(damage))
 		}
 		10 -> {
 			// Bulkhead collapse
-			val damage = Random.nextInt(2..4) + Random.nextInt(3..5)
+			val damage = (2..4).random() + (3..5).random()
 			CritResult.fromImpactResult(impact(damage))
 		}
 		else -> CritResult.NoEffect

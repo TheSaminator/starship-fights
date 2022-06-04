@@ -40,7 +40,7 @@ fun GameState.getValidAttackersWith(target: ShipInstance): Map<Id<ShipInstance>,
 }
 
 fun GameState.isValidAttackerWith(attacker: ShipInstance, target: ShipInstance): Set<Id<ShipWeapon>> {
-	return attacker.armaments.weaponInstances.filterValues {
+	return attacker.armaments.filterValues {
 		isValidTarget(attacker, it, attacker.getWeaponPickRequest(it.weapon), target)
 	}.keys
 }
@@ -77,12 +77,12 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 			shipList
 				.filter { !it.isDoneCurrentPhase }
 				.sumOf { ship ->
-					val allWeapons = ship.armaments.weaponInstances
+					val allWeapons = ship.armaments
 						.filterValues { weapon -> hasValidTargets(ship, weapon) }
 					val usableWeapons = allWeapons - ship.usedArmaments
 					
-					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots }
-					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots }
+					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots } + ship.troopsAmount
+					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots } + (if (ship.canSendBoardingParty) ship.troopsAmount else 0)
 					
 					ship.ship.pointCost * (usableWeaponShots.toDouble() / allWeaponShots)
 				}

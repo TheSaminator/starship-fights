@@ -271,6 +271,7 @@ object GameUI {
 							
 							+when (entry.critical) {
 								ShipCritical.Fire -> ", starting a fire"
+								is ShipCritical.TroopsKilled -> ", killing ${entry.critical.number} troops"
 								is ShipCritical.ModulesHit -> ", disabling ${entry.critical.module.joinToDisplayString { it.getDisplayName(ship) }}"
 								else -> ""
 							}
@@ -325,6 +326,33 @@ object GameUI {
 							
 							+when (entry.damageIgnoreType) {
 								DamageIgnoreType.FELINAE_ARMOR -> " using its relativistic armor"
+							}
+							+"."
+						}
+						is ChatEntry.ShipBoarded -> {
+							val ship = state.getShipInfo(entry.ship)
+							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
+							+if (owner == LocalSide.RED)
+								"The enemy ship "
+							else
+								"Our ship, the "
+							strong {
+								style = "color:${owner.htmlColor}"
+								+ship.fullName
+							}
+							
+							+" has been boarded by the "
+							strong {
+								style = "color:${owner.other.htmlColor}"
+								+state.getShipInfo(entry.boarder).fullName
+							}
+							
+							+when (entry.critical) {
+								ShipCritical.ExtraDamage -> ", dealing ${entry.damageAmount} hull damage"
+								ShipCritical.Fire -> ", starting a fire"
+								is ShipCritical.TroopsKilled -> ", killing ${entry.critical.number} troops"
+								is ShipCritical.ModulesHit -> ", disabling ${entry.critical.module.joinToDisplayString { it.getDisplayName(ship) }}"
+								else -> ", to no effect"
 							}
 							+"."
 						}
@@ -488,7 +516,7 @@ object GameUI {
 						val downShield = totalShield - activeShield
 						
 						table {
-							style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:25px"
+							style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:10px"
 							
 							tr {
 								repeat(activeShield) {
@@ -510,7 +538,7 @@ object GameUI {
 					val downHull = totalHull - activeHull
 					
 					table {
-						style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:25px"
+						style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:10px"
 						
 						tr {
 							repeat(activeHull) {
@@ -521,6 +549,27 @@ object GameUI {
 							repeat(downHull) {
 								td {
 									style = "background-color:${if (ship.owner == mySide) "#262" else "#622"};height:15px;box-shadow:inset 0 0 0 3px #555"
+								}
+							}
+						}
+					}
+					
+					val totalTroops = ship.durability.troopsDefense
+					val activeTroops = ship.troopsAmount
+					val downTroops = totalTroops - activeTroops
+					
+					table {
+						style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:10px"
+						
+						tr {
+							repeat(activeTroops) {
+								td {
+									style = "background-color:#AAA;height:15px;box-shadow:inset 0 0 0 3px #555"
+								}
+							}
+							repeat(downTroops) {
+								td {
+									style = "background-color:#444;height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 						}
@@ -578,7 +627,7 @@ object GameUI {
 						+Entities.nbsp
 						
 						+ship.fighterWings.sumOf { (carrierId, wingId) ->
-							(state.ships[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
+							(state.ships[carrierId]?.armaments?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
 						}.toPercent()
 					}
 				}
@@ -601,7 +650,7 @@ object GameUI {
 						+Entities.nbsp
 						
 						+ship.bomberWings.sumOf { (carrierId, wingId) ->
-							(state.ships[carrierId]?.armaments?.weaponInstances?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
+							(state.ships[carrierId]?.armaments?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
 						}.toPercent()
 					}
 				}
@@ -908,6 +957,16 @@ object GameUI {
 									}
 									br
 								}
+								is PlayerAbilityType.BoardingParty -> {
+									a(href = "#") {
+										+"Board Enemy Vessel"
+										onClickFunction = { e ->
+											e.preventDefault()
+											responder.useAbility(ability)
+										}
+									}
+									br
+								}
 								is PlayerAbilityType.RepairShipModule -> {
 									a(href = "#") {
 										+"Repair ${ability.module.getDisplayName(ship.ship)}"
@@ -944,7 +1003,7 @@ object GameUI {
 						for (ability in combatAbilities) {
 							br
 							
-							val weaponInstance = ship.armaments.weaponInstances.getValue(ability.weapon)
+							val weaponInstance = ship.armaments.getValue(ability.weapon)
 							
 							val weaponVerb = if (weaponInstance is ShipWeaponInstance.Hangar) "Release" else "Fire"
 							val weaponDesc = weaponInstance.displayName

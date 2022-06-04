@@ -417,7 +417,7 @@ sealed class PlayerAbilityType {
 			if (shipInstance.weaponAmount <= 0) return null
 			if (weapon in shipInstance.usedArmaments) return null
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
+			val shipWeapon = shipInstance.armaments[weapon] ?: return null
 			if (shipWeapon !is ShipWeaponInstance.Lance) return null
 			
 			return PlayerAbilityData.ChargeLance
@@ -430,7 +430,7 @@ sealed class PlayerAbilityType {
 			if (shipInstance.weaponAmount <= 0) return GameEvent.InvalidAction("Not enough power to charge lances")
 			if (weapon in shipInstance.usedArmaments) return GameEvent.InvalidAction("Cannot charge used lances")
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
+			val shipWeapon = shipInstance.armaments[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			if (shipWeapon !is ShipWeaponInstance.Lance) return GameEvent.InvalidAction("Cannot charge non-lance weapons")
 			
 			return GameEvent.StateChange(
@@ -438,10 +438,8 @@ sealed class PlayerAbilityType {
 					ships = gameState.ships + mapOf(
 						ship to shipInstance.copy(
 							weaponAmount = shipInstance.weaponAmount - 1,
-							armaments = ShipInstanceArmaments(
-								weaponInstances = shipInstance.armaments.weaponInstances + mapOf(
-									weapon to shipWeapon.copy(numCharges = shipWeapon.numCharges + shipInstance.firepower.lanceCharging)
-								)
+							armaments = shipInstance.armaments + mapOf(
+								weapon to shipWeapon.copy(numCharges = shipWeapon.numCharges + shipInstance.firepower.lanceCharging)
 							)
 						)
 					)
@@ -458,7 +456,7 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (!shipInstance.canUseWeapon(weapon)) return null
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
+			val shipWeapon = shipInstance.armaments[weapon] ?: return null
 			
 			val pickResponse = pick(shipInstance.getWeaponPickRequest(shipWeapon.weapon))
 			
@@ -473,7 +471,7 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That attacking ship does not exist")
 			if (!shipInstance.canUseWeapon(weapon)) return GameEvent.InvalidAction("That weapon cannot be used")
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
+			val shipWeapon = shipInstance.armaments[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			
 			val pickRequest = shipInstance.getWeaponPickRequest(shipWeapon.weapon)
 			val pickResponse = data.target
@@ -492,7 +490,7 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return null
 			if (weapon !in shipInstance.usedArmaments) return null
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return null
+			val shipWeapon = shipInstance.armaments[weapon] ?: return null
 			if (shipWeapon !is ShipWeaponInstance.Hangar) return null
 			
 			return PlayerAbilityData.RecallStrikeCraft
@@ -504,7 +502,7 @@ sealed class PlayerAbilityType {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (weapon !in shipInstance.usedArmaments) return GameEvent.InvalidAction("Cannot recall unused strike craft")
 			
-			val shipWeapon = shipInstance.armaments.weaponInstances[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
+			val shipWeapon = shipInstance.armaments[weapon] ?: return GameEvent.InvalidAction("That weapon does not exist")
 			if (shipWeapon !is ShipWeaponInstance.Hangar) return GameEvent.InvalidAction("Cannot recall non-hangar weapons")
 			
 			val hangarWing = ShipHangarWing(ship, weapon)
@@ -521,7 +519,7 @@ sealed class PlayerAbilityType {
 							bomberWings = targetShip.bomberWings - hangarWing,
 						)
 					} + mapOf(ship to newShip)
-				)
+				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
 	}
@@ -559,14 +557,12 @@ sealed class PlayerAbilityType {
 			val changedShips = hangars.groupBy { it.ship }.mapNotNull { (shipId, hangarWings) ->
 				val changedShip = gameState.ships[shipId] ?: return@mapNotNull null
 				changedShip.copy(
-					armaments = ShipInstanceArmaments(
-						changedShip.armaments.weaponInstances + hangarWings.associate {
-							it.hangar to ShipWeaponInstance.Hangar(
-								changedShip.ship.armaments.weapons[it.hangar] as ShipWeapon.Hangar,
-								0.0
-							)
-						}
-					)
+					armaments = changedShip.armaments + hangarWings.associate {
+						it.hangar to ShipWeaponInstance.Hangar(
+							changedShip.ship.armaments[it.hangar] as ShipWeapon.Hangar,
+							0.0
+						)
+					}
 				)
 			}.associateBy { it.id } + mapOf(
 				ship to shipInstance.copy(
@@ -578,7 +574,52 @@ sealed class PlayerAbilityType {
 			return GameEvent.StateChange(
 				gameState.copy(
 					ships = gameState.ships + changedShips
-				)
+				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
+			)
+		}
+	}
+	
+	@Serializable
+	data class BoardingParty(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			if (gameState.phase !is GamePhase.Attack) return null
+			
+			val shipInstance = gameState.ships[ship] ?: return null
+			if (!shipInstance.canSendBoardingParty) return null
+			
+			val pickResponse = pick(shipInstance.getBoardingPickRequest()) as? PickResponse.Ship ?: return null
+			return PlayerAbilityData.BoardingParty(pickResponse.id)
+		}
+		
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+			if (data !is PlayerAbilityData.BoardingParty) return GameEvent.InvalidAction("Internal error from using player ability")
+			
+			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only send Boarding Parties during Phase III")
+			
+			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
+			if (!shipInstance.canSendBoardingParty) return GameEvent.InvalidAction("Cannot send a boarding party")
+			
+			val afterBoarding = shipInstance.afterBoarding() ?: return GameEvent.InvalidAction("Cannot send a boarding party")
+			
+			val boarded = gameState.ships[data.target] ?: return GameEvent.InvalidAction("That ship does not exist")
+			val afterBoarded = shipInstance.board(boarded)
+			
+			val newShips = (if (afterBoarded is ImpactResult.Damaged)
+				gameState.ships + mapOf(data.target to afterBoarded.ship)
+			else gameState.ships - data.target) + mapOf(ship to afterBoarding)
+			
+			val newWrecks = gameState.destroyedShips + (if (afterBoarded is ImpactResult.Destroyed)
+				mapOf(data.target to afterBoarded.ship)
+			else emptyMap())
+			
+			val newChatEntries = gameState.chatBox + reportBoardingResult(afterBoarded, ship)
+			
+			return GameEvent.StateChange(
+				gameState.copy(
+					ships = newShips,
+					destroyedShips = newWrecks,
+					chatBox = newChatEntries
+				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
 	}
@@ -744,6 +785,9 @@ sealed class PlayerAbilityData {
 	object DisruptionPulse : PlayerAbilityData()
 	
 	@Serializable
+	data class BoardingParty(val target: Id<ShipInstance>) : PlayerAbilityData()
+	
+	@Serializable
 	object RepairShipModule : PlayerAbilityData()
 	
 	@Serializable
@@ -820,7 +864,7 @@ else when (phase) {
 		val chargeableLances = ships
 			.filterValues { it.owner == forPlayer && it.weaponAmount > 0 }
 			.flatMap { (id, ship) ->
-				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
+				ship.armaments.mapNotNull { (weaponId, weapon) ->
 					PlayerAbilityType.ChargeLance(id, weaponId).takeIf {
 						when (weapon) {
 							is ShipWeaponInstance.Lance -> weapon.numCharges < 7.0 && weaponId !in ship.usedArmaments
@@ -834,7 +878,7 @@ else when (phase) {
 			.filterKeys { canShipAttack(it) }
 			.filterValues { it.owner == forPlayer }
 			.flatMap { (id, ship) ->
-				ship.armaments.weaponInstances.keys.mapNotNull { weaponId ->
+				ship.armaments.keys.mapNotNull { weaponId ->
 					PlayerAbilityType.UseWeapon(id, weaponId).takeIf {
 						weaponId !in ship.usedArmaments && ship.canUseWeapon(weaponId)
 					}
@@ -847,10 +891,16 @@ else when (phase) {
 			.keys
 			.map { PlayerAbilityType.DisruptionPulse(it) }
 		
+		val usableBoardingTransportaria = ships
+			.filterKeys { canShipAttack(it) }
+			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.canSendBoardingParty }
+			.keys
+			.map { PlayerAbilityType.BoardingParty(it) }
+		
 		val recallableStrikeWings = ships
 			.filterValues { it.owner == forPlayer }
 			.flatMap { (id, ship) ->
-				ship.armaments.weaponInstances.mapNotNull { (weaponId, weapon) ->
+				ship.armaments.mapNotNull { (weaponId, weapon) ->
 					PlayerAbilityType.RecallStrikeCraft(id, weaponId).takeIf {
 						weaponId in ship.usedArmaments && weapon is ShipWeaponInstance.Hangar
 					}
@@ -861,7 +911,7 @@ else when (phase) {
 			listOf(PlayerAbilityType.DonePhase(GamePhase.Attack(phase.turn)))
 		else emptyList()
 		
-		chargeableLances + usableWeapons + recallableStrikeWings + usableDisruptionPulses + finishAttacking
+		usableBoardingTransportaria + chargeableLances + usableWeapons + recallableStrikeWings + usableDisruptionPulses + finishAttacking
 	}
 	is GamePhase.Repair -> {
 		val repairableModules = ships

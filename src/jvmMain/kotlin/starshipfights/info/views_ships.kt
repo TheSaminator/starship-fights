@@ -164,7 +164,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 				th { +"Firepower" }
 			}
 			
-			for ((label, weapons) in shipType.armaments.weapons.values.groupBy { it.groupLabel }) {
+			for ((label, weapons) in shipType.armaments.values.groupBy { it.groupLabel }) {
 				val weapon = weapons.distinct().single()
 				val numShots = weapons.sumOf { it.numShots }
 				

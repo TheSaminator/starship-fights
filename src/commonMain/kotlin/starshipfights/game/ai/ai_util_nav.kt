@@ -40,7 +40,7 @@ fun ShipInstance.canAttackWithDamage(gameState: GameState): Map<Id<ShipInstance>
 }
 
 fun ShipInstance.attackableTargets(gameState: GameState): Map<Id<ShipInstance>, Set<Id<ShipWeapon>>> {
-	return armaments.weaponInstances.keys.associateWith { weaponId ->
+	return armaments.keys.associateWith { weaponId ->
 		weaponId.validTargets(gameState, this).map { it.id }.toSet()
 	}.transpose()
 }
@@ -57,14 +57,14 @@ fun ShipInstance.attackableWithDamageBy(gameState: GameState): Map<Id<ShipInstan
 
 fun Id<ShipWeapon>.validTargets(gameState: GameState, ship: ShipInstance): List<ShipInstance> {
 	if (!ship.canUseWeapon(this)) return emptyList()
-	val weaponInstance = ship.armaments.weaponInstances[this] ?: return emptyList()
+	val weaponInstance = ship.armaments[this] ?: return emptyList()
 	
 	return gameState.getValidTargets(ship, weaponInstance)
 }
 
 fun Id<ShipWeapon>.expectedAdvantageFromWeaponUsage(gameState: GameState, ship: ShipInstance, target: ShipInstance): Double {
 	if (!ship.canUseWeapon(this)) return 0.0
-	val weaponInstance = ship.armaments.weaponInstances[this] ?: return 0.0
+	val weaponInstance = ship.armaments[this] ?: return 0.0
 	val mustBeSameSide = weaponInstance is ShipWeaponInstance.Hangar && weaponInstance.weapon.wing == StrikeCraftWing.FIGHTERS
 	if ((ship.owner == target.owner) != mustBeSameSide) return 0.0
 	

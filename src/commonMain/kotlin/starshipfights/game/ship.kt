@@ -142,18 +142,21 @@ val ShipWeightClass.movement: ShipMovement
 sealed class ShipDurability {
 	abstract val maxHullPoints: Int
 	abstract val turretDefense: Double
+	abstract val troopsDefense: Int
 }
 
 @Serializable
 data class StandardShipDurability(
 	override val maxHullPoints: Int,
 	override val turretDefense: Double,
+	override val troopsDefense: Int,
 	val repairTokens: Int,
 ) : ShipDurability()
 
 @Serializable
 data class FelinaeShipDurability(
 	override val maxHullPoints: Int,
+	override val troopsDefense: Int,
 	val disruptionPulseRange: Double,
 	val disruptionPulseShots: Int
 ) : ShipDurability() {
@@ -163,31 +166,31 @@ data class FelinaeShipDurability(
 
 val ShipWeightClass.durability: ShipDurability
 	get() = when (this) {
-		ShipWeightClass.ESCORT -> StandardShipDurability(4, 0.5, 1)
-		ShipWeightClass.DESTROYER -> StandardShipDurability(8, 0.5, 1)
-		ShipWeightClass.CRUISER -> StandardShipDurability(12, 1.0, 2)
-		ShipWeightClass.BATTLECRUISER -> StandardShipDurability(14, 1.5, 2)
-		ShipWeightClass.BATTLESHIP -> StandardShipDurability(16, 2.0, 3)
+		ShipWeightClass.ESCORT -> StandardShipDurability(4, 0.5, 5, 1)
+		ShipWeightClass.DESTROYER -> StandardShipDurability(8, 0.5, 7, 1)
+		ShipWeightClass.CRUISER -> StandardShipDurability(12, 1.0, 10, 2)
+		ShipWeightClass.BATTLECRUISER -> StandardShipDurability(14, 1.5, 10, 2)
+		ShipWeightClass.BATTLESHIP -> StandardShipDurability(16, 2.0, 15, 3)
 		
-		ShipWeightClass.BATTLE_BARGE -> StandardShipDurability(16, 1.5, 3)
+		ShipWeightClass.BATTLE_BARGE -> StandardShipDurability(16, 1.5, 15, 3)
 		
-		ShipWeightClass.GRAND_CRUISER -> StandardShipDurability(15, 1.75, 3)
-		ShipWeightClass.COLOSSUS -> StandardShipDurability(27, 3.0, 4)
+		ShipWeightClass.GRAND_CRUISER -> StandardShipDurability(15, 1.75, 12, 3)
+		ShipWeightClass.COLOSSUS -> StandardShipDurability(27, 3.0, 25, 4)
 		
-		ShipWeightClass.FF_ESCORT -> FelinaeShipDurability(6, 1000.0, 3)
-		ShipWeightClass.FF_DESTROYER -> FelinaeShipDurability(9, 1000.0, 4)
-		ShipWeightClass.FF_CRUISER -> FelinaeShipDurability(12, 750.0, 2)
-		ShipWeightClass.FF_BATTLECRUISER -> FelinaeShipDurability(15, 875.0, 2)
-		ShipWeightClass.FF_BATTLESHIP -> FelinaeShipDurability(18, 1250.0, 3)
+		ShipWeightClass.FF_ESCORT -> FelinaeShipDurability(6, 3, 1000.0, 3)
+		ShipWeightClass.FF_DESTROYER -> FelinaeShipDurability(9, 4, 1000.0, 4)
+		ShipWeightClass.FF_CRUISER -> FelinaeShipDurability(12, 5, 750.0, 2)
+		ShipWeightClass.FF_BATTLECRUISER -> FelinaeShipDurability(15, 6, 875.0, 2)
+		ShipWeightClass.FF_BATTLESHIP -> FelinaeShipDurability(18, 7, 1250.0, 3)
 		
-		ShipWeightClass.AUXILIARY_SHIP -> StandardShipDurability(4, 2.0, 1)
-		ShipWeightClass.LIGHT_CRUISER -> StandardShipDurability(8, 3.0, 2)
-		ShipWeightClass.MEDIUM_CRUISER -> StandardShipDurability(12, 3.5, 2)
-		ShipWeightClass.HEAVY_CRUISER -> StandardShipDurability(16, 4.0, 3)
+		ShipWeightClass.AUXILIARY_SHIP -> StandardShipDurability(4, 2.0, 6, 1)
+		ShipWeightClass.LIGHT_CRUISER -> StandardShipDurability(8, 3.0, 9, 2)
+		ShipWeightClass.MEDIUM_CRUISER -> StandardShipDurability(12, 3.5, 12, 2)
+		ShipWeightClass.HEAVY_CRUISER -> StandardShipDurability(16, 4.0, 15, 3)
 		
-		ShipWeightClass.FRIGATE -> StandardShipDurability(10, 1.5, 1)
-		ShipWeightClass.LINE_SHIP -> StandardShipDurability(15, 2.0, 1)
-		ShipWeightClass.DREADNOUGHT -> StandardShipDurability(20, 2.5, 1)
+		ShipWeightClass.FRIGATE -> StandardShipDurability(10, 1.5, 7, 1)
+		ShipWeightClass.LINE_SHIP -> StandardShipDurability(15, 2.0, 9, 1)
+		ShipWeightClass.DREADNOUGHT -> StandardShipDurability(20, 2.5, 11, 1)
 	}
 
 @Serializable

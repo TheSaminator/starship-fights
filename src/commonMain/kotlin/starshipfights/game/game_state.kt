@@ -2,8 +2,6 @@ package starshipfights.game
 
 import kotlinx.serialization.Serializable
 import starshipfights.data.Id
-import kotlin.random.Random
-import kotlin.random.nextInt
 
 @Serializable
 data class GameState(
@@ -99,7 +97,7 @@ private fun GameState.afterPhase(): GameState {
 				if (ship.numFires <= 0)
 					return@fireDamage id to ship
 				
-				val hits = Random.nextInt(0..ship.numFires)
+				val hits = (0..ship.numFires).random()
 				
 				val impactResult = ship.impact(hits, true)
 				newChatEntries += listOfNotNull(impactResult.toChatEntry(ShipAttacker.Fire, null))
@@ -126,6 +124,8 @@ private fun GameState.afterPhase(): GameState {
 					fighterWings = emptySet(),
 					bomberWings = emptySet(),
 					usedArmaments = emptySet(),
+					
+					hasSentBoardingParty = false,
 				)
 			}
 		}
