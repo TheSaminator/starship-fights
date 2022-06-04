@@ -1,36 +1,48 @@
 package starshipfights.game.ai
 
 import starshipfights.game.EPSILON
+import kotlin.jvm.JvmInline
 import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.random.Random
 
+@JvmInline
+value class VecN(val values: List<Double>)
+
+val VecN.dimension: Int
+	get() = values.size
+
 // close enough
 fun Random.nextGaussian() = (1..12).sumOf { nextDouble() } - 6
 
-fun Random.nextUnitVector(size: Int): List<Double> {
+fun Random.nextUnitVector(size: Int): VecN {
 	if (size <= 0)
 		throw IllegalArgumentException("Cannot have vector of zero or negative dimension!")
 	
 	if (size == 1)
-		return listOf(if (nextBoolean()) 1.0 else -1.0)
+		return VecN(listOf(if (nextBoolean()) 1.0 else -1.0))
 	
-	return (1..size).map { nextGaussian() }.normalize()
+	val vector = VecN((1..size).map { nextGaussian() })
+	
+	if (vector.isNullVector) // try again
+		return nextUnitVector(size)
+	
+	return vector.normalize()
 }
 
-fun Random.nextOrthonormalBasis(size: Int): List<List<Double>> {
+fun Random.nextOrthonormalBasis(size: Int): List<VecN> {
 	if (size <= 0)
 		throw IllegalArgumentException("Cannot have orthonormal basis of zero or negative dimension!")
 	
 	if (size == 1)
-		return listOf(listOf(if (nextBoolean()) 1.0 else -1.0))
+		return listOf(VecN(listOf(if (nextBoolean()) 1.0 else -1.0)))
 	
-	val orthogonalBasis = mutableListOf<List<Double>>()
+	val orthogonalBasis = mutableListOf<VecN>()
 	while (orthogonalBasis.size < size) {
 		val vector = nextUnitVector(size)
 		var orthogonal = vector
 		for (prevVector in orthogonalBasis)
-			orthogonal = orthogonal minus (vector project prevVector)
+			orthogonal -= (vector project prevVector)
 		
 		if (!orthogonal.isNullVector)
 			orthogonalBasis.add(orthogonal)
@@ -40,44 +52,42 @@ fun Random.nextOrthonormalBasis(size: Int): List<List<Double>> {
 	return orthogonalBasis.map { it.normalize() }
 }
 
-val Iterable<Double>.isNullVector: Boolean
+val VecN.isNullVector: Boolean
 	get() {
-		return all { abs(it) < EPSILON }
+		return values.all { abs(it) < EPSILON }
 	}
 
-fun Iterable<Double>.normalize(): List<Double> {
-	val magnitude = sqrt(sumOf { it * it })
-	if (magnitude < EPSILON)
+fun VecN.normalize(): VecN {
+	if (isNullVector)
 		throw IllegalArgumentException("Cannot normalize the zero vector!")
 	
-	return this div magnitude
+	val magnitude = sqrt(this dot this)
+	
+	return this / magnitude
 }
 
-infix fun Iterable<Double>.dot(other: Iterable<Double>): Double {
-	if (count() != other.count())
+infix fun VecN.dot(other: VecN): Double {
+	if (dimension != other.dimension)
 		throw IllegalArgumentException("Cannot take inner product of vectors of unequal dimensions!")
 	
-	return (this zip other).sumOf { (a, b) -> a * b }
+	return (this.values zip other.values).sumOf { (a, b) -> a * b }
 }
 
-infix fun Iterable<Double>.project(onto: Iterable<Double>): List<Double> {
-	if (count() != onto.count())
-		throw IllegalArgumentException("Cannot take inner product of vectors of unequal dimensions!")
-	
-	return this times ((this dot onto) / (this dot this))
+infix fun VecN.project(onto: VecN): VecN {
+	return this * ((this dot onto) / (this dot this))
 }
 
-infix fun Iterable<Double>.plus(other: Iterable<Double>): List<Double> {
-	if (count() != other.count())
+operator fun VecN.plus(other: VecN): VecN {
+	if (dimension != other.dimension)
 		throw IllegalArgumentException("Cannot take sum of vectors of unequal dimensions!")
 	
-	return (this zip other).map { (a, b) -> a + b }
+	return VecN((this.values zip other.values).map { (a, b) -> a + b })
 }
 
-infix fun Iterable<Double>.minus(other: Iterable<Double>) = this plus (other times -1.0)
+operator fun VecN.minus(other: VecN) = this + (other * -1.0)
 
-infix fun Iterable<Double>.times(scale: Double): List<Double> = map { it * scale }
-infix fun Iterable<Double>.div(scale: Double): List<Double> = map { it / scale }
+operator fun VecN.times(scale: Double): VecN = VecN(values.map { it * scale })
+operator fun VecN.div(scale: Double): VecN = VecN(values.map { it / scale })
 
 fun Instinct.denormalize(normalValue: Double): Double {
 	val zeroToOne = (normalValue + 1) / 2

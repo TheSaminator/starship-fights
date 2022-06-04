@@ -36,7 +36,7 @@ val allInstincts = listOf(
 
 fun genInstinctCandidates(count: Int): Set<Instincts> {
 	return Random.nextOrthonormalBasis(allInstincts.size).take(count).map { vector ->
-		Instincts.fromValues((allInstincts zip vector).associate { (key, value) ->
+		Instincts.fromValues((allInstincts zip vector.values).associate { (key, value) ->
 			key.key to key.denormalize(value)
 		})
 	}.toSet()
