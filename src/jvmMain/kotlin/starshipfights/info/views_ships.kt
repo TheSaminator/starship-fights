@@ -78,6 +78,8 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 				}
 				td {
 					+"${shipType.weightClass.durability.maxHullPoints} impacts"
+					br
+					+"${shipType.weightClass.durability.troopsDefense} troops"
 				}
 				td {
 					when (val durability = shipType.weightClass.durability) {
