@@ -18,6 +18,7 @@ enum class BattleBackground(val displayName: String, val color: String) {
 	BLUE_BROWN("Milky Way", "#335577"),
 	BLUE_MAGENTA("Arcane Anomaly", "#553377"),
 	BLUE_PURPLE("Vensca Wormhole", "#444477"),
+	BLUE_GREEN("Radiation Risk", "#337755"),
 	GRAYBLUE_GRAYBROWN("Fulkreyksk Bloc", "#445566"),
 	MAGENTA_PURPLE("Aedon Vortex", "#773355"),
 	ORANGE_ORANGE("Solar Flare", "#775533"),
