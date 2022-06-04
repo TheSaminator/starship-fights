@@ -8,7 +8,7 @@ val ShipType.buyPrice: Int
 	get() = pointCost * 6 / 5
 
 val ShipType.buyWhileDutchPrice: Int
-	get() = pointCost * 7 / 5
+	get() = pointCost * 8 / 5
 
 val ShipType.sellPrice: Int
 	get() = pointCost * 4 / 5
