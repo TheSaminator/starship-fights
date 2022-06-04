@@ -41,7 +41,7 @@ inline val Vec2.angle: Double
 inline val Vec2.normal: Vec2
 	get() {
 		val thisMagnitude = this.magnitude
-		return if (thisMagnitude == 0.0)
+		return if (thisMagnitude < EPSILON)
 			Vec2(0.0, 0.0)
 		else this / thisMagnitude
 	}
