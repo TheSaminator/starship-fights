@@ -249,7 +249,7 @@ sealed class PlayerAbilityType {
 			if (angleDiff - shipInstance.movement.turnAngle > EPSILON) return GameEvent.InvalidAction("Illegal move - turn angle is too big")
 			
 			val maxMoveSpeed = shipInstance.movement.moveSpeed
-			val minMoveSpeed = maxMoveSpeed * (angleDiff / shipInstance.movement.turnAngle) / 2
+			val minMoveSpeed = if (maxMoveSpeed < EPSILON) maxMoveSpeed else (maxMoveSpeed * (angleDiff / shipInstance.movement.turnAngle) / 2)
 			
 			val moveFrom = moveOrigin + (newFacingNormal * minMoveSpeed)
 			val moveTo = moveOrigin + (newFacingNormal * maxMoveSpeed)

@@ -12,7 +12,7 @@ import javax.swing.UIManager
 object AITesting {
 	@JvmStatic
 	fun main(args: Array<String>) {
-		UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+		UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel")
 		
 		val instinctVectorCounts = listOf(5, 11, 17)
 		val instinctVectorOptions = instinctVectorCounts.map { it.toString() }.toTypedArray()
