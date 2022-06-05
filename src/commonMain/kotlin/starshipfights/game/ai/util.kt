@@ -16,6 +16,9 @@ expect fun logError(message: Any?)
 
 fun ClosedFloatingPointRange<Double>.random(random: Random = Random) = random.nextDouble(start, endInclusive.nextUp())
 
+val ClosedFloatingPointRange<Double>.size: Double
+	get() = endInclusive.nextUp() - start
+
 fun <T : Any> Map<T, Double>.weightedRandom(random: Random = Random): T {
 	return weightedRandomOrNull(random) ?: error("Cannot take weighted random of effectively-empty collection!")
 }

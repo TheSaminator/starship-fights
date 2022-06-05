@@ -5,6 +5,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import starshipfights.data.Id
@@ -249,7 +250,7 @@ data class InstinctGamePairing(
 	val guest: Instincts
 )
 
-suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, validBattleSizes: Set<BattleSize> = BattleSize.values().toSet(), validFactions: Set<Faction> = Faction.values().toSet()): Map<InstinctGamePairing, Int> {
+suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, validBattleSizes: Set<BattleSize> = BattleSize.values().toSet(), validFactions: Set<Faction> = Faction.values().toSet(), cancellationJob: Job = Job(), onProgress: suspend () -> Unit = {}): Map<InstinctGamePairing, Int> {
 	return coroutineScope {
 		instincts.associateWith { host ->
 			async {
@@ -263,11 +264,19 @@ suspend fun performTrials(numTrialsPerPairing: Int, instincts: Set<Instincts>, v
 								val guestFaction = validFactions.random()
 								
 								val gameState = generateOptimizationInitialState(hostFaction, guestFaction, BattleInfo(battleSize, BattleBackground.BLUE_BROWN))
-								val winner = withTimeoutOrNull(30_000L * numTrialsPerPairing) {
-									performTestSession(gameState, host, guest)
+								val winner = withTimeoutOrNull((20_000L * numTrialsPerPairing) + (400L * numTrialsPerPairing * numTrialsPerPairing)) {
+									val deferred = async(cancellationJob) {
+										performTestSession(gameState, host, guest)
+									}
+									
+									select<GlobalSide?> {
+										cancellationJob.onJoin { null }
+										deferred.onAwait { it }
+									}
 								}
 								
 								logInfo("A trial has ended! Winner: ${winner ?: "NEITHER"}")
+								onProgress()
 								
 								when (winner) {
 									GlobalSide.HOST -> 1
@@ -296,4 +305,18 @@ fun Map<InstinctGamePairing, Int>.toVictoryMap() = keys.associate { (host, _) ->
 
 fun Map<InstinctGamePairing, Int>.toVictoryPairingMap() = keys.associate { (host, guest) ->
 	InstinctVictoryPairing(host, guest) to ((get(InstinctGamePairing(host, guest)) ?: 0) - (get(InstinctGamePairing(guest, host)) ?: 0))
+}
+
+fun Map<Instincts, Int>.successHistograms(numSegments: Int) = allInstincts.associateWith { instinct ->
+	val ranges = (0..numSegments).map { it.toDouble() / numSegments }.windowed(2) { (begin, end) ->
+		val rBegin = instinct.randRange.start + (begin * instinct.randRange.size)
+		val rEnd = instinct.randRange.start + (end * instinct.randRange.size)
+		rBegin..rEnd
+	}
+	
+	val perRange = ranges.associateWith { range ->
+		filterKeys { it[instinct] in range }.values.sum()
+	}
+	
+	perRange
 }

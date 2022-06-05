@@ -1,13 +1,16 @@
 package starshipfights.game.ai
 
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.html.*
 import kotlinx.html.stream.createHTML
 import starshipfights.game.BattleSize
 import starshipfights.game.Faction
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import javax.swing.JOptionPane
 import javax.swing.UIManager
+import kotlin.concurrent.thread
 
 object AITesting {
 	@JvmStatic
@@ -26,9 +29,10 @@ object AITesting {
 		
 		if (instinctVectorIndex == JOptionPane.CLOSED_OPTION) return
 		
-		val instinctVectors = genInstinctCandidates(instinctVectorCounts[instinctVectorIndex])
+		val instinctVectorCount = instinctVectorCounts[instinctVectorIndex]
+		val instinctVectors = genInstinctCandidates(instinctVectorCount)
 		
-		val numTrialCounts = listOf(3, 5, 7, 10)
+		val numTrialCounts = listOf(3, 5, 7, 10, 25)
 		val numTrialOptions = numTrialCounts.map { it.toString() }.toTypedArray()
 		
 		val numTrialIndex = JOptionPane.showOptionDialog(
@@ -70,13 +74,39 @@ object AITesting {
 		
 		val allowedFactions = allowedFactionChoices[allowedFactionIndex]
 		
+		val allTrials = numTrials * instinctVectorCount * instinctVectorCount
+		val doneTrials = AtomicInteger(0)
+		val cancelJob = Job()
+		
+		thread {
+			while (true) {
+				val options = arrayOf("Update", "Cancel")
+				
+				val option = JOptionPane.showOptionDialog(
+					null, "Please select an action. ${doneTrials.get()}/$allTrials trials are done.",
+					"Trials in Progress", JOptionPane.DEFAULT_OPTION,
+					JOptionPane.INFORMATION_MESSAGE, null,
+					options, options[0]
+				)
+				
+				if (option == 1) {
+					cancelJob.cancel()
+					break
+				}
+			}
+		}
+		
 		val instinctPairingSuccessRate = runBlocking {
-			performTrials(numTrials, instinctVectors, allowedBattleSizes, allowedFactions)
+			performTrials(numTrials, instinctVectors, allowedBattleSizes, allowedFactions, cancelJob) {
+				doneTrials.getAndIncrement()
+			}
 		}
 		
 		val instinctVictories = instinctPairingSuccessRate.toVictoryPairingMap()
 		
 		val instinctSuccessRate = instinctPairingSuccessRate.toVictoryMap()
+		
+		val instinctHistograms = instinctSuccessRate.successHistograms(instinctVectorCount)
 		
 		val indexedInstincts = instinctSuccessRate
 			.toList()
@@ -98,7 +128,7 @@ object AITesting {
 				p { +"Battle Sizes Allowed: ${allowedBattleSizes.singleOrNull()?.displayName ?: "All"}" }
 				p { +"Factions Allowed: ${allowedFactions.singleOrNull()?.polityName ?: "All"}" }
 				h2 { +"Instincts Vectors and Battle Results" }
-				val cellStyle = "border: 1px solid rgba(0, 0, 0, 0.6)"
+				val cellStyle = "border:1px solid rgba(0, 0, 0, 0.6)"
 				table {
 					thead {
 						tr {
@@ -166,6 +196,54 @@ object AITesting {
 									+"$victories"
 								}
 						}
+				}
+				h2 { +"Instinct Victory Histograms" }
+				for ((instinct, histogram) in instinctHistograms) {
+					val sortedHistogram = histogram.toList().sortedBy { (range, _) -> range.start }
+					val lowestNumber = sortedHistogram.minOf { (_, score) -> score }
+					val highestNumber = sortedHistogram.maxOf { (_, score) -> score }
+					
+					h3 { +"Instinct ${instinct.key}" }
+					table {
+						thead {
+							tr {
+								th(scope = ThScope.col) {
+									style = cellStyle
+									+"Value Range"
+								}
+								for (num in lowestNumber..highestNumber)
+									th(scope = ThScope.col) {
+										style = cellStyle
+										+"$num"
+									}
+							}
+						}
+						tbody {
+							for ((range, successRate) in sortedHistogram)
+								tr {
+									th {
+										style = cellStyle
+										+"${range.start}"
+										br
+										+"${range.endInclusive}"
+									}
+									for (i in lowestNumber until successRate)
+										td {
+											style = "$cellStyle;background-color:#AAA;color:#AAA"
+											+"##"
+										}
+									td {
+										style = "$cellStyle;background-color:#555;color:#555"
+										+"##"
+									}
+									for (i in successRate until highestNumber)
+										td {
+											style = "$cellStyle;background-color:#FFF;color:#FFF"
+											+"##"
+										}
+								}
+						}
+					}
 				}
 			}
 		}
