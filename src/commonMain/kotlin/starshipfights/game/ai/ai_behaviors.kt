@@ -228,6 +228,14 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 									
 									PickResponse.Location(chosenLocation)
 								}
+								is ShipWeapon.Lance -> {
+									doActions.send(PlayerAction.UseAbility(PlayerAbilityType.ChargeLance(ship.id, weaponId), PlayerAbilityData.ChargeLance))
+									withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
+										logWarning("Error when charging lance weapon $weaponId of ship ID ${ship.id} - $error")
+									}
+									
+									PickResponse.Ship(target.id)
+								}
 								else -> PickResponse.Ship(target.id)
 							}
 							
