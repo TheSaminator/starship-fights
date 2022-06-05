@@ -114,7 +114,7 @@ val ShipInstance.defenseModifier: Int
 		defenseBoardingModifier(modulesStatus[ShipModule.Defense]),
 	).sum()
 
-fun boardingRoll(): Int = (0..8).random() + (0..8).random()
+fun boardingRoll(): Int = (0..4).random() + (0..4).random()
 
 fun ShipInstance.board(defender: ShipInstance): ImpactResult {
 	val myValue = assaultModifier + boardingRoll()
