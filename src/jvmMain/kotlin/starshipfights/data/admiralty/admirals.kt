@@ -81,6 +81,24 @@ data class ShipInDrydock(
 	})
 }
 
+@Serializable
+data class ShipMemorial(
+	@SerialName("_id")
+	override val id: Id<ShipMemorial> = Id(),
+	val name: String,
+	val shipType: ShipType,
+	val destroyedAt: @Contextual Instant,
+	val owningAdmiral: Id<Admiral>,
+	val destroyedIn: Id<BattleRecord>,
+) : DataDocument<ShipMemorial> {
+	val fullName: String
+		get() = "${shipType.faction.shipPrefix}$name"
+	
+	companion object Table : DocumentTable<ShipMemorial> by DocumentTable.create({
+		index(ShipMemorial::owningAdmiral)
+	})
+}
+
 suspend fun getAllInGameAdmirals(user: User) = Admiral.filter(Admiral::owningUser eq user.id).map { admiral ->
 	InGameAdmiral(
 		admiral.id.reinterpret(),

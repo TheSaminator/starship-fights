@@ -115,6 +115,7 @@ data class ShipWreck(
 	val ship: Ship,
 	val owner: GlobalSide,
 	val isEscape: Boolean = false,
+	val wreckedAt: Moment = Moment.now
 ) {
 	val id: Id<ShipInstance>
 		get() = ship.id.reinterpret()

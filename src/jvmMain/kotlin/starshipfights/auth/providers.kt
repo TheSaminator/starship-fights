@@ -274,7 +274,7 @@ interface AuthProvider {
 					val newShip = ShipInDrydock(
 						name = newShipName,
 						shipType = shipType,
-						readyAt = Instant.now().plus(6, ChronoUnit.HOURS),
+						readyAt = Instant.now().plus(2, ChronoUnit.HOURS),
 						owningAdmiral = admiralId
 					)
 					

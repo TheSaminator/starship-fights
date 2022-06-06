@@ -449,12 +449,13 @@ suspend fun ApplicationCall.createAdmiralPage(): HTML.() -> Unit {
 suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 	val currentUser = getUserSession()?.user
 	val admiralId = parameters["id"]?.let { Id<Admiral>(it) }!!
-	val (admiral, ships, records) = coroutineScope {
-		val admiral = async { Admiral.get(admiralId)!! }
+	val admiral = Admiral.get(admiralId)!!
+	val (ships, graveyard, records) = coroutineScope {
 		val ships = async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList() }
+		val graveyard = async { ShipMemorial.filter(ShipMemorial::owningAdmiral eq admiralId).toList() }
 		val records = async { BattleRecord.filter(or(BattleRecord::hostAdmiral eq admiralId, BattleRecord::guestAdmiral eq admiralId)).toList() }
 		
-		Triple(admiral.await(), ships.await(), records.await())
+		Triple(ships.await(), graveyard.await(), records.await())
 	}
 	
 	val recordRoles = records.mapNotNull {
@@ -534,6 +535,47 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 									style = "display:none"
 									+shipReadyAt.toEpochMilli().toString()
 								}
+							}
+						}
+					}
+				}
+			}
+			
+			p {
+				+"The following ships were lost under "
+				+(if (admiral.isFemale) "her" else "his")
+				+" command:"
+			}
+			table {
+				tr {
+					th { +"Ship Name" }
+					th { +"Ship Class" }
+					th { +"Destruction" }
+				}
+				
+				for (ship in graveyard.sortedBy { it.name }.sortedBy { it.shipType.weightClass.tier }) {
+					tr {
+						td { +ship.fullName }
+						td {
+							a(href = "/info/${ship.shipType.toUrlSlug()}") {
+								+ship.shipType.fullDisplayName
+							}
+						}
+						td {
+							+"Destroyed by "
+							val opponent = recordOpponents[ship.destroyedIn]
+							if (opponent == null)
+								i { +"(Deleted Admiral)" }
+							else
+								a(href = "/admiral/${opponent.id}") {
+									+opponent.fullName
+								}
+							br
+							br
+							+"Destroyed at "
+							span(classes = "moment") {
+								style = "display:none"
+								+ship.destroyedAt.toEpochMilli().toString()
 							}
 						}
 					}

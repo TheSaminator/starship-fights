@@ -100,3 +100,21 @@ private fun calculateShipDamageChanceFromBombing(calculatedBombing: Double): Dou
 	
 	return smoothNegative(maxBomberWingOutput - maxFighterWingOutput)
 }
+
+fun ShipInstance.navigateTo(targetLocation: Position): PlayerAction.UseAbility {
+	val myLocation = position.location
+	
+	val angleTo = normalDistance(position.facing) angleTo (targetLocation - myLocation)
+	val maxTurn = movement.turnAngle * 0.99
+	val turnNormal = normalDistance(position.facing) rotatedBy angleTo.coerceIn(-maxTurn..maxTurn)
+	
+	val move = (movement.moveSpeed * if (turnNormal angleBetween (targetLocation - myLocation) < EPSILON) 0.99 else 0.51) * turnNormal
+	val newLoc = position.location + move
+	
+	val position = ShipPosition(newLoc, move.angle)
+	
+	return PlayerAction.UseAbility(
+		PlayerAbilityType.MoveShip(id),
+		PlayerAbilityData.MoveShip(position)
+	)
+}

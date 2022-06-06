@@ -16,6 +16,7 @@ import starshipfights.data.Id
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.ShipInDrydock
+import starshipfights.data.admiralty.ShipMemorial
 import starshipfights.data.auth.User
 import starshipfights.data.createToken
 import java.time.Instant
@@ -190,24 +191,15 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 private const val SHIP_POINTS_PER_ACUMEN = 5
 
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
-	val destroyedShipReadyAt = endedAt.plus(12, ChronoUnit.HOURS)
-	val damagedShipReadyAt = endedAt.plus(9, ChronoUnit.HOURS)
+	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
 	val intactShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
 	val escapedShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
 	
 	val shipWrecks = gameState.destroyedShips
 	val ships = gameState.ships
 	
-	val destroyedShips = shipWrecks.filterValues { !it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
-	
 	val hostAdmiralId = gameState.hostInfo.id.reinterpret<Admiral>()
 	val guestAdmiralId = gameState.guestInfo.id.reinterpret<Admiral>()
-	
-	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
-	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
 	
 	val battleRecord = BattleRecord(
 		battleInfo = gameState.battleInfo,
@@ -225,9 +217,35 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 		winMessage = gameEnd.message
 	)
 	
+	val destructions = shipWrecks.filterValues { !it.isEscape }
+	val destroyedShips = destructions.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val rememberedShips = destructions.values.map { wreck ->
+		ShipMemorial(
+			id = Id("RIP_${wreck.id.id}"),
+			name = wreck.ship.name,
+			shipType = wreck.ship.shipType,
+			destroyedAt = wreck.wreckedAt.instant,
+			owningAdmiral = when (wreck.owner) {
+				GlobalSide.HOST -> hostAdmiralId
+				GlobalSide.GUEST -> guestAdmiralId
+			},
+			destroyedIn = battleRecord.id
+		)
+	}
+	
+	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
+	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
+	
+	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
+	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
+	
 	coroutineScope {
 		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` destroyedShips, setValue(ShipInDrydock::readyAt, destroyedShipReadyAt))
+			ShipMemorial.put(rememberedShips)
+		}
+		launch {
+			ShipInDrydock.remove(ShipInDrydock::id `in` destroyedShips)
 		}
 		launch {
 			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::readyAt, damagedShipReadyAt))

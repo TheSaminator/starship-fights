@@ -411,25 +411,12 @@ fun engage(gameState: GameState, ship: ShipInstance): PlayerAction.UseAbility {
 }
 
 fun pursue(gameState: GameState, ship: ShipInstance): PlayerAction.UseAbility {
-	val myLocation = ship.position.location
 	val targetLocation = gameState.ships.values.filter { it.owner != ship.owner }.map { it.position.location }.minByOrNull { loc ->
-		(loc - myLocation).length
+		(loc - ship.position.location).length
 	} ?: return PlayerAction.UseAbility(
 		PlayerAbilityType.MoveShip(ship.id),
 		PlayerAbilityData.MoveShip(ship.position)
 	)
 	
-	val angleTo = normalDistance(ship.position.facing) angleTo (targetLocation - myLocation)
-	val maxTurn = ship.movement.turnAngle * 0.99
-	val turnNormal = normalDistance(ship.position.facing) rotatedBy angleTo.coerceIn(-maxTurn..maxTurn)
-	
-	val move = (ship.movement.moveSpeed * if (turnNormal angleBetween (targetLocation - myLocation) < EPSILON) 0.99 else 0.51) * turnNormal
-	val newLoc = ship.position.location + move
-	
-	val position = ShipPosition(newLoc, move.angle)
-	
-	return PlayerAction.UseAbility(
-		PlayerAbilityType.MoveShip(ship.id),
-		PlayerAbilityData.MoveShip(position)
-	)
+	return ship.navigateTo(targetLocation)
 }
