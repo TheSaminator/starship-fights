@@ -24,10 +24,9 @@ fun <T : Any> Map<T, Double>.weightedRandom(random: Random = Random): T {
 }
 
 fun <T : Any> Map<T, Double>.weightedRandomOrNull(random: Random = Random): T? {
-	if (isEmpty()) return null
+	if (values.none { it >= EPSILON }) return null
 	
 	val total = values.sum()
-	if (total < EPSILON) return null
 	
 	var hasChoice = false
 	var choice = random.nextDouble(total)
