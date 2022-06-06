@@ -189,7 +189,7 @@ fun felinaeShipWeapons(
 }
 
 fun fulkreykkShipWeapons(
-	torpedoRows: Int,
+	torpedoes: Int,
 	hasPulseBeam: Boolean,
 	
 	cannonSections: Int,
@@ -198,7 +198,7 @@ fun fulkreykkShipWeapons(
 	val idCounter = ShipWeaponIdCounter()
 	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
 	
-	repeat(torpedoRows * 2) {
+	repeat(torpedoes) {
 		idCounter.add(weapons, ShipWeapon.Torpedo(setOf(FiringArc.BOW), "Fore torpedo launchers"))
 	}
 	
