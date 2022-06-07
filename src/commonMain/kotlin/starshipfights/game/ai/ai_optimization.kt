@@ -200,7 +200,7 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 	val rank = battleInfo.size.minRank
 	
 	return GameState(
-		GameStart(
+		start = GameStart(
 			battleWidth, battleLength,
 			
 			PlayerStart(
@@ -219,7 +219,7 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 				generateFleet(guestFaction, rank, GlobalSide.GUEST)
 			)
 		),
-		InGameAdmiral(
+		hostInfo = InGameAdmiral(
 			id = Id(GlobalSide.HOST.name),
 			user = InGameUser(
 				id = Id(GlobalSide.HOST.name),
@@ -230,7 +230,7 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 			faction = hostFaction,
 			rank = rank
 		),
-		InGameAdmiral(
+		guestInfo = InGameAdmiral(
 			id = Id(GlobalSide.GUEST.name),
 			user = InGameUser(
 				id = Id(GlobalSide.GUEST.name),
@@ -241,7 +241,7 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 			faction = guestFaction,
 			rank = rank
 		),
-		battleInfo
+		battleInfo = battleInfo
 	)
 }
 
