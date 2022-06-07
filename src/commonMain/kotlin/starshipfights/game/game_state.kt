@@ -11,6 +11,8 @@ data class GameState(
 	val guestInfo: InGameAdmiral,
 	val battleInfo: BattleInfo,
 	
+	val subplots: Set<Subplot>,
+	
 	val phase: GamePhase = GamePhase.Deploy,
 	val doneWithPhase: GlobalSide? = null,
 	val calculatedInitiative: GlobalSide? = null,
@@ -21,7 +23,10 @@ data class GameState(
 	val chatBox: List<ChatEntry> = emptyList(),
 ) {
 	fun getShipInfo(id: Id<ShipInstance>) = destroyedShips[id]?.ship ?: ships.getValue(id).ship
+	fun getShipInfoOrNull(id: Id<ShipInstance>) = destroyedShips[id]?.ship ?: ships[id]?.ship
+	
 	fun getShipOwner(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships.getValue(id).owner
+	fun getShipOwnerOrNull(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships[id]?.owner
 }
 
 val GameState.currentInitiative: GlobalSide?
@@ -47,6 +52,17 @@ private fun GameState.afterPhase(): GameState {
 	var newInitiative: GameState.() -> InitiativePair = { InitiativePair(emptyMap()) }
 	
 	when (phase) {
+		GamePhase.Deploy -> {
+			return subplots.map { it.key }.fold(this) { newState, key ->
+				val subplot = newState.subplots.single { it.key == key }
+				subplot.onAfterDeployShips(newState)
+			}.copy(
+				phase = phase.next(),
+				ships = ships.mapValues { (_, ship) ->
+					ship.copy(isDoneCurrentPhase = false)
+				},
+			)
+		}
 		is GamePhase.Power -> {
 			// Prepare for move phase
 			newInitiative = { calculateMovePhaseInitiative() }
@@ -162,12 +178,24 @@ fun GameState.checkVictory(): GameEvent.GameEnd? {
 	val hostDefeated = ships.none { (_, it) -> it.owner == GlobalSide.HOST }
 	val guestDefeated = ships.none { (_, it) -> it.owner == GlobalSide.GUEST }
 	
-	return if (hostDefeated && guestDefeated)
-		GameEvent.GameEnd(null, "Stalemate: both sides have been completely destroyed!")
+	val winner = if (hostDefeated && guestDefeated)
+		null
 	else if (hostDefeated)
-		GameEvent.GameEnd(GlobalSide.GUEST, victoryMessage(GlobalSide.GUEST))
+		GlobalSide.GUEST
 	else if (guestDefeated)
-		GameEvent.GameEnd(GlobalSide.HOST, victoryMessage(GlobalSide.HOST))
+		GlobalSide.HOST
+	else return null
+	
+	val subplotsOutcomes = subplots.associate { subplot ->
+		subplot.key to subplot.getFinalGameResult(this, winner)
+	}
+	
+	return if (hostDefeated && guestDefeated)
+		GameEvent.GameEnd(null, "Stalemate: both sides have been completely destroyed!", subplotsOutcomes)
+	else if (hostDefeated)
+		GameEvent.GameEnd(GlobalSide.GUEST, victoryMessage(GlobalSide.GUEST), subplotsOutcomes)
+	else if (guestDefeated)
+		GameEvent.GameEnd(GlobalSide.HOST, victoryMessage(GlobalSide.HOST), subplotsOutcomes)
 	else
 		null
 }

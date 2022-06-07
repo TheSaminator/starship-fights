@@ -114,8 +114,8 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	}
 }
 
-private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSide?, String> {
-	val gameEnd = CompletableDeferred<Pair<LocalSide?, String>>()
+private suspend fun GameNetworkInteraction.execute(token: String): GameEvent.GameEnd {
+	val gameEnd = CompletableDeferred<GameEvent.GameEnd>()
 	
 	try {
 		httpClient.webSocket("$rootPathWs/game/$token") {
@@ -124,7 +124,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSid
 			}.display()
 			
 			if (!opponentJoined)
-				Popup.GameOver(LocalSide.GREEN, "Unfortunately, your opponent never entered the battle.", gameState.value).display()
+				Popup.GameOver(mySide, "Unfortunately, your opponent never entered the battle.", emptyMap(), gameState.value).display()
 			
 			val sendActionsJob = launch {
 				for (action in playerActions)
@@ -142,18 +142,18 @@ private suspend fun GameNetworkInteraction.execute(token: String): Pair<LocalSid
 						errorMessages.send(event.message)
 					}
 					is GameEvent.GameEnd -> {
-						gameEnd.complete(event.winner?.relativeTo(mySide) to event.message)
+						gameEnd.complete(event)
 						closeAndReturn { return@webSocket sendActionsJob.cancel() }
 					}
 				}
 			}
 		}
 	} catch (ex: WebSocketException) {
-		gameEnd.complete(null to "Server closed connection abruptly")
+		gameEnd.complete(GameEvent.GameEnd(null, "Server closed connection abruptly", emptyMap()))
 	}
 	
 	if (gameEnd.isActive)
-		gameEnd.complete(null to "Connection closed")
+		gameEnd.complete(GameEvent.GameEnd(null, "Connection closed", emptyMap()))
 	
 	return gameEnd.await()
 }
@@ -195,10 +195,10 @@ suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
 		val connectionJob = async { gameConnection.execute(token) }
 		val renderingJob = launch { gameRendering.execute(this@coroutineScope) }
 		
-		val (finalWinner, finalMessage) = connectionJob.await()
+		val (finalWinner, finalMessage, finalSubplots) = connectionJob.await()
 		renderingJob.cancel()
 		
 		interruptExit = false
-		Popup.GameOver(finalWinner, finalMessage, gameState.value).display()
+		Popup.GameOver(finalWinner, finalMessage, finalSubplots, gameState.value).display()
 	}
 }

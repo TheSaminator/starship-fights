@@ -14,6 +14,18 @@ enum class BattleSize(val numPoints: Int, val maxWeightClass: ShipWeightClass, v
 	CRUCIBLE_OF_HISTORY(3000, ShipWeightClass.COLOSSUS, "Crucible of History");
 }
 
+val BattleSize.numSubplotsPerPlayer: Int
+	get() = when (this) {
+		BattleSize.SKIRMISH -> 0
+		BattleSize.RAID -> 0
+		BattleSize.FIREFIGHT -> 0
+		BattleSize.BATTLE -> (0..1).random()
+		BattleSize.GRAND_CLASH -> 1
+		BattleSize.APOCALYPSE -> 1
+		BattleSize.LEGENDARY_STRUGGLE -> 1
+		BattleSize.CRUCIBLE_OF_HISTORY -> (1..2).random()
+	}
+
 enum class BattleBackground(val displayName: String, val color: String) {
 	BLUE_BROWN("Milky Way", "#335577"),
 	BLUE_MAGENTA("Arcane Anomaly", "#553377"),

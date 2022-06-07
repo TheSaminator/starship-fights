@@ -497,17 +497,13 @@ sealed class Popup<out T> {
 		}
 	}
 	
-	class GameOver(private val winner: LocalSide?, private val outcome: String, private val finalState: GameState) : Popup<Nothing>() {
+	class GameOver(private val winner: GlobalSide?, private val outcome: String, private val subplotStatuses: Map<SubplotKey, SubplotOutcome>, private val finalState: GameState) : Popup<Nothing>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Nothing) -> Unit) {
 			p {
 				style = "text-align:center"
 				
 				strong(classes = "heading") {
-					+when (winner) {
-						LocalSide.GREEN -> "Victory"
-						LocalSide.RED -> "Defeat"
-						null -> "Stalemate"
-					}
+					+victoryTitle(mySide, winner, subplotStatuses)
 				}
 			}
 			p {

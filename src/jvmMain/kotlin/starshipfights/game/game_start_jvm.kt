@@ -83,6 +83,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 			faction = aiAdmiral.faction,
 			rank = aiAdmiral.rank
 		),
-		battleInfo = battleInfo
+		battleInfo = battleInfo,
+		subplots = generateSubplots(battleInfo.size, GlobalSide.HOST)
 	)
 }

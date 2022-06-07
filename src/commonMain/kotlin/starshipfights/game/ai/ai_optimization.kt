@@ -241,7 +241,8 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 			faction = guestFaction,
 			rank = rank
 		),
-		battleInfo = battleInfo
+		battleInfo = battleInfo,
+		subplots = emptySet(),
 	)
 }
 

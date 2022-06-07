@@ -51,7 +51,7 @@ class GameSession(gameState: GameState) {
 	}
 }
 
-private suspend fun GameNetworkInteraction.execute(): Pair<LocalSide?, String> {
+private suspend fun GameNetworkInteraction.execute(): GameEvent.GameEnd {
 	val gameSession = GameSession(gameState.value)
 	
 	val aiSide = mySide.other
@@ -113,7 +113,7 @@ private suspend fun GameNetworkInteraction.execute(): Pair<LocalSide?, String> {
 		aiHandlingJob.cancel()
 		playerHandlingJob.cancel()
 		
-		gameEnd.winner?.relativeTo(mySide) to gameEnd.message
+		gameEnd
 	}
 }
 
@@ -135,10 +135,10 @@ suspend fun trainingMain(state: GameState) {
 		val connectionJob = async { gameConnection.execute() }
 		val renderingJob = launch { gameRendering.execute(this@coroutineScope) }
 		
-		val (finalWinner, finalMessage) = connectionJob.await()
+		val (finalWinner, finalMessage, finalSubplots) = connectionJob.await()
 		renderingJob.cancel()
 		
 		interruptExit = false
-		Popup.GameOver(finalWinner, finalMessage, gameState.value).display()
+		Popup.GameOver(finalWinner, finalMessage, finalSubplots, gameState.value).display()
 	}
 }

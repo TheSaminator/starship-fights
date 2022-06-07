@@ -1,5 +1,6 @@
 package starshipfights.data.admiralty
 
+import starshipfights.game.Faction
 import kotlin.random.Random
 
 enum class AdmiralNameFlavor {
@@ -22,6 +23,17 @@ enum class AdmiralNameFlavor {
 			AMERICAN -> "American"
 			HISPANIC_AMERICAN -> "Hispanic-American"
 		}
+	
+	companion object {
+		fun forFaction(faction: Faction) = when (faction) {
+			Faction.MECHYRDIA -> setOf(MECHYRDIA, TYLA, CALIBOR, OLYMPIA, DUTCH)
+			Faction.NDRC -> setOf(DUTCH)
+			Faction.MASRA_DRAETSEN -> setOf(CALIBOR, NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI)
+			Faction.FELINAE_FELICES -> setOf(OLYMPIA)
+			Faction.ISARNAREYKK -> setOf(FULKREYKK)
+			Faction.VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
+		}
+	}
 }
 
 object AdmiralNames {

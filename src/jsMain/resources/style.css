@@ -219,15 +219,6 @@ hr + hr {
 	display: none;
 }
 
-#bottom-center-bar {
-	position: fixed;
-	bottom: 22.5vh;
-	left: 50vw;
-	width: 25vw;
-	height: 5vh;
-	transform: translate(-50%, 0);
-}
-
 input[type=text] {
 	border: none;
 	border-bottom: 2px solid transparent;
@@ -374,4 +365,39 @@ button:disabled > img {
 .error {
 	color: #d22;
 	font-weight: bold;
+}
+
+#objectives {
+	position: fixed;
+	top: 2.5vh;
+	left: 2.5vw;
+	width: 25vw;
+	height: 75vh;
+	font-size: 1.5em;
+}
+
+#objectives .item {
+	background-color: rgba(0, 0, 0, 0.6);
+	color: #cccccc;
+	padding: 1.2em 0.4em 1.2em 2em;
+}
+
+#objectives .item.failed {
+	color: #ff5555;
+}
+
+#objectives .item.failed::before {
+	content: '✘';
+	position: absolute;
+	left: 0.5em;
+}
+
+#objectives .item.succeeded {
+	color: #55ff55;
+}
+
+#objectives .item.succeeded::before {
+	content: '✔';
+	position: absolute;
+	left: 0.5em;
 }

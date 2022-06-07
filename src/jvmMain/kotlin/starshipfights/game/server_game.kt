@@ -32,7 +32,8 @@ object GameManager {
 			start = generateGameStart(hostInfo, guestInfo, battleInfo),
 			hostInfo = hostInfo,
 			guestInfo = guestInfo,
-			battleInfo = battleInfo
+			battleInfo = battleInfo,
+			subplots = generateSubplots(battleInfo.size, GlobalSide.HOST) + generateSubplots(battleInfo.size, GlobalSide.GUEST)
 		)
 		
 		val session = GameSession(gameState)

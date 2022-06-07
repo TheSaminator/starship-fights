@@ -31,6 +31,8 @@ object GameUI {
 	private lateinit var topMiddleInfo: HTMLDivElement
 	private lateinit var topRightBar: HTMLDivElement
 	
+	private lateinit var objectives: HTMLDivElement
+	
 	private lateinit var errorMessages: HTMLParagraphElement
 	private lateinit var helpMessages: HTMLParagraphElement
 	
@@ -79,6 +81,10 @@ object GameUI {
 				id = "top-right-bar"
 			}
 			
+			div {
+				id = "objectives"
+			}
+			
 			p {
 				id = "error-messages"
 			}
@@ -113,6 +119,8 @@ object GameUI {
 		
 		topMiddleInfo = document.getElementById("top-middle-info").unsafeCast<HTMLDivElement>()
 		topRightBar = document.getElementById("top-right-bar").unsafeCast<HTMLDivElement>()
+		
+		objectives = document.getElementById("objectives").unsafeCast<HTMLDivElement>()
 		
 		errorMessages = document.getElementById("error-messages").unsafeCast<HTMLParagraphElement>()
 		helpMessages = document.getElementById("help-messages").unsafeCast<HTMLParagraphElement>()
@@ -393,6 +401,20 @@ object GameUI {
 				}
 			}
 		}.lastOrNull()?.scrollIntoView()
+		
+		objectives.clear()
+		objectives.append {
+			for (objective in state.objectives(mySide)) {
+				val classes = when (objective.succeeded) {
+					true -> "item succeeded"
+					false -> "item failed"
+					else -> "item"
+				}
+				div(classes = classes) {
+					+objective.displayText
+				}
+			}
+		}
 		
 		val abilities = state.getPossibleAbilities(mySide)
 		

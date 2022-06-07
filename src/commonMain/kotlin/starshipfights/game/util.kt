@@ -1,6 +1,12 @@
 package starshipfights.game
 
 import kotlinx.html.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.PairSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlin.math.abs
 import kotlin.math.exp
@@ -13,6 +19,21 @@ val jsonSerializer = Json {
 	encodeDefaults = false
 	ignoreUnknownKeys = true
 	useAlternativeNames = false
+}
+
+class MapAsListSerializer<K, V>(keySerializer: KSerializer<K>, valueSerializer: KSerializer<V>) : KSerializer<Map<K, V>> {
+	private val inner = ListSerializer(PairSerializer(keySerializer, valueSerializer))
+	
+	override val descriptor: SerialDescriptor
+		get() = inner.descriptor
+	
+	override fun serialize(encoder: Encoder, value: Map<K, V>) {
+		inner.serialize(encoder, value.toList())
+	}
+	
+	override fun deserialize(decoder: Decoder): Map<K, V> {
+		return inner.deserialize(decoder).toMap()
+	}
 }
 
 const val EPSILON = 0.00_001

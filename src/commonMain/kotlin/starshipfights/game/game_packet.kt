@@ -31,7 +31,12 @@ sealed class GameEvent {
 	data class InvalidAction(val message: String) : GameEvent()
 	
 	@Serializable
-	data class GameEnd(val winner: GlobalSide?, val message: String) : GameEvent()
+	data class GameEnd(
+		val winner: GlobalSide?,
+		val message: String,
+		@Serializable(with = MapAsListSerializer::class)
+		val subplotOutcomes: Map<SubplotKey, SubplotOutcome> = emptyMap()
+	) : GameEvent()
 }
 
 fun GameState.after(player: GlobalSide, packet: PlayerAction): GameEvent = when (packet) {
@@ -56,12 +61,21 @@ fun GameState.after(player: GlobalSide, packet: PlayerAction): GameEvent = when 
 		val loserName = admiralInfo(player).fullName
 		val winnerName = admiralInfo(player.other).fullName
 		
-		GameEvent.GameEnd(player.other, "$loserName never joined the battle, yielding victory to $winnerName!")
+		GameEvent.GameEnd(player.other, "$loserName never joined the battle, yielding victory to $winnerName!", emptyMap())
 	}
 	PlayerAction.Disconnect -> {
 		val loserName = admiralInfo(player).fullName
 		val winnerName = admiralInfo(player.other).fullName
 		
-		GameEvent.GameEnd(player.other, "$loserName has disconnected from the battle, yielding victory to $winnerName!")
+		GameEvent.GameEnd(player.other, "$loserName has disconnected from the battle, yielding victory to $winnerName!", emptyMap())
 	}
+}.let { event ->
+	if (event is GameEvent.StateChange) {
+		val subplotKeys = event.newState.subplots.map { it.key }
+		val finalState = subplotKeys.fold(event.newState) { newState, key ->
+			val subplot = newState.subplots.single { it.key == key }
+			subplot.onGameStateChanged(newState)
+		}
+		GameEvent.StateChange(finalState)
+	} else event
 }
