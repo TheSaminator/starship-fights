@@ -290,6 +290,7 @@ object AdmiralNames {
 		"Aternius" to "Aternia",
 		"Caecilius" to "Caecilia",
 		"Cassius" to "Cassia",
+		"Claudius" to "Claudia",
 		"Cornelius" to "Cornelia",
 		"Calpurnius" to "Calpurnia",
 		"Fabius" to "Fabia",
