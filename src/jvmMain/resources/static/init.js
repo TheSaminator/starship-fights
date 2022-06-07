@@ -218,7 +218,7 @@
 	});
 
 	window.addEventListener("load", function () {
-		// Generate random admiral names
+		// Preview themes
 		if (!window.sfThemeChoice) return;
 
 		const themeChoices = document.getElementsByName("theme");
