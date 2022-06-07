@@ -12,6 +12,7 @@ import starshipfights.auth.getUserSession
 import starshipfights.data.admiralty.Admiral
 import starshipfights.data.admiralty.BattleRecord
 import starshipfights.data.admiralty.ShipInDrydock
+import starshipfights.data.admiralty.ShipMemorial
 import starshipfights.data.auth.User
 import starshipfights.data.auth.UserSession
 import starshipfights.game.GlobalSide
@@ -20,6 +21,9 @@ import java.time.Instant
 
 suspend fun ApplicationCall.privateInfo(): String {
 	val currentSession = getUserSession() ?: redirect("/login")
+	
+	val now = Instant.now()
+	
 	val userId = currentSession.user
 	val (user, userData) = coroutineScope {
 		val getUser = async { User.get(userId) }
@@ -36,8 +40,6 @@ suspend fun ApplicationCall.privateInfo(): String {
 		
 		getUser.await() to Triple(getAdmirals.await(), getSessions.await(), getBattles.await())
 	}
-	
-	val now = Instant.now()
 	val (userAdmirals, userSessions, userBattles) = userData
 	user ?: redirect("/login")
 	
@@ -51,7 +53,11 @@ suspend fun ApplicationCall.privateInfo(): String {
 	
 	val (admiralShips, battleOpponents, battleAdmirals) = coroutineScope {
 		val getShips = userAdmirals.associate { admiral ->
-			admiral.id to async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiral.id).toList() }
+			admiral.id to (async {
+				ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiral.id).toList()
+			} to async {
+				ShipMemorial.filter(ShipMemorial::owningAdmiral eq admiral.id).toList()
+			})
 		}
 		val getOpponents = userBattles.associate { record ->
 			val (opponentId, opponentAdmiralId) = if (record.hostUser == userId) record.guestUser to record.guestAdmiral else record.hostUser to record.hostAdmiral
@@ -64,7 +70,10 @@ suspend fun ApplicationCall.privateInfo(): String {
 		}
 		
 		Triple(
-			getShips.mapValues { (_, deferred) -> deferred.await() },
+			getShips.mapValues { (_, pair) ->
+				val (ships, graves) = pair
+				ships.await() to graves.await()
+			},
 			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } },
 			getAdmirals
 		)
@@ -129,13 +138,22 @@ suspend fun ApplicationCall.privateInfo(): String {
 			appendLine("Admiral's experience is ${admiral.acumen} acumen")
 			appendLine("Admiral's monetary wealth is ${admiral.money} ${admiral.faction.currencyName}")
 			appendLine("Admiral can command ships as big as a ${admiral.rank.maxShipWeightClass.displayName}")
-			val ships = admiralShips[admiral.id].orEmpty()
+			val ships = admiralShips[admiral.id]?.first.orEmpty()
 			appendLine("Admiral has ${ships.size} ships:")
 			for (ship in ships) {
 				appendLine("")
 				appendLine("#### ${ship.fullName} (${ship.id})")
 				appendLine("Ship is a ${ship.shipType.fullerDisplayName}")
 				appendLine("Ship ${if (ship.readyAt > now) "will be ready at" else "has been ready since"} ${ship.readyAt}")
+			}
+			appendLine("")
+			val graves = admiralShips[admiral.id]?.second.orEmpty()
+			appendLine("Admiral has lost ${ships.size} ships in battle:")
+			for (grave in graves) {
+				appendLine("")
+				appendLine("#### ${grave.fullName} (${grave.id})")
+				appendLine("Ship is a ${grave.shipType.fullerDisplayName}")
+				appendLine("Ship was destroyed at ${grave.destroyedAt} in battle recorded at ${grave.destroyedIn}")
 			}
 			appendLine("")
 			appendLine("# More information")
