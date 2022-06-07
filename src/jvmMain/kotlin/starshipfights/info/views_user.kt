@@ -540,7 +540,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 					}
 				}
 			}
-			
+			h2 { +"Lost Ships' Memorial" }
 			p {
 				+"The following ships were lost under "
 				+(if (admiral.isFemale) "her" else "his")
@@ -550,7 +550,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 				tr {
 					th { +"Ship Name" }
 					th { +"Ship Class" }
-					th { +"Destruction" }
+					th { +Entities.nbsp }
 				}
 				
 				for (ship in graveyard.sortedBy { it.name }.sortedBy { it.shipType.weightClass.tier }) {

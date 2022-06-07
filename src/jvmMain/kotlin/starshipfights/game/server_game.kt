@@ -29,8 +29,10 @@ object GameManager {
 	
 	suspend fun initGame(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral, battleInfo: BattleInfo): GameToken {
 		val gameState = GameState(
-			generateGameStart(hostInfo, guestInfo, battleInfo),
-			hostInfo, guestInfo, battleInfo
+			start = generateGameStart(hostInfo, guestInfo, battleInfo),
+			hostInfo = hostInfo,
+			guestInfo = guestInfo,
+			battleInfo = battleInfo
 		)
 		
 		val session = GameSession(gameState)

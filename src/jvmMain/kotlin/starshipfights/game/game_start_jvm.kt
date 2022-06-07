@@ -49,7 +49,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 	val aiAdmiral = genAI(enemyFaction, battleInfo.size)
 	
 	return GameState(
-		GameStart(
+		start = GameStart(
 			battleWidth, battleLength,
 			
 			PlayerStart(
@@ -71,8 +71,8 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxWeightClass.tier }
 			)
 		),
-		playerInfo,
-		InGameAdmiral(
+		hostInfo = playerInfo,
+		guestInfo = InGameAdmiral(
 			id = aiAdmiral.id.reinterpret(),
 			user = InGameUser(
 				id = aiAdmiral.owningUser.reinterpret(),
@@ -83,6 +83,6 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 			faction = aiAdmiral.faction,
 			rank = aiAdmiral.rank
 		),
-		battleInfo
+		battleInfo = battleInfo
 	)
 }
