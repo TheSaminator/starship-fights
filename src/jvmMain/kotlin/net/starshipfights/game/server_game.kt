@@ -16,11 +16,26 @@ import net.starshipfights.data.admiralty.ShipInDrydock
 import net.starshipfights.data.admiralty.ShipMemorial
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.createToken
+import org.litote.kmongo.combine
 import org.litote.kmongo.`in`
 import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.count
+import kotlin.collections.filter
+import kotlin.collections.filterKeys
+import kotlin.collections.filterValues
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.minus
+import kotlin.collections.mutableMapOf
+import kotlin.collections.plus
+import kotlin.collections.set
+import kotlin.collections.sumOf
+import kotlin.collections.toSet
 
 data class GameToken(val hostToken: String, val joinToken: String)
 
@@ -261,10 +276,12 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	val hostAcumenGainFromShips = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / battleSize.shipPointsPerAcumen }
 	val hostAcumenGainFromSubplots = gameEnd.subplotOutcomes.filterKeys { it.player == GlobalSide.HOST }.count { (_, outcome) -> outcome == SubplotOutcome.WON } * battleSize.acumenPerSubplotWon
 	val hostAcumenGain = hostAcumenGainFromShips + hostAcumenGainFromSubplots
+	val hostPayment = hostAcumenGain * 2
 	
 	val guestAcumenGainFromShips = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / battleSize.shipPointsPerAcumen }
 	val guestAcumenGainFromSubplots = gameEnd.subplotOutcomes.filterKeys { it.player == GlobalSide.GUEST }.count { (_, outcome) -> outcome == SubplotOutcome.WON } * battleSize.acumenPerSubplotWon
 	val guestAcumenGain = guestAcumenGainFromShips + guestAcumenGainFromSubplots
+	val guestPayment = guestAcumenGain * 2
 	
 	coroutineScope {
 		launch {
@@ -284,10 +301,20 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 		}
 		
 		launch {
-			Admiral.set(hostAdmiralId, inc(Admiral::acumen, hostAcumenGain))
+			Admiral.set(
+				hostAdmiralId, combine(
+					inc(Admiral::acumen, hostAcumenGain),
+					inc(Admiral::money, hostPayment),
+				)
+			)
 		}
 		launch {
-			Admiral.set(guestAdmiralId, inc(Admiral::acumen, guestAcumenGain))
+			Admiral.set(
+				guestAdmiralId, combine(
+					inc(Admiral::acumen, guestAcumenGain),
+					inc(Admiral::money, guestPayment),
+				)
+			)
 		}
 		
 		launch {
