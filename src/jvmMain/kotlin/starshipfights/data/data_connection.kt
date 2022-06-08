@@ -1,6 +1,6 @@
 package starshipfights.data
 
-import de.flapdoodle.embed.mongo.MongodExecutable
+import de.flapdoodle.embed.mongo.MongodProcess
 import de.flapdoodle.embed.mongo.MongodStarter
 import de.flapdoodle.embed.mongo.config.MongoCmdOptions
 import de.flapdoodle.embed.mongo.config.MongodConfig
@@ -46,16 +46,16 @@ sealed class ConnectionType {
 				.cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
 				.build()
 			
-			var executable: MongodExecutable? = null
+			var process: MongodProcess? = null
 			Runtime.getRuntime().addShutdownHook(
 				Thread(
-					{ executable?.stop() },
+					{ process?.stop() },
 					"Shutdown Thread"
 				)
 			)
 			
 			try {
-				executable = starter.prepare(config).apply { start() }
+				process = starter.prepare(config).start()
 			} catch (ex: Exception) {
 				log.error("Exception from starting embedded MongoDB!", ex)
 				log.error("Shutting down")
