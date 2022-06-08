@@ -22,9 +22,7 @@ import org.litote.kmongo.inc
 import org.litote.kmongo.setValue
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.set
+import kotlin.collections.*
 
 data class GameToken(val hostToken: String, val joinToken: String)
 
