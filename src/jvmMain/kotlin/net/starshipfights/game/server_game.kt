@@ -24,18 +24,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.collections.count
-import kotlin.collections.filter
-import kotlin.collections.filterKeys
-import kotlin.collections.filterValues
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.minus
-import kotlin.collections.mutableMapOf
-import kotlin.collections.plus
 import kotlin.collections.set
-import kotlin.collections.sumOf
-import kotlin.collections.toSet
 
 data class GameToken(val hostToken: String, val joinToken: String)
 
@@ -223,8 +212,8 @@ private val BattleSize.acumenPerSubplotWon: Int
 
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
 	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
-	val intactShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
-	val escapedShipReadyAt = endedAt.plus(3, ChronoUnit.HOURS)
+	val intactShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
+	val escapedShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
 	
 	val shipWrecks = gameState.destroyedShips
 	val ships = gameState.ships
