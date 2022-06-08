@@ -1,3 +1,0 @@
-package starshipfights.game
-
-

@@ -1,0 +1,195 @@
+package net.starshipfights.info
+
+import io.ktor.application.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.toList
+import kotlinx.html.*
+import net.starshipfights.auth.getUser
+import net.starshipfights.auth.getUserSession
+import net.starshipfights.data.admiralty.Admiral
+import net.starshipfights.data.admiralty.BattleRecord
+import net.starshipfights.data.admiralty.ShipInDrydock
+import net.starshipfights.data.admiralty.ShipMemorial
+import net.starshipfights.data.auth.User
+import net.starshipfights.data.auth.UserSession
+import net.starshipfights.game.GlobalSide
+import net.starshipfights.redirect
+import org.litote.kmongo.eq
+import org.litote.kmongo.or
+import java.time.Instant
+
+suspend fun ApplicationCall.privateInfo(): String {
+	val currentSession = getUserSession() ?: redirect("/login")
+	
+	val now = Instant.now()
+	
+	val userId = currentSession.user
+	val (user, userData) = coroutineScope {
+		val getUser = async { User.get(userId) }
+		val getAdmirals = async { Admiral.filter(Admiral::owningUser eq userId).toList() }
+		val getSessions = async { UserSession.filter(UserSession::user eq userId).toList() }
+		val getBattles = async {
+			BattleRecord.filter(
+				or(
+					BattleRecord::hostUser eq userId,
+					BattleRecord::guestUser eq userId
+				)
+			).toList()
+		}
+		
+		getUser.await() to Triple(getAdmirals.await(), getSessions.await(), getBattles.await())
+	}
+	val (userAdmirals, userSessions, userBattles) = userData
+	user ?: redirect("/login")
+	
+	val battleEndings = userBattles.associate { record ->
+		record.id to when (record.winner) {
+			GlobalSide.HOST -> record.hostUser == userId
+			GlobalSide.GUEST -> record.guestUser == userId
+			null -> null
+		}
+	}
+	
+	val (admiralShips, battleOpponents, battleAdmirals) = coroutineScope {
+		val getShips = userAdmirals.associate { admiral ->
+			admiral.id to (async {
+				ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiral.id).toList()
+			} to async {
+				ShipMemorial.filter(ShipMemorial::owningAdmiral eq admiral.id).toList()
+			})
+		}
+		val getOpponents = userBattles.associate { record ->
+			val (opponentId, opponentAdmiralId) = if (record.hostUser == userId) record.guestUser to record.guestAdmiral else record.hostUser to record.hostAdmiral
+			
+			record.id to (async { User.get(opponentId) } to async { Admiral.get(opponentAdmiralId) })
+		}
+		val getAdmirals = userBattles.associate { record ->
+			val admiralId = if (record.hostUser == userId) record.hostAdmiral else record.guestAdmiral
+			record.id to userAdmirals.singleOrNull { it.id == admiralId }
+		}
+		
+		Triple(
+			getShips.mapValues { (_, pair) ->
+				val (ships, graves) = pair
+				ships.await() to graves.await()
+			},
+			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } },
+			getAdmirals
+		)
+	}
+	
+	return buildString {
+		appendLine("# Private data of user https://starshipfights.net/user/$userId\n")
+		appendLine("Profile name: ${user.profileName}")
+		appendLine("Profile bio: \"\"\"")
+		appendLine(user.profileBio)
+		appendLine("\"\"\"")
+		appendLine("Display theme: ${user.preferredTheme}")
+		appendLine("")
+		appendLine("## Activity data")
+		appendLine("Registered at: ${user.registeredAt}")
+		appendLine("Last activity: ${user.lastActivity}")
+		appendLine("Online status: ${if (user.showUserStatus) "shown" else "hidden"}")
+		appendLine("")
+		appendLine("## Discord login data")
+		appendLine("Discord ID: ${user.discordId}")
+		appendLine("Discord name: ${user.discordName}")
+		appendLine("Discord discriminator: ${user.discordDiscriminator}")
+		appendLine(user.discordAvatar?.let { "Discord avatar: $it" } ?: "Discord avatar absent")
+		appendLine("Discord profile: ${if (user.showDiscordName) "shown" else "hidden"}")
+		appendLine("")
+		appendLine("## Session data")
+		appendLine("IP addresses are ${if (user.logIpAddresses) "stored" else "ignored"}")
+		for (session in userSessions.sortedByDescending { it.expiration }) {
+			appendLine("")
+			appendLine("### Session ${session.id}")
+			appendLine("Browser User-Agent: ${session.userAgent}")
+			appendLine("Client addresses${if (session.clientAddresses.isEmpty()) " are not stored" else ":"}")
+			for (addr in session.clientAddresses) appendLine("* $addr")
+			appendLine("${if (session.expiration > now) "Will expire" else "Has expired"} at: ${session.expiration}")
+		}
+		appendLine("")
+		appendLine("## Battle-record data")
+		for (record in userBattles.sortedBy { it.whenEnded }) {
+			appendLine("")
+			appendLine("### Battle record ${record.id}")
+			appendLine("Battle size: ${record.battleInfo.size.displayName} (${record.battleInfo.size.numPoints})")
+			appendLine("Battle background: ${record.battleInfo.bg.displayName}")
+			appendLine("Battle started at: ${record.whenStarted}")
+			appendLine("Battle completed at: ${record.whenEnded}")
+			appendLine("Battle was fought by ${battleAdmirals[record.id]?.let { "${it.fullName} (https://starshipfights.net/admiral/${it.id})" } ?: "{deleted admiral}"}")
+			appendLine("Battle was fought against ${battleOpponents[record.id]?.second?.let { "${it.fullName} (https://starshipfights.net/admiral/${it.id})" } ?: "{deleted admiral}"}")
+			appendLine(" => ${battleOpponents[record.id]?.first?.let { "${it.profileName} (https://starshipfights.net/user/${it.id})" } ?: "{deleted user}"}")
+			when (battleEndings[record.id]) {
+				true -> appendLine("Battle ended in victory")
+				false -> appendLine("Battle ended in defeat")
+				null -> appendLine("Battle ended in stalemate")
+			}
+			appendLine(" => \"${record.winMessage}\"")
+		}
+		appendLine("")
+		appendLine("## Admiral data")
+		for (admiral in userAdmirals) {
+			appendLine("")
+			appendLine("### ${admiral.fullName} (https://starshipfights.net/admiral/${admiral.id})")
+			appendLine("Admiral is ${if (admiral.isFemale) "female" else "male"}")
+			appendLine("Admiral serves the ${admiral.faction.navyName}")
+			appendLine("Admiral's experience is ${admiral.acumen} acumen")
+			appendLine("Admiral's monetary wealth is ${admiral.money} ${admiral.faction.currencyName}")
+			appendLine("Admiral can command ships as big as a ${admiral.rank.maxShipWeightClass.displayName}")
+			val ships = admiralShips[admiral.id]?.first.orEmpty()
+			appendLine("Admiral has ${ships.size} ships:")
+			for (ship in ships) {
+				appendLine("")
+				appendLine("#### ${ship.fullName} (${ship.id})")
+				appendLine("Ship is a ${ship.shipType.fullerDisplayName}")
+				appendLine("Ship ${if (ship.readyAt > now) "will be ready at" else "has been ready since"} ${ship.readyAt}")
+			}
+			appendLine("")
+			val graves = admiralShips[admiral.id]?.second.orEmpty()
+			appendLine("Admiral has lost ${ships.size} ships in battle:")
+			for (grave in graves) {
+				appendLine("")
+				appendLine("#### ${grave.fullName} (${grave.id})")
+				appendLine("Ship is a ${grave.shipType.fullerDisplayName}")
+				appendLine("Ship was destroyed at ${grave.destroyedAt} in battle recorded at ${grave.destroyedIn}")
+			}
+			appendLine("")
+			appendLine("# More information")
+			appendLine("This document contains the totality of your private data as stored by Starship Fights")
+			appendLine("This page can be accessed at https://starshipfights.net/me/private-info")
+			appendLine("All private info can be downloaded at https://starshipfights.net/me/private-info/txt")
+			appendLine("The privacy policy can be reviewed at https://starshipfights.net/about/pp")
+		}
+	}
+}
+
+suspend fun ApplicationCall.privateInfoPage(): HTML.() -> Unit {
+	if (getUser() == null) redirect("/login")
+	
+	return page(
+		null, standardNavBar(), PageNavSidebar(
+			listOf(
+				NavLink("/me/manage", "Back to Preferences"),
+				NavLink("/about/pp", "Review Privacy Policy"),
+			)
+		)
+	) {
+		section {
+			h1 { +"Your Private Info" }
+			
+			iframe {
+				style = "width:100%;height:25em"
+				src = "/me/private-info/txt"
+			}
+			
+			p {
+				a(href = "/me/private-info/txt") {
+					attributes["download"] = "private-info.txt"
+					+"Download your private info"
+				}
+			}
+		}
+	}
+}

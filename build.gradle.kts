@@ -128,7 +128,7 @@ kotlin {
 }
 
 application {
-	mainClass.set("starshipfights.Server")
+	mainClass.set("net.starshipfights.Server")
 }
 
 tasks.named<Copy>("jvmProcessResources") {
@@ -185,5 +185,5 @@ tasks.named<JavaExec>("run") {
 tasks.create("runAiTest", JavaExec::class.java) {
 	group = "test"
 	classpath = sourceSets.getByName("test").runtimeClasspath
-	mainClass.set("starshipfights.game.ai.AITesting")
+	mainClass.set("net.starshipfights.game.ai.AITesting")
 }
