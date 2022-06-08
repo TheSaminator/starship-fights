@@ -191,7 +191,20 @@ suspend fun DefaultWebSocketServerSession.gameEndpoint(user: User, token: String
 	receiveActionsJob.cancelAndJoin()
 }
 
-private const val SHIP_POINTS_PER_ACUMEN = 5
+private val BattleSize.shipPointsPerAcumen: Int
+	get() = when (this) {
+		BattleSize.SKIRMISH -> 5
+		BattleSize.RAID -> 5
+		BattleSize.FIREFIGHT -> 5
+		BattleSize.BATTLE -> 5
+		BattleSize.GRAND_CLASH -> 10
+		BattleSize.APOCALYPSE -> 10
+		BattleSize.LEGENDARY_STRUGGLE -> 10
+		BattleSize.CRUCIBLE_OF_HISTORY -> 10
+	}
+
+private val BattleSize.acumenPerSubplotWon: Int
+	get() = numPoints / 100
 
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
 	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
@@ -240,8 +253,15 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
 	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
 	
-	val hostAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
-	val guestAcumenGain = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / SHIP_POINTS_PER_ACUMEN }
+	val battleSize = gameState.battleInfo.size
+	
+	val hostAcumenGainFromShips = shipWrecks.values.filter { it.owner == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / battleSize.shipPointsPerAcumen }
+	val hostAcumenGainFromSubplots = gameEnd.subplotOutcomes.filterKeys { it.player == GlobalSide.HOST }.count { (_, outcome) -> outcome == SubplotOutcome.WON } * battleSize.acumenPerSubplotWon
+	val hostAcumenGain = hostAcumenGainFromShips + hostAcumenGainFromSubplots
+	
+	val guestAcumenGainFromShips = shipWrecks.values.filter { it.owner == GlobalSide.HOST && !it.isEscape }.sumOf { it.ship.pointCost / battleSize.shipPointsPerAcumen }
+	val guestAcumenGainFromSubplots = gameEnd.subplotOutcomes.filterKeys { it.player == GlobalSide.GUEST }.count { (_, outcome) -> outcome == SubplotOutcome.WON } * battleSize.acumenPerSubplotWon
+	val guestAcumenGain = guestAcumenGainFromShips + guestAcumenGainFromSubplots
 	
 	coroutineScope {
 		launch {
