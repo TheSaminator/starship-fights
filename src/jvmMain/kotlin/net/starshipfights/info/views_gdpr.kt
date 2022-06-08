@@ -137,7 +137,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 			appendLine("Admiral serves the ${admiral.faction.navyName}")
 			appendLine("Admiral's experience is ${admiral.acumen} acumen")
 			appendLine("Admiral's monetary wealth is ${admiral.money} ${admiral.faction.currencyName}")
-			appendLine("Admiral can command ships as big as a ${admiral.rank.maxShipWeightClass.displayName}")
+			appendLine("Admiral can command ships as big as ${admiral.rank.maxShipTier.displayName} size")
 			val ships = admiralShips[admiral.id]?.first.orEmpty()
 			appendLine("Admiral has ${ships.size} ships:")
 			for (ship in ships) {

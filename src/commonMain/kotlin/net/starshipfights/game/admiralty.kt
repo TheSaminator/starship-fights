@@ -10,6 +10,15 @@ enum class AdmiralRank {
 	HIGH_ADMIRAL,
 	LORD_ADMIRAL;
 	
+	val maxShipTier: ShipTier
+		get() = when (this) {
+			REAR_ADMIRAL -> ShipTier.CRUISER
+			VICE_ADMIRAL -> ShipTier.BATTLECRUISER
+			ADMIRAL -> ShipTier.BATTLESHIP
+			HIGH_ADMIRAL -> ShipTier.BATTLESHIP
+			LORD_ADMIRAL -> ShipTier.TITAN
+		}
+	
 	val maxShipWeightClass: ShipWeightClass
 		get() = when (this) {
 			REAR_ADMIRAL -> ShipWeightClass.CRUISER
@@ -20,7 +29,7 @@ enum class AdmiralRank {
 		}
 	
 	val maxBattleSize: BattleSize
-		get() = BattleSize.values().last { it.maxWeightClass.tier <= maxShipWeightClass.tier }
+		get() = BattleSize.values().last { it.minRank <= this }
 	
 	val minAcumen: Int
 		get() = when (this) {

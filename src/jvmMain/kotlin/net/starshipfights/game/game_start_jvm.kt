@@ -23,7 +23,7 @@ suspend fun generateGameStart(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral,
 			PI / 2,
 			PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
 			PI / 2,
-			getAdmiralsShips(hostInfo.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxWeightClass.tier }
+			getAdmiralsShips(hostInfo.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier }
 		),
 		
 		PlayerStart(
@@ -31,7 +31,7 @@ suspend fun generateGameStart(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral,
 			-PI / 2,
 			PickBoundary.Rectangle(guestDeployCenter, deployWidth2, deployLength2),
 			-PI / 2,
-			getAdmiralsShips(guestInfo.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxWeightClass.tier }
+			getAdmiralsShips(guestInfo.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier }
 		),
 	)
 }
@@ -58,7 +58,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 				PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
 				PI / 2,
 				getAdmiralsShips(playerInfo.id.reinterpret())
-					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxWeightClass.tier }
+					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier }
 			),
 			
 			PlayerStart(
@@ -68,7 +68,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 				-PI / 2,
 				generateFleet(aiAdmiral)
 					.associate { it.shipData.id to it.shipData }
-					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxWeightClass.tier }
+					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier }
 			)
 		),
 		hostInfo = playerInfo,

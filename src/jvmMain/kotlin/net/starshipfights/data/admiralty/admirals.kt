@@ -47,7 +47,7 @@ fun genAI(faction: Faction, forBattleSize: BattleSize) = Admiral(
 	isFemale = true,
 	faction = faction,
 	acumen = AdmiralRank.values().first {
-		it.maxShipWeightClass.tier >= forBattleSize.maxWeightClass.tier
+		it.maxBattleSize >= forBattleSize
 	}.minAcumen + 500,
 	money = 0
 )
@@ -141,7 +141,7 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 		if (shipTypes.isEmpty())
 			emptyList()
 		else
-			(0 until ((admiral.rank.maxShipWeightClass.tier - swc.tier + 1) * 2).coerceAtLeast(0)).map { i ->
+			(0 until ((admiral.rank.maxShipTier.ordinal - swc.tier.ordinal + 1) * 2).coerceAtLeast(0)).map { i ->
 				shipTypes[i % shipTypes.size]
 			}
 	}

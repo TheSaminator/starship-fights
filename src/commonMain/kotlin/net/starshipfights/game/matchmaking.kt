@@ -3,27 +3,27 @@ package net.starshipfights.game
 import kotlinx.serialization.Serializable
 import net.starshipfights.data.Id
 
-enum class BattleSize(val numPoints: Int, val maxWeightClass: ShipWeightClass, val displayName: String) {
-	SKIRMISH(600, ShipWeightClass.CRUISER, "Skirmish"),
-	RAID(800, ShipWeightClass.CRUISER, "Raid"),
-	FIREFIGHT(1000, ShipWeightClass.BATTLECRUISER, "Firefight"),
-	BATTLE(1300, ShipWeightClass.BATTLECRUISER, "Battle"),
-	GRAND_CLASH(1600, ShipWeightClass.BATTLESHIP, "Grand Clash"),
-	APOCALYPSE(2000, ShipWeightClass.BATTLESHIP, "Apocalypse"),
-	LEGENDARY_STRUGGLE(2400, ShipWeightClass.COLOSSUS, "Legendary Struggle"),
-	CRUCIBLE_OF_HISTORY(3000, ShipWeightClass.COLOSSUS, "Crucible of History");
+enum class BattleSize(val numPoints: Int, val maxTier: ShipTier, val minRank: AdmiralRank, val displayName: String) {
+	SKIRMISH(600, ShipTier.CRUISER, AdmiralRank.REAR_ADMIRAL, "Skirmish"),
+	RAID(800, ShipTier.CRUISER, AdmiralRank.REAR_ADMIRAL, "Raid"),
+	FIREFIGHT(1000, ShipTier.BATTLECRUISER, AdmiralRank.REAR_ADMIRAL, "Firefight"),
+	BATTLE(1300, ShipTier.BATTLECRUISER, AdmiralRank.REAR_ADMIRAL, "Battle"),
+	GRAND_CLASH(1600, ShipTier.BATTLESHIP, AdmiralRank.ADMIRAL, "Grand Clash"),
+	APOCALYPSE(2000, ShipTier.BATTLESHIP, AdmiralRank.ADMIRAL, "Apocalypse"),
+	LEGENDARY_STRUGGLE(2400, ShipTier.TITAN, AdmiralRank.ADMIRAL, "Legendary Struggle"),
+	CRUCIBLE_OF_HISTORY(3000, ShipTier.TITAN, AdmiralRank.ADMIRAL, "Crucible of History");
 }
 
 val BattleSize.numSubplotsPerPlayer: Int
 	get() = when (this) {
 		BattleSize.SKIRMISH -> 0
 		BattleSize.RAID -> 0
-		BattleSize.FIREFIGHT -> 0
-		BattleSize.BATTLE -> (0..1).random()
+		BattleSize.FIREFIGHT -> (0..1).random()
+		BattleSize.BATTLE -> 1
 		BattleSize.GRAND_CLASH -> 1
 		BattleSize.APOCALYPSE -> 1
-		BattleSize.LEGENDARY_STRUGGLE -> 1
-		BattleSize.CRUCIBLE_OF_HISTORY -> (1..2).random()
+		BattleSize.LEGENDARY_STRUGGLE -> (1..2).random()
+		BattleSize.CRUCIBLE_OF_HISTORY -> 2
 	}
 
 enum class BattleBackground(val displayName: String, val color: String) {

@@ -37,7 +37,7 @@ suspend fun ApplicationCall.shipsPage(): HTML.() -> Unit = page("Strategema Naut
 			
 			faction.blurbDesc(consumer)
 			
-			for ((weightClass, weightedShipTypes) in factionShipTypes.groupBy { it.weightClass }.toSortedMap(Comparator.comparingInt(ShipWeightClass::tier))) {
+			for ((weightClass, weightedShipTypes) in factionShipTypes.groupBy { it.weightClass }.toSortedMap(Comparator.comparing(ShipWeightClass::tier))) {
 				h3 { +weightClass.displayName }
 				ul {
 					for (shipType in weightedShipTypes) {

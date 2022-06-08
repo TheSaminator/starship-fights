@@ -1,40 +1,47 @@
 package net.starshipfights.game
 
+enum class ShipTier {
+	ESCORT, LIGHT_CRUISER, CRUISER, BATTLECRUISER, BATTLESHIP, TITAN;
+	
+	val displayName: String
+		get() = name.lowercase().split('_').joinToString(separator = " ") { word -> word.replaceFirstChar { c -> c.uppercase() } }
+}
+
 enum class ShipWeightClass(
 	val meshIndex: Int,
-	val tier: Int
+	val tier: ShipTier
 ) {
 	// General
-	ESCORT(1, 0),
-	DESTROYER(2, 1),
-	CRUISER(3, 2),
-	BATTLECRUISER(4, 3),
-	BATTLESHIP(5, 4),
+	ESCORT(1, ShipTier.ESCORT),
+	DESTROYER(2, ShipTier.LIGHT_CRUISER),
+	CRUISER(3, ShipTier.CRUISER),
+	BATTLECRUISER(4, ShipTier.BATTLECRUISER),
+	BATTLESHIP(5, ShipTier.BATTLESHIP),
 	
 	// NdRC-specific
-	BATTLE_BARGE(5, 3),
+	BATTLE_BARGE(5, ShipTier.BATTLECRUISER),
 	
 	// Masra Draetsen-specific
-	GRAND_CRUISER(4, 3),
-	COLOSSUS(5, 5),
+	GRAND_CRUISER(4, ShipTier.BATTLECRUISER),
+	COLOSSUS(5, ShipTier.TITAN),
 	
 	// Felinae Felices-specific
-	FF_ESCORT(1, 1),
-	FF_DESTROYER(2, 2),
-	FF_CRUISER(3, 3),
-	FF_BATTLECRUISER(4, 4),
-	FF_BATTLESHIP(5, 5),
+	FF_ESCORT(1, ShipTier.LIGHT_CRUISER),
+	FF_DESTROYER(2, ShipTier.CRUISER),
+	FF_CRUISER(3, ShipTier.BATTLECRUISER),
+	FF_BATTLECRUISER(4, ShipTier.BATTLESHIP),
+	FF_BATTLESHIP(5, ShipTier.TITAN),
 	
 	// Isarnareykk-specific
-	AUXILIARY_SHIP(1, 0),
-	LIGHT_CRUISER(2, 1),
-	MEDIUM_CRUISER(3, 2),
-	HEAVY_CRUISER(4, 4),
+	AUXILIARY_SHIP(1, ShipTier.ESCORT),
+	LIGHT_CRUISER(2, ShipTier.LIGHT_CRUISER),
+	MEDIUM_CRUISER(3, ShipTier.CRUISER),
+	HEAVY_CRUISER(4, ShipTier.BATTLECRUISER),
 	
 	// Vestigium-specific
-	FRIGATE(1, 0),
-	LINE_SHIP(3, 2),
-	DREADNOUGHT(5, 4),
+	FRIGATE(1, ShipTier.ESCORT),
+	LINE_SHIP(3, ShipTier.CRUISER),
+	DREADNOUGHT(5, ShipTier.BATTLESHIP),
 	;
 	
 	val displayName: String

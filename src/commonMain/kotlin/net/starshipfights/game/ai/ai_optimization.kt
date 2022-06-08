@@ -157,11 +157,6 @@ suspend fun performTestSession(gameState: GameState, hostInstincts: Instincts, g
 	}
 }
 
-val BattleSize.minRank: AdmiralRank
-	get() = AdmiralRank.values().first {
-		it.maxShipWeightClass.tier >= maxWeightClass.tier
-	}
-
 fun generateFleet(faction: Faction, rank: AdmiralRank, side: GlobalSide): Map<Id<Ship>, Ship> = ShipWeightClass.values()
 	.flatMap { swc ->
 		val shipTypes = ShipType.values().filter { st ->
@@ -171,7 +166,7 @@ fun generateFleet(faction: Faction, rank: AdmiralRank, side: GlobalSide): Map<Id
 		if (shipTypes.isEmpty())
 			emptyList()
 		else
-			(0 until ((rank.maxShipWeightClass.tier - swc.tier + 1) * 2).coerceAtLeast(0)).map { i ->
+			(0 until ((rank.maxShipTier.ordinal - swc.tier.ordinal + 1) * 2).coerceAtLeast(0)).map { i ->
 				shipTypes[i % shipTypes.size]
 			}
 	}

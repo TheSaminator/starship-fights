@@ -105,6 +105,7 @@ sealed class Subplot {
 			val destroyedShipPointCount = enemyWrecks.filter { !it.isEscape }.sumOf { it.ship.pointCost }
 			
 			val success = when {
+				gameState.phase == GamePhase.Deploy -> null
 				destroyedShipPointCount * 2 >= totalEnemyShipPointCount -> true
 				escapedShipPointCount * 2 >= totalEnemyShipPointCount -> false
 				else -> null
@@ -166,6 +167,48 @@ sealed class Subplot {
 				gameState.modifySubplotData(Vendetta(forPlayer, againstShip, SubplotOutcome.LOST))
 			else
 				gameState.modifySubplotData(Vendetta(forPlayer, againstShip, SubplotOutcome.WON))
+		}
+		
+		override fun getFinalGameResult(gameState: GameState, winner: GlobalSide?) = if (outcome == SubplotOutcome.UNDECIDED)
+			SubplotOutcome.LOST
+		else outcome
+	}
+	
+	@Serializable
+	class PlausibleDeniability private constructor(override val forPlayer: GlobalSide, private val againstShip: Id<ShipInstance>?, private val outcome: SubplotOutcome) : Subplot() {
+		constructor(forPlayer: GlobalSide) : this(forPlayer, null, SubplotOutcome.UNDECIDED)
+		constructor(forPlayer: GlobalSide, againstShip: Id<ShipInstance>) : this(forPlayer, againstShip, SubplotOutcome.UNDECIDED)
+		
+		override val type: SubplotType
+			get() = SubplotType.PLAUSIBLE_DENIABILITY
+		
+		override val displayName: String
+			get() = "Plausible Deniability"
+		
+		override fun displayObjective(gameState: GameState): GameObjective? {
+			val shipName = gameState.getShipInfoOrNull(againstShip ?: return null)?.fullName ?: return null
+			return GameObjective("Ensure that the $shipName is destroyed", outcome.toSuccess)
+		}
+		
+		override fun onAfterDeployShips(gameState: GameState): GameState {
+			if (gameState.ships[againstShip] != null) return gameState
+			
+			val myShips = gameState.ships.values.filter { it.owner == forPlayer }
+			val lowestShipTier = myShips.minOf { it.ship.shipType.weightClass }
+			val shipsNotOfLowestTier = myShips.filter { it.ship.shipType.weightClass != lowestShipTier }.ifEmpty { myShips }
+			
+			val arkancideShip = shipsNotOfLowestTier.random().id
+			return gameState.modifySubplotData(PlausibleDeniability(forPlayer, arkancideShip, SubplotOutcome.UNDECIDED))
+		}
+		
+		override fun onGameStateChanged(gameState: GameState): GameState {
+			if (outcome != SubplotOutcome.UNDECIDED) return gameState
+			
+			val assassinateShipWreck = gameState.destroyedShips[againstShip ?: return gameState] ?: return gameState
+			return if (assassinateShipWreck.isEscape)
+				gameState.modifySubplotData(PlausibleDeniability(forPlayer, againstShip, SubplotOutcome.LOST))
+			else
+				gameState.modifySubplotData(PlausibleDeniability(forPlayer, againstShip, SubplotOutcome.WON))
 		}
 		
 		override fun getFinalGameResult(gameState: GameState, winner: GlobalSide?) = if (outcome == SubplotOutcome.UNDECIDED)
@@ -237,6 +280,7 @@ enum class SubplotType(val factory: (GlobalSide) -> Subplot) {
 	EXTENDED_DUTY(Subplot::ExtendedDuty),
 	NO_QUARTER(Subplot::NoQuarter),
 	VENDETTA(Subplot::Vendetta),
+	PLAUSIBLE_DENIABILITY(Subplot::PlausibleDeniability),
 	RECOVER_INFORMANT(Subplot::RecoverInformant),
 }
 

@@ -43,7 +43,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							is ChatEntry.ShipIdentified -> {
 								val identifiedShip = state.ships[msg.ship] ?: continue
 								if (identifiedShip.owner != mySide)
-									brain[shipAttackPriority forShip identifiedShip.id] += identifiedShip.ship.shipType.weightClass.tier.toDouble().pow(instincts[combatTargetShipWeight])
+									brain[shipAttackPriority forShip identifiedShip.id] += (identifiedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatTargetShipWeight])
 							}
 							is ChatEntry.ShipEscaped -> {
 								// handle escaping ship
@@ -70,7 +70,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 							is ChatEntry.ShipDestroyed -> {
 								val targetedShip = state.ships[msg.ship] ?: continue
 								if (targetedShip.owner == mySide && msg.destroyedBy is ShipAttacker.EnemyShip)
-									brain[shipAttackPriority forShip msg.destroyedBy.id] += instincts[combatAvengeShipwrecks] * targetedShip.ship.shipType.weightClass.tier.toDouble().pow(instincts[combatAvengeShipWeight])
+									brain[shipAttackPriority forShip msg.destroyedBy.id] += instincts[combatAvengeShipwrecks] * (targetedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatAvengeShipWeight])
 							}
 						}
 					}
@@ -292,11 +292,11 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 fun deploy(gameState: GameState, mySide: GlobalSide, instincts: Instincts): Map<Id<ShipInstance>, Position> {
 	val size = gameState.battleInfo.size
 	val totalPoints = size.numPoints
-	val maxWC = size.maxWeightClass
+	val maxTier = size.maxTier
 	
 	val myStart = gameState.start.playerStart(mySide)
 	
-	val deployable = myStart.deployableFleet.values.filter { it.shipType.weightClass.tier <= maxWC.tier }.toMutableSet()
+	val deployable = myStart.deployableFleet.values.filter { it.shipType.weightClass.tier <= maxTier }.toMutableSet()
 	val deployed = mutableSetOf<Ship>()
 	
 	while (true) {
