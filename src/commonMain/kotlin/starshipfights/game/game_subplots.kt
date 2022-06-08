@@ -271,7 +271,7 @@ fun victoryTitle(player: GlobalSide, winner: GlobalSide?, subplotOutcomes: Map<S
 	return when (winner) {
 		player -> {
 			val isGlorious = myOutcomes.all { (_, outcome) -> outcome == SubplotOutcome.WON }
-			val isPyrrhic = myOutcomes.size >= 2 && myOutcomes.any { (_, outcome) -> outcome != SubplotOutcome.WON }
+			val isPyrrhic = myOutcomes.size >= 2 && myOutcomes.none { (_, outcome) -> outcome == SubplotOutcome.WON }
 			
 			if (isGlorious)
 				"Glorious Victory"
@@ -282,7 +282,7 @@ fun victoryTitle(player: GlobalSide, winner: GlobalSide?, subplotOutcomes: Map<S
 		}
 		player.other -> {
 			val isHeroic = myOutcomes.all { (_, outcome) -> outcome == SubplotOutcome.WON }
-			val isHumiliating = myOutcomes.size >= 2 && myOutcomes.any { (_, outcome) -> outcome != SubplotOutcome.WON }
+			val isHumiliating = myOutcomes.size >= 2 && myOutcomes.none { (_, outcome) -> outcome == SubplotOutcome.WON }
 			
 			if (isHeroic)
 				"Heroic Defeat"
