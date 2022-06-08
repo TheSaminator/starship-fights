@@ -633,10 +633,10 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 								}
 						}
 						td {
-							+when (record.winner) {
-								null -> "Stalemate"
-								recordRoles[record.id] -> "Victory"
-								else -> "Defeat"
+							+when (recordRoles[record.id]) {
+								GlobalSide.HOST -> record.hostEndingMessage
+								GlobalSide.GUEST -> record.guestEndingMessage
+								else -> "N/A"
 							}
 						}
 					}

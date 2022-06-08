@@ -28,6 +28,9 @@ data class BattleRecord(
 	val hostAdmiral: Id<Admiral>,
 	val guestAdmiral: Id<Admiral>,
 	
+	val hostEndingMessage: String,
+	val guestEndingMessage: String,
+	
 	val winner: GlobalSide?,
 	val winMessage: String,
 ) : DataDocument<BattleRecord> {

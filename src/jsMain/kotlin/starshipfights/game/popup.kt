@@ -503,7 +503,7 @@ sealed class Popup<out T> {
 				style = "text-align:center"
 				
 				strong(classes = "heading") {
-					+victoryTitle(mySide, winner, subplotStatuses)
+					+"${victoryTitle(mySide, winner, subplotStatuses)}!"
 				}
 			}
 			p {

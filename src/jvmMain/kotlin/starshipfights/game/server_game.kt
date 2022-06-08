@@ -229,6 +229,9 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 		hostAdmiral = hostAdmiralId,
 		guestAdmiral = guestAdmiralId,
 		
+		hostEndingMessage = victoryTitle(GlobalSide.HOST, gameEnd.winner, gameEnd.subplotOutcomes),
+		guestEndingMessage = victoryTitle(GlobalSide.GUEST, gameEnd.winner, gameEnd.subplotOutcomes),
+		
 		winner = gameEnd.winner,
 		winMessage = gameEnd.message
 	)
