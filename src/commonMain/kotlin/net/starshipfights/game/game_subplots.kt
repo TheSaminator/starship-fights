@@ -25,7 +25,6 @@ val Subplot.key: SubplotKey
 @Serializable
 sealed class Subplot {
 	abstract val type: SubplotType
-	abstract val displayName: String
 	abstract val forPlayer: GlobalSide
 	
 	override fun equals(other: Any?): Boolean {
@@ -48,9 +47,6 @@ sealed class Subplot {
 	class ExtendedDuty(override val forPlayer: GlobalSide) : Subplot() {
 		override val type: SubplotType
 			get() = SubplotType.EXTENDED_DUTY
-		
-		override val displayName: String
-			get() = "Extended Duty"
 		
 		override fun displayObjective(gameState: GameState) = GameObjective("Win the battle with your fleet worn out from extended duty", null)
 		
@@ -92,9 +88,6 @@ sealed class Subplot {
 	class NoQuarter(override val forPlayer: GlobalSide) : Subplot() {
 		override val type: SubplotType
 			get() = SubplotType.NO_QUARTER
-		
-		override val displayName: String
-			get() = "Leave No Quarter!"
 		
 		override fun displayObjective(gameState: GameState): GameObjective {
 			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
@@ -140,9 +133,6 @@ sealed class Subplot {
 		override val type: SubplotType
 			get() = SubplotType.VENDETTA
 		
-		override val displayName: String
-			get() = "Vendetta!"
-		
 		override fun displayObjective(gameState: GameState): GameObjective? {
 			val shipName = gameState.getShipInfoOrNull(againstShip ?: return null)?.fullName ?: return null
 			return GameObjective("Destroy the $shipName", outcome.toSuccess)
@@ -182,9 +172,6 @@ sealed class Subplot {
 		override val type: SubplotType
 			get() = SubplotType.PLAUSIBLE_DENIABILITY
 		
-		override val displayName: String
-			get() = "Plausible Deniability"
-		
 		override fun displayObjective(gameState: GameState): GameObjective? {
 			val shipName = gameState.getShipInfoOrNull(againstShip ?: return null)?.fullName ?: return null
 			return GameObjective("Ensure that the $shipName is destroyed", outcome.toSuccess)
@@ -223,9 +210,6 @@ sealed class Subplot {
 		
 		override val type: SubplotType
 			get() = SubplotType.RECOVER_INFORMANT
-		
-		override val displayName: String
-			get() = "Recover Informant"
 		
 		override fun displayObjective(gameState: GameState): GameObjective? {
 			val shipName = gameState.getShipInfoOrNull(onBoardShip ?: return null)?.fullName ?: return null
