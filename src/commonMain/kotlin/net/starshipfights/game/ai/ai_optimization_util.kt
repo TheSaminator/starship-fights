@@ -39,10 +39,9 @@ fun Random.nextOrthonormalBasis(size: Int): List<VecN> {
 	
 	val orthogonalBasis = mutableListOf<VecN>()
 	while (orthogonalBasis.size < size) {
-		val vector = nextUnitVector(size)
-		var orthogonal = vector
+		var orthogonal = nextUnitVector(size)
 		for (prevVector in orthogonalBasis)
-			orthogonal -= (vector project prevVector)
+			orthogonal -= (orthogonal project prevVector)
 		
 		if (!orthogonal.isNullVector)
 			orthogonalBasis.add(orthogonal)
