@@ -74,9 +74,9 @@ enum class ShipWeightClass(
 			MEDIUM_CRUISER -> 200
 			HEAVY_CRUISER -> 400
 			
-			FRIGATE -> 150
-			LINE_SHIP -> 275
-			DREADNOUGHT -> 400
+			FRIGATE -> 100
+			LINE_SHIP -> 200
+			DREADNOUGHT -> 300
 		}
 	
 	val isUnique: Boolean
