@@ -210,7 +210,6 @@ private val BattleSize.acumenPerSubplotWon: Int
 
 private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
 	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
-	val intactShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
 	val escapedShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
 	
 	val shipWrecks = gameState.destroyedShips
@@ -255,8 +254,7 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 	}
 	
 	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val intactShips = ships.keys.map { it.reinterpret<ShipInDrydock>() }.toSet() - damagedShips
+	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints || it.troopsAmount < it.durability.troopsDefense }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
 	
 	val battleSize = gameState.battleInfo.size
 	
@@ -279,9 +277,6 @@ private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, 
 		}
 		launch {
 			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::readyAt, damagedShipReadyAt))
-		}
-		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` intactShips, setValue(ShipInDrydock::readyAt, intactShipReadyAt))
 		}
 		launch {
 			ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::readyAt, escapedShipReadyAt))
