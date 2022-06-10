@@ -15,7 +15,7 @@ data class AIPlayer(
 	val gameState: StateFlow<GameState>,
 	val doActions: SendChannel<PlayerAction>,
 	val getErrors: ReceiveChannel<String>,
-	val onGameEnd: CompletableJob
+	val onGameEnd: Job
 )
 
 @OptIn(FlowPreview::class)
@@ -32,7 +32,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 				for (state in gameState.produceIn(this)) {
 					phasePipe.send(state.phase to (state.doneWithPhase != mySide && (!state.phase.usesInitiative || state.currentInitiative != mySide.other)))
 					
-					for (msg in state.chatBox.takeLastWhile { msg -> msg.sentAt > prevSentAt }) {
+					chatLoop@ for (msg in state.chatBox.takeLastWhile { msg -> msg.sentAt > prevSentAt }) {
 						if (msg.sentAt > prevSentAt)
 							prevSentAt = msg.sentAt
 						
@@ -41,7 +41,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								// ignore
 							}
 							is ChatEntry.ShipIdentified -> {
-								val identifiedShip = state.ships[msg.ship] ?: continue
+								val identifiedShip = state.ships[msg.ship] ?: continue@chatLoop
 								if (identifiedShip.owner != mySide)
 									brain[shipAttackPriority forShip identifiedShip.id] += (identifiedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatTargetShipWeight])
 							}
@@ -49,26 +49,26 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 								// handle escaping ship
 							}
 							is ChatEntry.ShipAttacked -> {
-								val targetedShip = state.ships[msg.ship] ?: continue
+								val targetedShip = state.ships[msg.ship] ?: continue@chatLoop
 								if (targetedShip.owner != mySide)
 									brain[shipAttackPriority forShip targetedShip.id] -= Random.nextDouble(msg.damageInflicted - 0.5, msg.damageInflicted + 0.5) * instincts[combatForgiveTarget]
 								else if (msg.attacker is ShipAttacker.EnemyShip)
 									brain[shipAttackPriority forShip msg.attacker.id] += Random.nextDouble(msg.damageInflicted - 0.5, msg.damageInflicted + 0.5) * instincts[combatAvengeAttacks]
 							}
 							is ChatEntry.ShipAttackFailed -> {
-								val targetedShip = state.ships[msg.ship] ?: continue
+								val targetedShip = state.ships[msg.ship] ?: continue@chatLoop
 								if (targetedShip.owner != mySide)
 									brain[shipAttackPriority forShip targetedShip.id] += instincts[combatFrustratedByFailedAttacks]
 							}
 							is ChatEntry.ShipBoarded -> {
-								val targetedShip = state.ships[msg.ship] ?: continue
+								val targetedShip = state.ships[msg.ship] ?: continue@chatLoop
 								if (targetedShip.owner != mySide)
 									brain[shipAttackPriority forShip targetedShip.id] -= Random.nextDouble(msg.damageAmount - 0.5, msg.damageAmount + 0.5) * instincts[combatForgiveTarget]
 								else
 									brain[shipAttackPriority forShip msg.boarder] += Random.nextDouble(msg.damageAmount - 0.5, msg.damageAmount + 0.5) * instincts[combatAvengeAttacks]
 							}
 							is ChatEntry.ShipDestroyed -> {
-								val targetedShip = state.ships[msg.ship] ?: continue
+								val targetedShip = state.destroyedShips[msg.ship] ?: continue@chatLoop
 								if (targetedShip.owner == mySide && msg.destroyedBy is ShipAttacker.EnemyShip)
 									brain[shipAttackPriority forShip msg.destroyedBy.id] += instincts[combatAvengeShipwrecks] * (targetedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatAvengeShipWeight])
 							}
