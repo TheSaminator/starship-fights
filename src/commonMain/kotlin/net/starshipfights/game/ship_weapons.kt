@@ -464,7 +464,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 				weaponAmount = (0..weaponAmount).random(),
 				shieldAmount = (0..shieldAmount).random(),
 			),
-			ImpactDamage.OtherEffect
+			ImpactDamage.Success(0)
 		)
 	}
 }
