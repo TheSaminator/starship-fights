@@ -21,8 +21,8 @@ val BattleSize.numSubplotsPerPlayer: Int
 		BattleSize.FIREFIGHT -> (0..1).random()
 		BattleSize.BATTLE -> 1
 		BattleSize.GRAND_CLASH -> 1
-		BattleSize.APOCALYPSE -> 1
-		BattleSize.LEGENDARY_STRUGGLE -> (1..2).random()
+		BattleSize.APOCALYPSE -> (1..2).random()
+		BattleSize.LEGENDARY_STRUGGLE -> 2
 		BattleSize.CRUCIBLE_OF_HISTORY -> 2
 	}
 
