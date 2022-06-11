@@ -181,10 +181,10 @@ sealed class Subplot {
 			if (gameState.ships[againstShip] != null) return gameState
 			
 			val myShips = gameState.ships.values.filter { it.owner == forPlayer }
-			val lowestShipTier = myShips.minOf { it.ship.shipType.weightClass }
-			val shipsNotOfLowestTier = myShips.filter { it.ship.shipType.weightClass != lowestShipTier }.ifEmpty { myShips }
+			val highestShipTier = myShips.maxOf { it.ship.shipType.weightClass }
+			val shipsNotOfHighestTier = myShips.filter { it.ship.shipType.weightClass != highestShipTier }.ifEmpty { myShips }
 			
-			val arkancideShip = shipsNotOfLowestTier.random().id
+			val arkancideShip = shipsNotOfHighestTier.random().id
 			return gameState.modifySubplotData(PlausibleDeniability(forPlayer, arkancideShip, SubplotOutcome.UNDECIDED))
 		}
 		
