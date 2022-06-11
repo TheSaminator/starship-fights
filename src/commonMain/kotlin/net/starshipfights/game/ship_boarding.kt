@@ -41,17 +41,15 @@ fun weightClassBoardingModifier(weightClass: ShipWeightClass): Int = when (weigh
 }
 
 fun troopsBoardingModifier(troopsAmount: Int, totalTroops: Int): Int = when {
-	troopsAmount < totalTroops / 3 -> 0
-	troopsAmount < (totalTroops * 2) / 3 -> 2
+	troopsAmount * 3 < totalTroops -> 0
+	troopsAmount * 3 < totalTroops * 2 -> 2
 	troopsAmount < totalTroops -> 3
-	troopsAmount == totalTroops -> 4
 	else -> 4
 }
 
 fun hullBoardingModifier(hullAmount: Int, totalHull: Int): Int = when {
-	hullAmount < totalHull / 2 -> 1
+	hullAmount * 2 < totalHull -> 1
 	hullAmount < totalHull -> 3
-	hullAmount == totalHull -> 5
 	else -> 5
 }
 
@@ -69,7 +67,7 @@ fun shieldsBoardingAssaultModifier(shieldsAmount: Int, totalShields: Int): Int =
 
 fun shieldsBoardingDefenseModifier(shieldsAmount: Int, totalShields: Int): Int = when {
 	shieldsAmount == 0 -> 0
-	shieldsAmount <= totalShields / 2 -> 1
+	shieldsAmount * 2 <= totalShields -> 1
 	shieldsAmount < totalShields -> 2
 	else -> 3
 }
