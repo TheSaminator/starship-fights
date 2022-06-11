@@ -142,8 +142,8 @@ sealed class Subplot {
 			if (gameState.ships[againstShip] != null) return gameState
 			
 			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
-			val highestEnemyShipTier = enemyShips.maxOf { it.ship.shipType.weightClass }
-			val enemyShipsOfHighestTier = enemyShips.filter { it.ship.shipType.weightClass == highestEnemyShipTier }
+			val highestEnemyShipTier = enemyShips.maxOf { it.ship.shipType.weightClass.tier }
+			val enemyShipsOfHighestTier = enemyShips.filter { it.ship.shipType.weightClass.tier == highestEnemyShipTier }
 			
 			val vendettaShip = enemyShipsOfHighestTier.random().id
 			return gameState.modifySubplotData(Vendetta(forPlayer, vendettaShip, SubplotOutcome.UNDECIDED))
@@ -181,8 +181,8 @@ sealed class Subplot {
 			if (gameState.ships[againstShip] != null) return gameState
 			
 			val myShips = gameState.ships.values.filter { it.owner == forPlayer }
-			val highestShipTier = myShips.maxOf { it.ship.shipType.weightClass }
-			val shipsNotOfHighestTier = myShips.filter { it.ship.shipType.weightClass != highestShipTier }.ifEmpty { myShips }
+			val highestShipTier = myShips.maxOf { it.ship.shipType.weightClass.tier }
+			val shipsNotOfHighestTier = myShips.filter { it.ship.shipType.weightClass.tier != highestShipTier }.ifEmpty { myShips }
 			
 			val arkancideShip = shipsNotOfHighestTier.random().id
 			return gameState.modifySubplotData(PlausibleDeniability(forPlayer, arkancideShip, SubplotOutcome.UNDECIDED))
@@ -220,8 +220,8 @@ sealed class Subplot {
 			if (gameState.ships[onBoardShip] != null) return gameState
 			
 			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
-			val lowestEnemyShipTier = enemyShips.minOf { it.ship.shipType.weightClass }
-			val enemyShipsNotOfLowestTier = enemyShips.filter { it.ship.shipType.weightClass != lowestEnemyShipTier }.ifEmpty { enemyShips }
+			val lowestEnemyShipTier = enemyShips.minOf { it.ship.shipType.weightClass.tier }
+			val enemyShipsNotOfLowestTier = enemyShips.filter { it.ship.shipType.weightClass.tier != lowestEnemyShipTier }.ifEmpty { enemyShips }
 			
 			val informantShip = enemyShipsNotOfLowestTier.random().id
 			return gameState.modifySubplotData(RecoverInformant(forPlayer, informantShip, SubplotOutcome.UNDECIDED, null))
