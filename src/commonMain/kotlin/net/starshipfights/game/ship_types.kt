@@ -120,8 +120,10 @@ enum class ShipType(
 	JAGER(Faction.NDRC, ShipWeightClass.DESTROYER),
 	NOVAATJE(Faction.NDRC, ShipWeightClass.DESTROYER),
 	ZWAARD(Faction.NDRC, ShipWeightClass.DESTROYER),
+	
 	SLAGSCHIP(Faction.NDRC, ShipWeightClass.CRUISER),
 	VOORHOEDE(Faction.NDRC, ShipWeightClass.CRUISER),
+	
 	KRIJGSCHUIT(Faction.NDRC, ShipWeightClass.BATTLE_BARGE),
 	
 	// Masra Draetsen
