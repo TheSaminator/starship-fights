@@ -816,7 +816,7 @@ object GameUI {
 							ShipModuleStatus.INTACT -> {}
 							ShipModuleStatus.DAMAGED -> {
 								span {
-									style = "color:#fd4"
+									style = "color:#ec4"
 									+"${module.getDisplayName(ship.ship)} Damaged"
 								}
 								br
