@@ -2,7 +2,7 @@ package net.starshipfights.game.ai
 
 import net.starshipfights.game.EPSILON
 import kotlin.jvm.JvmInline
-import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.sqrt
 import kotlin.random.Random
 
@@ -16,8 +16,11 @@ val VecN.dimension: Int
 fun Random.nextGaussian() = (1..12).sumOf { nextDouble() } - 6
 
 fun Random.nextUnitVector(size: Int): VecN {
-	if (size <= 0)
-		throw IllegalArgumentException("Cannot have vector of zero or negative dimension!")
+	if (size < 0)
+		throw IllegalArgumentException("Cannot have vector of negative dimension!")
+	
+	if (size == 0)
+		return VecN(emptyList())
 	
 	if (size == 1)
 		return VecN(listOf(if (nextBoolean()) 1.0 else -1.0))
@@ -31,8 +34,11 @@ fun Random.nextUnitVector(size: Int): VecN {
 }
 
 fun Random.nextOrthonormalBasis(size: Int): List<VecN> {
-	if (size <= 0)
-		throw IllegalArgumentException("Cannot have orthonormal basis of zero or negative dimension!")
+	if (size < 0)
+		throw IllegalArgumentException("Cannot have orthonormal basis of negative dimension!")
+	
+	if (size == 0)
+		return emptyList()
 	
 	if (size == 1)
 		return listOf(VecN(listOf(if (nextBoolean()) 1.0 else -1.0)))
@@ -53,7 +59,7 @@ fun Random.nextOrthonormalBasis(size: Int): List<VecN> {
 
 val VecN.isNullVector: Boolean
 	get() {
-		return values.all { abs(it) < EPSILON }
+		return values.all { it.absoluteValue < EPSILON }
 	}
 
 fun VecN.normalize(): VecN {
