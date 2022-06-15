@@ -32,7 +32,7 @@ plugins {
 	application
 }
 
-group = "io.github.thesaminator"
+group = "net.starshipfights"
 
 val isDevEnv: Boolean by extra {
 	val configFile = file("config.json")
