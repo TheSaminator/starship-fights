@@ -75,27 +75,27 @@ kotlin {
 		
 		val commonMain by getting {
 			dependencies {
-				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-				implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.2")
-				implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
+				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.2")
+				implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.3")
+				implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
 				
-				implementation("org.jetbrains.kotlinx:kotlinx-html:0.7.3")
+				implementation("org.jetbrains.kotlinx:kotlinx-html:0.7.5")
 			}
 		}
 		
 		val jvmMain by getting {
 			dependencies {
-				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.0")
-				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.0")
+				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.2")
+				implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.6.2")
 				
-				implementation("io.ktor:ktor-server-netty:1.6.7")
-				implementation("io.ktor:ktor-html-builder:1.6.7")
-				implementation("io.ktor:ktor-auth:1.6.7")
-				implementation("io.ktor:ktor-serialization:1.6.7")
-				implementation("io.ktor:ktor-websockets:1.6.7")
-				implementation("io.ktor:ktor-client-apache:1.6.7")
+				implementation("io.ktor:ktor-server-netty:1.6.8")
+				implementation("io.ktor:ktor-html-builder:1.6.8")
+				implementation("io.ktor:ktor-auth:1.6.8")
+				implementation("io.ktor:ktor-serialization:1.6.8")
+				implementation("io.ktor:ktor-websockets:1.6.8")
+				implementation("io.ktor:ktor-client-apache:1.6.8")
 				
-				implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.3")
+				implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.7.5")
 				implementation("org.slf4j:slf4j-api:1.7.32")
 				implementation("ch.qos.logback:logback-classic:1.2.10")
 				
@@ -116,10 +116,10 @@ kotlin {
 		
 		val jsMain by getting {
 			dependencies {
-				implementation("io.ktor:ktor-client-js:1.6.7")
-				implementation("io.ktor:ktor-client-websockets:1.6.7")
+				implementation("io.ktor:ktor-client-js:1.6.8")
+				implementation("io.ktor:ktor-client-websockets:1.6.8")
 				
-				implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.3")
+				implementation("org.jetbrains.kotlinx:kotlinx-html-js:0.7.5")
 				
 				implementation("com.juul.indexeddb:core:0.2.3")
 			}

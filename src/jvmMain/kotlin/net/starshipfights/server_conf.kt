@@ -50,7 +50,7 @@ val CurrentConfiguration: Configuration
 			
 			val json = JsonConfigCodec.encodeToString(Configuration.serializer(), DEFAULT_CONFIG)
 			file.writeText(json, Charsets.UTF_8)
-			return DEFAULT_CONFIG
+			return DEFAULT_CONFIG.also { currentConfig = it }
 		}
 		
 		val json = file.readText()
