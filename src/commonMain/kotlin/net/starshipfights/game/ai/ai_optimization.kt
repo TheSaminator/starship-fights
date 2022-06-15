@@ -174,10 +174,12 @@ fun generateFleet(faction: Faction, rank: AdmiralRank, side: GlobalSide): Map<Id
 		var shipCount = 0
 		shipTypes.map { st ->
 			val name = "${side}_${++shipCount}"
+			val flavor = FactionFlavor.defaultForFaction(faction)
 			Ship(
 				id = Id(name),
 				name = name,
 				shipType = st,
+				shipFlavor = flavor
 			)
 		}.associateBy { it.id }
 	}

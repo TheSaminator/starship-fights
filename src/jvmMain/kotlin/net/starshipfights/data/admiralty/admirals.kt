@@ -67,11 +67,12 @@ data class ShipInDrydock(
 	override val id: Id<ShipInDrydock> = Id(),
 	val name: String,
 	val shipType: ShipType,
+	val shipFlavor: FactionFlavor = FactionFlavor.defaultForFaction(shipType.faction),
 	val readyAt: @Contextual Instant,
 	val owningAdmiral: Id<Admiral>
 ) : DataDocument<ShipInDrydock> {
 	val shipData: Ship
-		get() = Ship(id.reinterpret(), name, shipType)
+		get() = Ship(id.reinterpret(), name, shipType, shipFlavor)
 	
 	val fullName: String
 		get() = shipData.fullName
@@ -132,7 +133,7 @@ suspend fun getAdmiralsShips(admiralId: Id<Admiral>): Map<Id<Ship>, Ship> {
 		.associate { it.shipData.id to it.shipData }
 }
 
-fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.values()
+fun generateFleet(admiral: Admiral, flavor: FactionFlavor = FactionFlavor.defaultForFaction(admiral.faction)): List<ShipInDrydock> = ShipWeightClass.values()
 	.flatMap { swc ->
 		val shipTypes = ShipType.values().filter { st ->
 			st.weightClass == swc && st.faction == admiral.faction
@@ -155,6 +156,7 @@ fun generateFleet(admiral: Admiral): List<ShipInDrydock> = ShipWeightClass.value
 					id = Id(),
 					name = name,
 					shipType = st,
+					shipFlavor = flavor,
 					readyAt = now,
 					owningAdmiral = admiral.id
 				)

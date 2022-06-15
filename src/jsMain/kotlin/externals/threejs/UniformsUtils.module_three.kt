@@ -3,6 +3,7 @@
 
 package externals.threejs
 
-external fun cloneUniforms(uniforms_src: Any): Any
-
-external fun mergeUniforms(uniforms: Array<Any>): Any
+external object UniformsUtils {
+	fun clone(uniforms_src: Any): Any
+	fun merge(uniforms: Array<Any>): Any
+}

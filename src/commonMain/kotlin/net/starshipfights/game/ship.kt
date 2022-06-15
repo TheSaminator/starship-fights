@@ -9,7 +9,8 @@ data class Ship(
 	val id: Id<Ship>,
 	
 	val name: String,
-	val shipType: ShipType
+	val shipType: ShipType,
+	val shipFlavor: FactionFlavor
 ) {
 	val fullName: String
 		get() = "${shipType.faction.shipPrefix}$name"

@@ -47,6 +47,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 	val guestDeployCenter = Position(Vec2(0.0, (battleLength / 2) - deployLength2))
 	
 	val aiAdmiral = genAI(enemyFaction, battleInfo.size)
+	val aiFlavor = FactionFlavor.optionsForAiEnemy(enemyFaction).random()
 	
 	return GameState(
 		start = GameStart(
@@ -66,7 +67,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 				-PI / 2,
 				PickBoundary.Rectangle(guestDeployCenter, deployWidth2, deployLength2),
 				-PI / 2,
-				generateFleet(aiAdmiral)
+				generateFleet(aiAdmiral, aiFlavor)
 					.associate { it.shipData.id to it.shipData }
 					.filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier }
 			)

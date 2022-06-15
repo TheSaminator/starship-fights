@@ -249,6 +249,8 @@ object RenderResources {
 					outlineRed.material = redOutlineMaterial
 					
 					CustomRenderFactory { ship ->
+						val faction = ship.ship.shipType.faction
+						val flavor = ship.ship.shipFlavor
 						val side = ship.owner.relativeTo(mySide)
 						
 						ShipRender(
@@ -257,6 +259,7 @@ object RenderResources {
 							mesh.clone(true).unsafeCast<Mesh>().apply {
 								receiveShadow = true
 								castShadow = true
+								material = material.unsafeCast<MeshPhongMaterial>().forShip(faction, flavor)
 							},
 							when (side) {
 								LocalSide.GREEN -> outlineGreen

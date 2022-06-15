@@ -1,8 +1,11 @@
 package net.starshipfights.game
 
 import externals.threejs.*
+import net.starshipfights.data.Id
 
 object GameRender {
+	private val shipMeshCache = mutableMapOf<Id<ShipInstance>, Mesh>()
+	
 	fun renderGameState(scene: Scene, state: GameState) {
 		scene.background = RenderResources.spaceboxes.getValue(state.battleInfo.bg)
 		scene.getObjectByName("light")?.removeFromParent()
@@ -16,7 +19,10 @@ object GameRender {
 			when (state.renderShipAs(ship, mySide)) {
 				ShipRenderMode.NONE -> {}
 				ShipRenderMode.SIGNAL -> shipGroup.add(RenderResources.enemySignal.generate(ship.position.location))
-				ShipRenderMode.FULL -> shipGroup.add(RenderResources.shipMesh.generate(ship))
+				ShipRenderMode.FULL -> shipGroup.add(shipMeshCache[ship.id]?.also { render ->
+					RenderScaling.toWorldRotation(ship.position.facing, render)
+					render.position.copy(RenderScaling.toWorldPosition(ship.position.location))
+				} ?: RenderResources.shipMesh.generate(ship))
 			}
 		}
 	}
@@ -27,7 +33,7 @@ object RenderScaling {
 	const val METERS_PER_3D_MESH_UNIT = 6.9
 	
 	fun toWorldRotation(facing: Double, obj: Object3D) {
-		obj.rotateY(-facing)
+		obj.rotation.y = -facing
 	}
 	
 	fun toBattleLength(length3js: Double) = length3js * METERS_PER_THREEJS_UNIT
