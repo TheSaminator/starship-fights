@@ -1,8 +1,0 @@
-Mechyrdian campaign:
-
-Intro: distress call from NdRC convoy in Calibor reveals Masra Draetsen invasion force
-
-Start in Calibor sector, the following factions must be purged from the sector:
-* Masra Draetsen
-* Felinae Felices
-* Ferthlon Separatists
