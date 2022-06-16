@@ -45,7 +45,7 @@ suspend fun setupBackground() {
 	}
 }
 
-private suspend fun enterTraining(admiral: Id<InGameAdmiral>, battleInfo: BattleInfo, faction: Faction?): Nothing {
+private suspend fun enterTraining(admiral: Id<InGameAdmiral>, battleInfo: BattleInfo, opponent: TrainingOpponent): Nothing {
 	interruptExit = false
 	
 	document.body!!.append.form(action = "/train", method = FormMethod.post, encType = FormEncType.applicationXWwwFormUrlEncoded) {
@@ -64,7 +64,11 @@ private suspend fun enterTraining(admiral: Id<InGameAdmiral>, battleInfo: Battle
 		}
 		hiddenInput {
 			name = "enemy-faction"
-			value = faction?.toUrlSlug() ?: "-random"
+			value = opponent.faction?.toUrlSlug() ?: "-random"
+		}
+		hiddenInput {
+			name = "enemy-flavor"
+			value = opponent.flavor?.toUrlSlug() ?: "-random"
 		}
 	}.submit()
 	awaitCancellation()

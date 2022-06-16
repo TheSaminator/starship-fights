@@ -81,8 +81,8 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 						.filterValues { weapon -> hasValidTargets(ship, weapon) }
 					val usableWeapons = allWeapons - ship.usedArmaments
 					
-					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots } + ship.troopsAmount
-					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots } + (if (ship.canSendBoardingParty) ship.troopsAmount else 0)
+					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + ship.troopsAmount
+					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + (if (ship.canSendBoardingParty) ship.troopsAmount else 0)
 					
 					ship.ship.pointCost * (usableWeaponShots.toDouble() / allWeaponShots)
 				}

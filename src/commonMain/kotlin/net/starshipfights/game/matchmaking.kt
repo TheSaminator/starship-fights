@@ -51,11 +51,35 @@ data class PlayerLogin(
 )
 
 @Serializable
+sealed class TrainingOpponent {
+	abstract val faction: Faction?
+	abstract val flavor: FactionFlavor?
+	
+	@Serializable
+	object RandomFaction : TrainingOpponent() {
+		override val faction: Faction?
+			get() = null
+		
+		override val flavor: FactionFlavor?
+			get() = null
+	}
+	
+	@Serializable
+	data class FactionWithRandomFlavor(override val faction: Faction) : TrainingOpponent() {
+		override val flavor: FactionFlavor?
+			get() = null
+	}
+	
+	@Serializable
+	data class FactionAndFlavor(override val faction: Faction, override val flavor: FactionFlavor) : TrainingOpponent()
+}
+
+@Serializable
 sealed class LoginMode {
 	abstract val globalSide: GlobalSide?
 	
 	@Serializable
-	data class Train(val battleInfo: BattleInfo, val enemyFaction: Faction?) : LoginMode() {
+	data class Train(val battleInfo: BattleInfo, val enemyFaction: TrainingOpponent) : LoginMode() {
 		override val globalSide: GlobalSide?
 			get() = null
 	}

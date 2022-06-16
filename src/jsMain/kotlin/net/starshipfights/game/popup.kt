@@ -265,6 +265,43 @@ sealed class Popup<out T> {
 		}
 	}
 	
+	class ChooseEnemyFactionFlavorScreen(val forFaction: Faction) : Popup<AIFactionFlavorChoice?>() {
+		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (AIFactionFlavorChoice?) -> Unit) {
+			p {
+				style = "text-align:center"
+				
+				+"Select a color scheme for the enemy faction"
+			}
+			
+			div(classes = "button-set col") {
+				button {
+					+"Random"
+					onClickFunction = { e ->
+						e.preventDefault()
+						callback(AIFactionFlavorChoice.Random)
+					}
+				}
+				for (flavor in FactionFlavor.optionsForAiEnemy(forFaction)) {
+					button {
+						+flavor.displayName
+						
+						onClickFunction = { e ->
+							e.preventDefault()
+							callback(AIFactionFlavorChoice.Chosen(flavor))
+						}
+					}
+				}
+				button {
+					+"Cancel"
+					onClickFunction = { e ->
+						e.preventDefault()
+						callback(null)
+					}
+				}
+			}
+		}
+	}
+	
 	class GuestRequestScreen(private val hostInfo: InGameAdmiral, private val guestInfo: InGameAdmiral) : Popup<Boolean?>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Boolean?) -> Unit) {
 			p {

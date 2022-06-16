@@ -22,8 +22,9 @@ suspend fun ApplicationCall.getTrainingClientMode(): ClientMode {
 	val battleInfo = BattleInfo(battleSize, battleBg)
 	
 	val enemyFaction = Faction.values().singleOrNull { it.toUrlSlug() == parameters["enemy-faction"] } ?: Faction.values().random()
+	val enemyFlavor = FactionFlavor.values().singleOrNull { it.toUrlSlug() == parameters["enemy-flavor"] } ?: FactionFlavor.optionsForAiEnemy(enemyFaction).random()
 	
-	val initialState = generateTrainingInitialState(admiralData, enemyFaction, battleInfo)
+	val initialState = generateTrainingInitialState(admiralData, enemyFaction, enemyFlavor, battleInfo)
 	
 	return ClientMode.InTrainingGame(initialState)
 }

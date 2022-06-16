@@ -12,6 +12,12 @@ sealed class AIFactionChoice {
 	data class Chosen(val faction: Faction) : AIFactionChoice()
 }
 
+sealed class AIFactionFlavorChoice {
+	object Random : AIFactionFlavorChoice()
+	
+	data class Chosen(val flavor: FactionFlavor) : AIFactionFlavorChoice()
+}
+
 private suspend fun Popup.Companion.getPlayerInfo(admirals: List<InGameAdmiral>): InGameAdmiral {
 	return Popup.ChooseAdmiralScreen(admirals).display()
 }
@@ -22,10 +28,25 @@ private suspend fun Popup.Companion.getBattleInfo(admiral: InGameAdmiral): Battl
 	return BattleInfo(battleSize, battleBackground)
 }
 
+private suspend fun Popup.Companion.getTrainingOpponent(): TrainingOpponent? {
+	val faction = Popup.ChooseEnemyFactionScreen.display() ?: return null
+	return when (faction) {
+		is AIFactionChoice.Chosen -> {
+			val flavor = Popup.ChooseEnemyFactionFlavorScreen(faction.faction).display() ?: return getTrainingOpponent()
+			when (flavor) {
+				is AIFactionFlavorChoice.Chosen -> TrainingOpponent.FactionAndFlavor(faction.faction, flavor.flavor)
+				AIFactionFlavorChoice.Random -> TrainingOpponent.FactionWithRandomFlavor(faction.faction)
+			}
+		}
+		AIFactionChoice.Random -> TrainingOpponent.RandomFaction
+	}
+}
+
 private suspend fun Popup.Companion.getTrainingInfo(admiral: InGameAdmiral): LoginMode? {
 	val battleInfo = getBattleInfo(admiral) ?: return getLoginMode(admiral)
-	val faction = Popup.ChooseEnemyFactionScreen.display() ?: return getLoginMode(admiral)
-	return LoginMode.Train(battleInfo, (faction as? AIFactionChoice.Chosen)?.faction)
+	val opponent = getTrainingOpponent() ?: return getTrainingInfo(admiral)
+	
+	return LoginMode.Train(battleInfo, opponent)
 }
 
 private suspend fun Popup.Companion.getLoginMode(admiral: InGameAdmiral): LoginMode? {
