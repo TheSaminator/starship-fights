@@ -20,14 +20,14 @@
      id="defs2" />
   <sodipodi:namedview
      id="base"
-     pagecolor="#000000"
+     pagecolor="#ffffff"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.35"
-     inkscape:cx="1209.4821"
-     inkscape:cy="1523.8818"
+     inkscape:zoom="0.49497475"
+     inkscape:cx="2001.3884"
+     inkscape:cy="1662.2865"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -64,10 +64,10 @@
     <rect
        style="fill:#333333;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.83464551;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:markers stroke fill"
        id="rect893"
-       width="2800"
-       height="2800"
-       x="0"
-       y="-1677.4803" />
+       width="3200"
+       height="3200"
+       x="-200"
+       y="-1877.4803" />
     <path
        inkscape:connector-curvature="0"
        id="path929"
