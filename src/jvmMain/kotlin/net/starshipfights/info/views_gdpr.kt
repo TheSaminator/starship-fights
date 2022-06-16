@@ -155,13 +155,13 @@ suspend fun ApplicationCall.privateInfo(): String {
 				appendLine("Ship is a ${grave.shipType.fullerDisplayName}")
 				appendLine("Ship was destroyed at ${grave.destroyedAt} in battle recorded at ${grave.destroyedIn}")
 			}
-			appendLine("")
-			appendLine("# More information")
-			appendLine("This document contains the totality of your private data as stored by Starship Fights")
-			appendLine("This page can be accessed at https://starshipfights.net/me/private-info")
-			appendLine("All private info can be downloaded at https://starshipfights.net/me/private-info/txt")
-			appendLine("The privacy policy can be reviewed at https://starshipfights.net/about/pp")
 		}
+		appendLine("")
+		appendLine("# More information")
+		appendLine("This document contains the totality of your private data as stored by Starship Fights")
+		appendLine("This page can be accessed at https://starshipfights.net/me/private-info")
+		appendLine("All private info can be downloaded at https://starshipfights.net/me/private-info/txt")
+		appendLine("The privacy policy can be reviewed at https://starshipfights.net/about/pp")
 	}
 }
 
