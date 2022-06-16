@@ -148,7 +148,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 			}
 			appendLine("")
 			val graves = admiralShips[admiral.id]?.second.orEmpty()
-			appendLine("Admiral has lost ${ships.size} ships in battle:")
+			appendLine("Admiral has lost ${graves.size} ships in battle:")
 			for (grave in graves) {
 				appendLine("")
 				appendLine("#### ${grave.fullName} (${grave.id})")
