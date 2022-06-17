@@ -119,7 +119,7 @@ interface AuthProvider {
 						logIpAddresses = form["logaddress"] == "yes",
 						profileName = form["name"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_NAME_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid name - must not be blank, must be at most $PROFILE_NAME_MAX_LENGTH characters")),
 						profileBio = form["bio"]?.takeIf { it.isNotBlank() && it.length <= PROFILE_BIO_MAX_LENGTH } ?: redirect("/me/manage" + withErrorMessage("Invalid bio - must not be blank, must be at most $PROFILE_BIO_MAX_LENGTH characters")),
-						preferredTheme = form["theme"]?.uppercase()?.takeIf { it in PreferredTheme.values().map { it.name } }?.let { PreferredTheme.valueOf(it) } ?: currentUser.preferredTheme
+						preferredTheme = form["theme"]?.let { themeName -> PreferredTheme.values().singleOrNull { it.name.equals(themeName, ignoreCase = true) } } ?: currentUser.preferredTheme
 					)
 					User.put(newUser)
 					
