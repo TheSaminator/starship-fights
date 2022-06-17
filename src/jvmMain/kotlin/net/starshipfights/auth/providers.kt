@@ -30,6 +30,7 @@ import net.starshipfights.data.auth.UserSession
 import net.starshipfights.data.createNonce
 import net.starshipfights.forbid
 import net.starshipfights.game.Faction
+import net.starshipfights.game.FactionFlavor
 import net.starshipfights.game.ShipType
 import net.starshipfights.game.toUrlSlug
 import net.starshipfights.info.*
@@ -274,6 +275,7 @@ interface AuthProvider {
 					val newShip = ShipInDrydock(
 						name = newShipName,
 						shipType = shipType,
+						shipFlavor = FactionFlavor.defaultForFaction(admiral.faction),
 						readyAt = Instant.now().plus(2, ChronoUnit.HOURS),
 						owningAdmiral = admiralId
 					)
