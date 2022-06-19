@@ -26,11 +26,11 @@ enum class ShipWeightClass(
 	COLOSSUS(5, ShipTier.TITAN),
 	
 	// Felinae Felices-specific
-	FF_ESCORT(1, ShipTier.LIGHT_CRUISER),
-	FF_DESTROYER(2, ShipTier.CRUISER),
-	FF_CRUISER(3, ShipTier.BATTLECRUISER),
-	FF_BATTLECRUISER(4, ShipTier.BATTLESHIP),
-	FF_BATTLESHIP(5, ShipTier.TITAN),
+	FF_ESCORT(1, ShipTier.ESCORT),
+	FF_DESTROYER(2, ShipTier.LIGHT_CRUISER),
+	FF_CRUISER(3, ShipTier.CRUISER),
+	FF_BATTLECRUISER(4, ShipTier.BATTLECRUISER),
+	FF_BATTLESHIP(5, ShipTier.BATTLESHIP),
 	
 	// Isarnareykk-specific
 	AUXILIARY_SHIP(1, ShipTier.ESCORT),
