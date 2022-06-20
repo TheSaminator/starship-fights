@@ -219,7 +219,7 @@ sealed class Subplot {
 		override fun onAfterDeployShips(gameState: GameState): GameState {
 			if (gameState.ships[onBoardShip] != null) return gameState
 			
-			val enemyShips = gameState.ships.values.filter { it.owner.side != forPlayer.side.other }
+			val enemyShips = gameState.ships.values.filter { it.owner.side == forPlayer.side.other }
 			val lowestEnemyShipTier = enemyShips.minOf { it.ship.shipType.weightClass.tier }
 			val enemyShipsNotOfLowestTier = enemyShips.filter { it.ship.shipType.weightClass.tier != lowestEnemyShipTier }.ifEmpty { enemyShips }
 			
