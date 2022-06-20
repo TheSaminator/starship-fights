@@ -423,11 +423,6 @@ private val vestigiumShipNames = listOf(
 	"Theodore Roosevelt",
 	"Calvin Coolidge",
 	"Dwight Eisenhower",
-	"Richard Nixon",
-	"Ronald Reagan",
-	"Donald Trump",
-	"Ron DeSantis",
-	"Gary Martison",
 	// IS Emperors
 	"Jack Coleman",
 	"Trevor Neer",
