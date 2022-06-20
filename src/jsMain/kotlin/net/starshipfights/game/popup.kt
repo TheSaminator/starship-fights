@@ -143,7 +143,7 @@ sealed class Popup<out T> {
 					}
 				}
 				button {
-					+"Host Competitive Battle"
+					+"Host Competitive (1v1) Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
@@ -151,7 +151,7 @@ sealed class Popup<out T> {
 					}
 				}
 				button {
-					+"Join Competitive Battle"
+					+"Join Competitive (1v1) Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
@@ -159,7 +159,7 @@ sealed class Popup<out T> {
 					}
 				}
 				button {
-					+"Host Cooperative Battle"
+					+"Host Cooperative (2v1) Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
@@ -167,7 +167,7 @@ sealed class Popup<out T> {
 					}
 				}
 				button {
-					+"Join Cooperative Battle"
+					+"Join Cooperative (2v1) Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
