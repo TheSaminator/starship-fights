@@ -112,7 +112,7 @@ sealed class Popup<out T> {
 				style = "text-align:center"
 				
 				img(alt = "Starship Fights", src = RenderResources.LOGO_URL) {
-					style = "width:70%"
+					style = "width:50%"
 				}
 			}
 			
@@ -143,19 +143,35 @@ sealed class Popup<out T> {
 					}
 				}
 				button {
-					+"Host Multiplayer Battle"
+					+"Host Competitive Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
-						callback(MainMenuOption.Multiplayer(GlobalSide.HOST))
+						callback(MainMenuOption.Multiplayer1v1(GlobalSide.HOST))
 					}
 				}
 				button {
-					+"Join Multiplayer Battle"
+					+"Join Competitive Battle"
 					onClickFunction = { e ->
 						e.preventDefault()
 						
-						callback(MainMenuOption.Multiplayer(GlobalSide.GUEST))
+						callback(MainMenuOption.Multiplayer1v1(GlobalSide.GUEST))
+					}
+				}
+				button {
+					+"Host Cooperative Battle"
+					onClickFunction = { e ->
+						e.preventDefault()
+						
+						callback(MainMenuOption.Multiplayer2v1(Player2v1.PLAYER_1))
+					}
+				}
+				button {
+					+"Join Cooperative Battle"
+					onClickFunction = { e ->
+						e.preventDefault()
+						
+						callback(MainMenuOption.Multiplayer2v1(Player2v1.PLAYER_2))
 					}
 				}
 			}
@@ -383,7 +399,7 @@ sealed class Popup<out T> {
 		}
 	}
 	
-	class HostSelectScreen(private val hosts: Map<String, Joinable>) : Popup<String?>() {
+	class Host1v1SelectScreen(private val hosts: Map<String, Joinable>) : Popup<String?>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (String?) -> Unit) {
 			table {
 				style = "table-layout:fixed;width:100%"
@@ -442,6 +458,97 @@ sealed class Popup<out T> {
 					}
 				}
 				tr {
+					td { +Entities.nbsp }
+					td { +Entities.nbsp }
+					td { +Entities.nbsp }
+					td { +Entities.nbsp }
+					td { +Entities.nbsp }
+					td {
+						style = "text-align:center"
+						
+						a(href = "#") {
+							+"Cancel"
+							onClickFunction = { e ->
+								e.preventDefault()
+								callback(null)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	class Host2v1SelectScreen(private val hosts: Map<String, Joinable>) : Popup<String?>() {
+		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (String?) -> Unit) {
+			table {
+				style = "table-layout:fixed;width:100%"
+				
+				tr {
+					th { +"Host Player" }
+					th { +"Host Admiral" }
+					th { +"Host Faction" }
+					th { +"Enemy Faction" }
+					th { +"Battle Size" }
+					th { +"Battle Background" }
+					th { +Entities.nbsp }
+				}
+				for ((id, joinable) in hosts) {
+					tr {
+						td {
+							style = "text-align:center"
+							
+							+joinable.admiral.user.username
+						}
+						td {
+							style = "text-align:center"
+							
+							+joinable.admiral.fullName
+						}
+						td {
+							style = "text-align:center"
+							
+							img(alt = joinable.admiral.faction.shortName, src = joinable.admiral.faction.flagUrl) {
+								style = "width:4em;height:2.5em"
+							}
+						}
+						td {
+							style = "text-align:center"
+							
+							joinable.enemyFaction?.let { enemy ->
+								img(alt = enemy.shortName, src = enemy.flagUrl) {
+									style = "width:4em;height:2.5em"
+								}
+							} ?: (+"Random")
+						}
+						td {
+							style = "text-align:center"
+							
+							+joinable.battleInfo.size.displayName
+							+" ("
+							+joinable.battleInfo.size.numPoints.toString()
+							+")"
+						}
+						td {
+							style = "text-align:center"
+							
+							+joinable.battleInfo.bg.displayName
+						}
+						td {
+							style = "text-align:center"
+							
+							a(href = "#") {
+								+"Join"
+								onClickFunction = { e ->
+									e.preventDefault()
+									callback(id)
+								}
+							}
+						}
+					}
+				}
+				tr {
+					td { +Entities.nbsp }
 					td { +Entities.nbsp }
 					td { +Entities.nbsp }
 					td { +Entities.nbsp }

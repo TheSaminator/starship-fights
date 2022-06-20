@@ -592,7 +592,7 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 					th { +"When" }
 					th { +"Size" }
 					th { +"Role" }
-					th { +"Against" }
+					th { +"With" }
 					th { +"Result" }
 				}
 				for (record in records.sortedBy { it.whenEnded }) {

@@ -13,7 +13,6 @@ import net.starshipfights.data.admiralty.ShipInDrydock
 import net.starshipfights.data.admiralty.ShipMemorial
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.auth.UserSession
-import net.starshipfights.game.GlobalSide
 import net.starshipfights.redirect
 import org.litote.kmongo.eq
 import org.litote.kmongo.or
@@ -44,11 +43,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 	user ?: redirect("/login")
 	
 	val battleEndings = userBattles.associate { record ->
-		record.id to when (record.winner) {
-			GlobalSide.HOST -> record.hostUser == userId
-			GlobalSide.GUEST -> record.guestUser == userId
-			null -> null
-		}
+		record.id to record.didUserWin(userId)
 	}
 	
 	val (admiralShips, battleOpponents, battleAdmirals) = coroutineScope {

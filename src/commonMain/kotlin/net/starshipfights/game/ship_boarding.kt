@@ -156,7 +156,7 @@ fun reportBoardingResult(impactResult: ImpactResult, attacker: Id<ShipInstance>)
 }
 
 fun ShipInstance.getBoardingPickRequest() = PickRequest(
-	PickType.Ship(allowSides = setOf(owner.other)),
+	PickType.Ship(allowSides = setOf(owner.side.other)),
 	PickBoundary.WeaponsFire(
 		center = position.location,
 		facing = position.facing,

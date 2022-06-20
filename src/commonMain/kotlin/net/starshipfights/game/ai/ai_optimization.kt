@@ -66,7 +66,7 @@ class TestSession(gameState: GameState) {
 	val gameEnd: Deferred<GameEvent.GameEnd>
 		get() = gameEndMutable
 	
-	suspend fun onPacket(player: GlobalSide, packet: PlayerAction) {
+	suspend fun onPacket(player: GlobalShipController, packet: PlayerAction) {
 		stateMutex.withLock {
 			when (val result = state.value.after(player, packet)) {
 				is GameEvent.StateChange -> {
@@ -74,7 +74,7 @@ class TestSession(gameState: GameState) {
 					result.newState.checkVictory()?.let { gameEndMutable.complete(it) }
 				}
 				is GameEvent.InvalidAction -> {
-					errorMessageChannel(player).send(result.message)
+					errorMessageChannel(player.side).send(result.message)
 				}
 				is GameEvent.GameEnd -> {
 					gameEndMutable.complete(result)
@@ -89,11 +89,13 @@ suspend fun performTestSession(gameState: GameState, hostInstincts: Instincts, g
 	
 	val hostActions = Channel<PlayerAction>()
 	val hostEvents = Channel<GameEvent>()
-	val hostSession = AISession(GlobalSide.HOST, hostActions, hostEvents, hostInstincts)
+	val hostSide = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+	val hostSession = AISession(hostSide, hostActions, hostEvents, hostInstincts)
 	
 	val guestActions = Channel<PlayerAction>()
 	val guestEvents = Channel<GameEvent>()
-	val guestSession = AISession(GlobalSide.GUEST, guestActions, guestEvents, guestInstincts)
+	val guestSide = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+	val guestSession = AISession(guestSide, guestActions, guestEvents, guestInstincts)
 	
 	return coroutineScope {
 		val hostHandlingJob = launch {
@@ -116,7 +118,7 @@ suspend fun performTestSession(gameState: GameState, hostInstincts: Instincts, g
 			
 			launch {
 				for (action in hostActions)
-					testSession.onPacket(GlobalSide.HOST, action)
+					testSession.onPacket(hostSide, action)
 			}
 			
 			aiPlayer(hostSession, testSession.state.value)
@@ -142,7 +144,7 @@ suspend fun performTestSession(gameState: GameState, hostInstincts: Instincts, g
 			
 			launch {
 				for (action in guestActions)
-					testSession.onPacket(GlobalSide.GUEST, action)
+					testSession.onPacket(guestSide, action)
 			}
 			
 			aiPlayer(guestSession, testSession.state.value)
@@ -200,43 +202,51 @@ fun generateOptimizationInitialState(hostFaction: Faction, guestFaction: Faction
 		start = GameStart(
 			battleWidth, battleLength,
 			
-			PlayerStart(
-				hostDeployCenter,
-				PI / 2,
-				PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
-				PI / 2,
-				generateFleet(hostFaction, rank, GlobalSide.HOST)
+			mapOf(
+				GlobalShipController.Player1Disambiguation to PlayerStart(
+					hostDeployCenter,
+					PI / 2,
+					PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
+					PI / 2,
+					generateFleet(hostFaction, rank, GlobalSide.HOST)
+				)
 			),
 			
-			PlayerStart(
-				guestDeployCenter,
-				-PI / 2,
-				PickBoundary.Rectangle(guestDeployCenter, deployWidth2, deployLength2),
-				-PI / 2,
-				generateFleet(guestFaction, rank, GlobalSide.GUEST)
+			mapOf(
+				GlobalShipController.Player1Disambiguation to PlayerStart(
+					guestDeployCenter,
+					-PI / 2,
+					PickBoundary.Rectangle(guestDeployCenter, deployWidth2, deployLength2),
+					-PI / 2,
+					generateFleet(guestFaction, rank, GlobalSide.GUEST)
+				)
 			)
 		),
-		hostInfo = InGameAdmiral(
-			id = Id(GlobalSide.HOST.name),
-			user = InGameUser(
+		hostInfo = mapOf(
+			GlobalShipController.Player1Disambiguation to InGameAdmiral(
 				id = Id(GlobalSide.HOST.name),
-				username = GlobalSide.HOST.name
-			),
-			name = GlobalSide.HOST.name,
-			isFemale = false,
-			faction = hostFaction,
-			rank = rank
+				user = InGameUser(
+					id = Id(GlobalSide.HOST.name),
+					username = GlobalSide.HOST.name
+				),
+				name = GlobalSide.HOST.name,
+				isFemale = false,
+				faction = hostFaction,
+				rank = rank
+			)
 		),
-		guestInfo = InGameAdmiral(
-			id = Id(GlobalSide.GUEST.name),
-			user = InGameUser(
+		guestInfo = mapOf(
+			GlobalShipController.Player1Disambiguation to InGameAdmiral(
 				id = Id(GlobalSide.GUEST.name),
-				username = GlobalSide.GUEST.name
-			),
-			name = GlobalSide.GUEST.name,
-			isFemale = false,
-			faction = guestFaction,
-			rank = rank
+				user = InGameUser(
+					id = Id(GlobalSide.GUEST.name),
+					username = GlobalSide.GUEST.name
+				),
+				name = GlobalSide.GUEST.name,
+				isFemale = false,
+				faction = guestFaction,
+				rank = rank
+			)
 		),
 		battleInfo = battleInfo,
 		subplots = emptySet(),

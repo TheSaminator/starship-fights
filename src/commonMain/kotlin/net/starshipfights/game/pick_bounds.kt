@@ -41,7 +41,7 @@ fun GameState.isValidPick(request: PickRequest, response: PickResponse): Boolean
 			
 			val ship = ships.getValue(response.id)
 			if (ship.position.location !in request.boundary) return false
-			if (ship.owner !in request.type.allowSides) return false
+			if (ship.owner.side !in request.type.allowSides) return false
 			
 			return true
 		}

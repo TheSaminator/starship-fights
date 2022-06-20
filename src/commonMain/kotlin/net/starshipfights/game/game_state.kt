@@ -2,20 +2,21 @@ package net.starshipfights.game
 
 import kotlinx.serialization.Serializable
 import net.starshipfights.data.Id
+import kotlin.math.roundToInt
 
 @Serializable
 data class GameState(
 	val start: GameStart,
 	
-	val hostInfo: InGameAdmiral,
-	val guestInfo: InGameAdmiral,
+	val hostInfo: Map<String, InGameAdmiral>,
+	val guestInfo: Map<String, InGameAdmiral>,
 	val battleInfo: BattleInfo,
 	
 	val subplots: Set<Subplot>,
 	
 	val phase: GamePhase = GamePhase.Deploy,
-	val doneWithPhase: GlobalSide? = null,
-	val calculatedInitiative: GlobalSide? = null,
+	val doneWithPhase: Set<GlobalShipController> = emptySet(),
+	val calculatedInitiative: GlobalShipController? = null,
 	
 	val ships: Map<Id<ShipInstance>, ShipInstance> = emptyMap(),
 	val destroyedShips: Map<Id<ShipInstance>, ShipWreck> = emptyMap(),
@@ -27,19 +28,29 @@ data class GameState(
 	
 	fun getShipOwner(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships.getValue(id).owner
 	fun getShipOwnerOrNull(id: Id<ShipInstance>) = destroyedShips[id]?.owner ?: ships[id]?.owner
+	
+	fun getUsablePoints(side: GlobalShipController) = (battleInfo.size.numPoints * start.playerStart(side).deployPointsFactor).roundToInt()
 }
 
-val GameState.currentInitiative: GlobalSide?
-	get() = calculatedInitiative?.takeIf { it != doneWithPhase }
+val GameState.allShipControllers: Set<GlobalShipController>
+	get() = (hostInfo.keys.map { GlobalShipController(GlobalSide.HOST, it) } + guestInfo.keys.map { GlobalShipController(GlobalSide.GUEST, it) }).toSet()
 
-fun GameState.canFinishPhase(side: GlobalSide): Boolean {
+fun GameState.allShipControllersOnSide(side: GlobalSide): Map<GlobalShipController, InGameAdmiral> = when (side) {
+	GlobalSide.HOST -> hostInfo
+	GlobalSide.GUEST -> guestInfo
+}.mapKeys { (it, _) -> GlobalShipController(side, it) }
+
+val GameState.currentInitiative: GlobalShipController?
+	get() = calculatedInitiative?.takeIf { it !in doneWithPhase }
+
+fun GameState.canFinishPhase(side: GlobalShipController): Boolean {
 	return when (phase) {
 		GamePhase.Deploy -> {
 			val usedPoints = ships.values
 				.filter { it.owner == side }
 				.sumOf { it.ship.pointCost }
 			
-			start.playerStart(side).deployableFleet.values.none { usedPoints + it.pointCost <= battleInfo.size.numPoints }
+			start.playerStart(side).deployableFleet.values.none { usedPoints + it.pointCost <= getUsablePoints(side) }
 		}
 		else -> true
 	}
@@ -49,7 +60,7 @@ private fun GameState.afterPhase(): GameState {
 	var newShips = ships
 	val newWrecks = destroyedShips.toMutableMap()
 	val newChatEntries = mutableListOf<ChatEntry>()
-	var newInitiative: GameState.() -> InitiativePair = { InitiativePair(emptyMap()) }
+	var newInitiative: GameState.() -> InitiativeMap = { emptyMap() }
 	
 	when (phase) {
 		GamePhase.Deploy -> {
@@ -160,23 +171,34 @@ private fun GameState.afterPhase(): GameState {
 	).withRecalculatedInitiative(newInitiative)
 }
 
-fun GameState.afterPlayerReady(playerSide: GlobalSide) = if (doneWithPhase == playerSide.other) {
-	afterPhase().copy(doneWithPhase = null)
-} else
-	copy(doneWithPhase = playerSide)
+fun GameState.afterPlayerReady(playerSide: GlobalShipController) = if ((doneWithPhase + playerSide) == allShipControllers) {
+	afterPhase().copy(doneWithPhase = emptySet())
+} else if (phase.usesInitiative)
+	copy(doneWithPhase = doneWithPhase + playerSide).withRecalculatedInitiative(
+		when (phase) {
+			is GamePhase.Move -> ({ calculateMovePhaseInitiative() })
+			is GamePhase.Attack -> ({ calculateAttackPhaseInitiative() })
+			else -> ({ emptyMap() })
+		}
+	)
+else
+	copy(doneWithPhase = doneWithPhase + playerSide)
 
 private fun GameState.victoryMessage(winner: GlobalSide): String {
-	val winnerName = admiralInfo(winner).fullName
-	val loserName = admiralInfo(winner.other).fullName
+	val winnerName = allShipControllersOnSide(winner).mapValues { (_, it) -> it.fullName }.values
+	val loserName = allShipControllersOnSide(winner.other).mapValues { (_, it) -> it.fullName }.values
 	
-	return "$winnerName has won the battle by destroying the fleet of $loserName!"
+	val winnerIsPlural = winnerName.size != 1
+	val loserIsPlural = loserName.size != 1
+	
+	return "${winnerName.joinToDisplayString()} ${if (winnerIsPlural) "have" else "has"} won the battle by destroying the fleet${if (loserIsPlural) "s" else ""} of ${loserName.joinToDisplayString()}!"
 }
 
 fun GameState.checkVictory(): GameEvent.GameEnd? {
 	if (phase == GamePhase.Deploy) return null
 	
-	val hostDefeated = ships.none { (_, it) -> it.owner == GlobalSide.HOST }
-	val guestDefeated = ships.none { (_, it) -> it.owner == GlobalSide.GUEST }
+	val hostDefeated = ships.none { (_, it) -> it.owner.side == GlobalSide.HOST }
+	val guestDefeated = ships.none { (_, it) -> it.owner.side == GlobalSide.GUEST }
 	
 	val winner = if (hostDefeated && guestDefeated)
 		null
@@ -191,7 +213,7 @@ fun GameState.checkVictory(): GameEvent.GameEnd? {
 	}
 	
 	return if (hostDefeated && guestDefeated)
-		GameEvent.GameEnd(null, "Stalemate: both sides have been completely destroyed!", subplotsOutcomes)
+		GameEvent.GameEnd(null, "Both sides have been completely destroyed!", subplotsOutcomes)
 	else if (hostDefeated)
 		GameEvent.GameEnd(GlobalSide.GUEST, victoryMessage(GlobalSide.GUEST), subplotsOutcomes)
 	else if (guestDefeated)
@@ -200,9 +222,9 @@ fun GameState.checkVictory(): GameEvent.GameEnd? {
 		null
 }
 
-fun GameState.admiralInfo(side: GlobalSide) = when (side) {
-	GlobalSide.HOST -> hostInfo
-	GlobalSide.GUEST -> guestInfo
+fun GameState.admiralInfo(side: GlobalShipController) = when (side.side) {
+	GlobalSide.HOST -> hostInfo.getValue(side.disambiguation)
+	GlobalSide.GUEST -> guestInfo.getValue(side.disambiguation)
 }
 
 enum class GlobalSide {
@@ -215,20 +237,28 @@ enum class GlobalSide {
 		}
 }
 
-fun GlobalSide.relativeTo(me: GlobalSide) = if (this == me) LocalSide.GREEN else LocalSide.RED
+@Serializable
+data class GlobalShipController(val side: GlobalSide, val disambiguation: String) {
+	companion object {
+		val Player1Disambiguation = "PLAYER 1"
+		val Player2Disambiguation = "PLAYER 2"
+	}
+}
+
+fun GlobalShipController.relativeTo(me: GlobalShipController) = if (this == me)
+	LocalSide.GREEN
+else if (side == me.side)
+	LocalSide.BLUE
+else
+	LocalSide.RED
 
 enum class LocalSide {
-	GREEN, RED;
-	
-	val other: LocalSide
-		get() = when (this) {
-			GREEN -> RED
-			RED -> GREEN
-		}
+	GREEN, BLUE, RED
 }
 
 val LocalSide.htmlColor: String
 	get() = when (this) {
 		LocalSide.GREEN -> "#55FF55"
+		LocalSide.BLUE -> "#5555FF"
 		LocalSide.RED -> "#FF5555"
 	}

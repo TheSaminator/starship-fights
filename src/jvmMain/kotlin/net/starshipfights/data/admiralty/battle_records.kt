@@ -33,7 +33,31 @@ data class BattleRecord(
 	
 	val winner: GlobalSide?,
 	val winMessage: String,
+	val was2v2: Boolean = false,
 ) : DataDocument<BattleRecord> {
+	fun getSide(admiral: Id<Admiral>) = when (admiral) {
+		hostAdmiral -> GlobalSide.HOST
+		guestAdmiral -> GlobalSide.GUEST
+		else -> null
+	}
+	
+	fun getUserSide(user: Id<User>) = when (user) {
+		hostUser -> GlobalSide.HOST
+		guestUser -> GlobalSide.GUEST
+		else -> null
+	}
+	
+	fun wasWinner(side: GlobalSide) = if (winner == null)
+		null
+	else if (was2v2)
+		winner == GlobalSide.HOST
+	else
+		winner == side
+	
+	fun didAdmiralWin(admiral: Id<Admiral>) = getSide(admiral)?.let { wasWinner(it) }
+	
+	fun didUserWin(user: Id<User>) = getUserSide(user)?.let { wasWinner(it) }
+	
 	companion object Table : DocumentTable<BattleRecord> by DocumentTable.create({
 		index(BattleRecord::hostUser)
 		index(BattleRecord::guestUser)

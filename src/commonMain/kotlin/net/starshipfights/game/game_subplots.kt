@@ -9,14 +9,14 @@ data class GameObjective(
 	val succeeded: Boolean?
 )
 
-fun GameState.objectives(forPlayer: GlobalSide): List<GameObjective> = listOf(
+fun GameState.objectives(forPlayer: GlobalShipController): List<GameObjective> = listOf(
 	GameObjective("Destroy or rout the enemy fleet", null)
 ) + subplots.filter { it.forPlayer == forPlayer }.mapNotNull { it.displayObjective(this) }
 
 @Serializable
 data class SubplotKey(
 	val type: SubplotType,
-	val player: GlobalSide,
+	val player: GlobalShipController,
 )
 
 val Subplot.key: SubplotKey
@@ -25,7 +25,7 @@ val Subplot.key: SubplotKey
 @Serializable
 sealed class Subplot {
 	abstract val type: SubplotType
-	abstract val forPlayer: GlobalSide
+	abstract val forPlayer: GlobalShipController
 	
 	override fun equals(other: Any?): Boolean {
 		return other is Subplot && other.key == key
@@ -44,7 +44,7 @@ sealed class Subplot {
 	protected fun GameState.modifySubplotData(newSubplot: Subplot) = copy(subplots = (subplots - this@Subplot) + newSubplot)
 	
 	@Serializable
-	class ExtendedDuty(override val forPlayer: GlobalSide) : Subplot() {
+	class ExtendedDuty(override val forPlayer: GlobalShipController) : Subplot() {
 		override val type: SubplotType
 			get() = SubplotType.EXTENDED_DUTY
 		
@@ -85,13 +85,13 @@ sealed class Subplot {
 	}
 	
 	@Serializable
-	class NoQuarter(override val forPlayer: GlobalSide) : Subplot() {
+	class NoQuarter(override val forPlayer: GlobalShipController) : Subplot() {
 		override val type: SubplotType
 			get() = SubplotType.NO_QUARTER
 		
 		override fun displayObjective(gameState: GameState): GameObjective {
-			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
-			val enemyWrecks = gameState.destroyedShips.values.filter { it.owner == forPlayer.other }
+			val enemyShips = gameState.ships.values.filter { it.owner.side == forPlayer.side.other }
+			val enemyWrecks = gameState.destroyedShips.values.filter { it.owner.side == forPlayer.side.other }
 			
 			val totalEnemyShipPointCount = enemyShips.sumOf { it.ship.pointCost } + enemyWrecks.sumOf { it.ship.pointCost }
 			val escapedShipPointCount = enemyWrecks.filter { it.isEscape }.sumOf { it.ship.pointCost }
@@ -112,8 +112,8 @@ sealed class Subplot {
 		override fun onGameStateChanged(gameState: GameState) = gameState
 		
 		override fun getFinalGameResult(gameState: GameState, winner: GlobalSide?): SubplotOutcome {
-			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
-			val enemyWrecks = gameState.destroyedShips.values.filter { it.owner == forPlayer.other }
+			val enemyShips = gameState.ships.values.filter { it.owner.side == forPlayer.side.other }
+			val enemyWrecks = gameState.destroyedShips.values.filter { it.owner.side == forPlayer.side.other }
 			
 			val totalEnemyShipPointCount = enemyShips.sumOf { it.ship.pointCost } + enemyWrecks.sumOf { it.ship.pointCost }
 			val destroyedShipPointCount = enemyWrecks.filter { !it.isEscape }.sumOf { it.ship.pointCost }
@@ -126,9 +126,9 @@ sealed class Subplot {
 	}
 	
 	@Serializable
-	class Vendetta private constructor(override val forPlayer: GlobalSide, private val againstShip: Id<ShipInstance>?, private val outcome: SubplotOutcome) : Subplot() {
-		constructor(forPlayer: GlobalSide) : this(forPlayer, null, SubplotOutcome.UNDECIDED)
-		constructor(forPlayer: GlobalSide, againstShip: Id<ShipInstance>) : this(forPlayer, againstShip, SubplotOutcome.UNDECIDED)
+	class Vendetta private constructor(override val forPlayer: GlobalShipController, private val againstShip: Id<ShipInstance>?, private val outcome: SubplotOutcome) : Subplot() {
+		constructor(forPlayer: GlobalShipController) : this(forPlayer, null, SubplotOutcome.UNDECIDED)
+		constructor(forPlayer: GlobalShipController, againstShip: Id<ShipInstance>) : this(forPlayer, againstShip, SubplotOutcome.UNDECIDED)
 		
 		override val type: SubplotType
 			get() = SubplotType.VENDETTA
@@ -141,7 +141,7 @@ sealed class Subplot {
 		override fun onAfterDeployShips(gameState: GameState): GameState {
 			if (gameState.ships[againstShip] != null) return gameState
 			
-			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
+			val enemyShips = gameState.ships.values.filter { it.owner.side == forPlayer.side.other }
 			val highestEnemyShipTier = enemyShips.maxOf { it.ship.shipType.weightClass.tier }
 			val enemyShipsOfHighestTier = enemyShips.filter { it.ship.shipType.weightClass.tier == highestEnemyShipTier }
 			
@@ -165,9 +165,9 @@ sealed class Subplot {
 	}
 	
 	@Serializable
-	class PlausibleDeniability private constructor(override val forPlayer: GlobalSide, private val againstShip: Id<ShipInstance>?, private val outcome: SubplotOutcome) : Subplot() {
-		constructor(forPlayer: GlobalSide) : this(forPlayer, null, SubplotOutcome.UNDECIDED)
-		constructor(forPlayer: GlobalSide, againstShip: Id<ShipInstance>) : this(forPlayer, againstShip, SubplotOutcome.UNDECIDED)
+	class PlausibleDeniability private constructor(override val forPlayer: GlobalShipController, private val againstShip: Id<ShipInstance>?, private val outcome: SubplotOutcome) : Subplot() {
+		constructor(forPlayer: GlobalShipController) : this(forPlayer, null, SubplotOutcome.UNDECIDED)
+		constructor(forPlayer: GlobalShipController, againstShip: Id<ShipInstance>) : this(forPlayer, againstShip, SubplotOutcome.UNDECIDED)
 		
 		override val type: SubplotType
 			get() = SubplotType.PLAUSIBLE_DENIABILITY
@@ -204,9 +204,9 @@ sealed class Subplot {
 	}
 	
 	@Serializable
-	class RecoverInformant private constructor(override val forPlayer: GlobalSide, private val onBoardShip: Id<ShipInstance>?, private val outcome: SubplotOutcome, private val mostRecentChatMessages: Moment?) : Subplot() {
-		constructor(forPlayer: GlobalSide) : this(forPlayer, null, SubplotOutcome.UNDECIDED, null)
-		constructor(forPlayer: GlobalSide, onBoardShip: Id<ShipInstance>) : this(forPlayer, onBoardShip, SubplotOutcome.UNDECIDED, null)
+	class RecoverInformant private constructor(override val forPlayer: GlobalShipController, private val onBoardShip: Id<ShipInstance>?, private val outcome: SubplotOutcome, private val mostRecentChatMessages: Moment?) : Subplot() {
+		constructor(forPlayer: GlobalShipController) : this(forPlayer, null, SubplotOutcome.UNDECIDED, null)
+		constructor(forPlayer: GlobalShipController, onBoardShip: Id<ShipInstance>) : this(forPlayer, onBoardShip, SubplotOutcome.UNDECIDED, null)
 		
 		override val type: SubplotType
 			get() = SubplotType.RECOVER_INFORMANT
@@ -219,7 +219,7 @@ sealed class Subplot {
 		override fun onAfterDeployShips(gameState: GameState): GameState {
 			if (gameState.ships[onBoardShip] != null) return gameState
 			
-			val enemyShips = gameState.ships.values.filter { it.owner == forPlayer.other }
+			val enemyShips = gameState.ships.values.filter { it.owner.side != forPlayer.side.other }
 			val lowestEnemyShipTier = enemyShips.minOf { it.ship.shipType.weightClass.tier }
 			val enemyShipsNotOfLowestTier = enemyShips.filter { it.ship.shipType.weightClass.tier != lowestEnemyShipTier }.ifEmpty { enemyShips }
 			
@@ -260,7 +260,7 @@ sealed class Subplot {
 	}
 }
 
-enum class SubplotType(val factory: (GlobalSide) -> Subplot) {
+enum class SubplotType(val factory: (GlobalShipController) -> Subplot) {
 	EXTENDED_DUTY(Subplot::ExtendedDuty),
 	NO_QUARTER(Subplot::NoQuarter),
 	VENDETTA(Subplot::Vendetta),
@@ -268,7 +268,7 @@ enum class SubplotType(val factory: (GlobalSide) -> Subplot) {
 	RECOVER_INFORMANT(Subplot::RecoverInformant),
 }
 
-fun generateSubplots(battleSize: BattleSize, forPlayer: GlobalSide): Set<Subplot> =
+fun generateSubplots(battleSize: BattleSize, forPlayer: GlobalShipController): Set<Subplot> =
 	(1..battleSize.numSubplotsPerPlayer).map {
 		SubplotType.values().random().factory(forPlayer)
 	}.toSet()
@@ -285,19 +285,19 @@ enum class SubplotOutcome {
 		}
 	
 	companion object {
-		fun fromBattleWinner(winner: GlobalSide?, subplotForPlayer: GlobalSide) = when (winner) {
-			subplotForPlayer -> WON
-			subplotForPlayer.other -> LOST
+		fun fromBattleWinner(winner: GlobalSide?, subplotForPlayer: GlobalShipController) = when (winner) {
+			subplotForPlayer.side -> WON
+			subplotForPlayer.side.other -> LOST
 			else -> UNDECIDED
 		}
 	}
 }
 
-fun victoryTitle(player: GlobalSide, winner: GlobalSide?, subplotOutcomes: Map<SubplotKey, SubplotOutcome>): String {
+fun victoryTitle(player: GlobalShipController, winner: GlobalSide?, subplotOutcomes: Map<SubplotKey, SubplotOutcome>): String {
 	val myOutcomes = subplotOutcomes.filterKeys { it.player == player }
 	
 	return when (winner) {
-		player -> {
+		player.side -> {
 			val isGlorious = myOutcomes.all { (_, outcome) -> outcome == SubplotOutcome.WON }
 			val isPyrrhic = myOutcomes.size >= 2 && myOutcomes.none { (_, outcome) -> outcome == SubplotOutcome.WON }
 			
@@ -308,7 +308,7 @@ fun victoryTitle(player: GlobalSide, winner: GlobalSide?, subplotOutcomes: Map<S
 			else
 				"Victory"
 		}
-		player.other -> {
+		player.side.other -> {
 			val isHeroic = myOutcomes.all { (_, outcome) -> outcome == SubplotOutcome.WON }
 			val isHumiliating = myOutcomes.size >= 2 && myOutcomes.none { (_, outcome) -> outcome == SubplotOutcome.WON }
 			

@@ -9,7 +9,7 @@ sealed class ChatEntry {
 	
 	@Serializable
 	data class PlayerMessage(
-		val senderSide: GlobalSide,
+		val senderSide: GlobalShipController,
 		override val sentAt: Moment,
 		val message: String
 	) : ChatEntry()

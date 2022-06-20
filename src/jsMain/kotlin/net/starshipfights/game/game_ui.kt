@@ -193,12 +193,14 @@ object GameUI {
 							+"The "
 							if (owner == LocalSide.RED)
 								+"enemy ship "
+							else if (owner == LocalSide.BLUE)
+								+"allied ship "
 							strong {
 								style = "color:${owner.htmlColor}"
 								+ship.fullName
 							}
 							+" has been sighted"
-							if (owner == LocalSide.GREEN)
+							if (owner != LocalSide.RED)
 								+" by the enemy"
 							+"!"
 						}
@@ -244,6 +246,7 @@ object GameUI {
 							+" damage from "
 							when (entry.attacker) {
 								is ShipAttacker.EnemyShip -> {
+									val attackerSide = state.getShipOwner(entry.attacker.id).relativeTo(mySide)
 									if (entry.weapon != null) {
 										+"the "
 										+when (entry.weapon) {
@@ -261,7 +264,7 @@ object GameUI {
 									}
 									+"the "
 									strong {
-										style = "color:${owner.other.htmlColor}"
+										style = "color:${attackerSide.htmlColor}"
 										+state.getShipInfo(entry.attacker.id).fullName
 									}
 								}
@@ -299,6 +302,7 @@ object GameUI {
 							+" has ignored an attack from "
 							when (entry.attacker) {
 								is ShipAttacker.EnemyShip -> {
+									val attackerSide = state.getShipOwner(entry.attacker.id).relativeTo(mySide)
 									if (entry.weapon != null) {
 										+"the "
 										+when (entry.weapon) {
@@ -316,7 +320,7 @@ object GameUI {
 									}
 									+"the "
 									strong {
-										style = "color:${owner.other.htmlColor}"
+										style = "color:${attackerSide.htmlColor}"
 										+state.getShipInfo(entry.attacker.id).fullName
 									}
 								}
@@ -340,6 +344,7 @@ object GameUI {
 						is ChatEntry.ShipBoarded -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
+							val attackerOwner = state.getShipOwner(entry.boarder).relativeTo(mySide)
 							+if (owner == LocalSide.RED)
 								"The enemy ship "
 							else
@@ -351,7 +356,7 @@ object GameUI {
 							
 							+" has been boarded by the "
 							strong {
-								style = "color:${owner.other.htmlColor}"
+								style = "color:${attackerOwner.htmlColor}"
 								+state.getShipInfo(entry.boarder).fullName
 							}
 							
@@ -378,9 +383,10 @@ object GameUI {
 							+" has been destroyed by "
 							when (entry.destroyedBy) {
 								is ShipAttacker.EnemyShip -> {
+									val attackerOwner = state.getShipOwner(entry.destroyedBy.id).relativeTo(mySide)
 									+"the "
 									strong {
-										style = "color:${owner.other.htmlColor}"
+										style = "color:${attackerOwner.htmlColor}"
 										+state.getShipInfo(entry.destroyedBy.id).fullName
 									}
 								}
@@ -459,12 +465,15 @@ object GameUI {
 				
 				if (state.phase.usesInitiative) {
 					br
-					+if (state.doneWithPhase == mySide)
+					+if (mySide in state.doneWithPhase)
 						"You have ended your phase"
-					else if (state.currentInitiative != mySide.other)
+					else if (state.currentInitiative == null || state.currentInitiative == mySide)
 						"You have the initiative!"
-					else "Your opponent has the initiative"
-				} else if (state.doneWithPhase == mySide) {
+					else if (state.currentInitiative?.side == mySide.side)
+						"Your ally has the initiative!"
+					else
+						"Your opponent has the initiative"
+				} else if (mySide in state.doneWithPhase) {
 					br
 					+"You have ended your phase"
 				}
@@ -563,14 +572,20 @@ object GameUI {
 						style = "width:100%;table-layout:fixed;background-color:#555;margin:0;margin-bottom:10px"
 						
 						tr {
+							val (activeHullColor, downHullColor) = when (ship.owner.relativeTo(mySide)) {
+								LocalSide.GREEN -> "#5F5" to "#262"
+								LocalSide.BLUE -> "#55F" to "#226"
+								LocalSide.RED -> "#F55" to "#622"
+							}
+							
 							repeat(activeHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#5F5" else "#F55"};height:15px;box-shadow:inset 0 0 0 3px #555"
+									style = "background-color:$activeHullColor;height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 							repeat(downHull) {
 								td {
-									style = "background-color:${if (ship.owner == mySide) "#262" else "#622"};height:15px;box-shadow:inset 0 0 0 3px #555"
+									style = "background-color:$downHullColor;height:15px;box-shadow:inset 0 0 0 3px #555"
 								}
 							}
 						}
@@ -598,7 +613,7 @@ object GameUI {
 					}
 					
 					if (ship.ship.reactor is StandardShipReactor) {
-						if (ship.owner == mySide) {
+						if (ship.owner.side == mySide.side) {
 							val totalWeapons = ship.powerMode.weapons
 							val activeWeapons = ship.weaponAmount
 							val downWeapons = totalWeapons - activeWeapons
@@ -630,13 +645,18 @@ object GameUI {
 				style = "margin:0;white-space:nowrap;text-align:center"
 				br
 				
-				val fighterSide = ship.owner.relativeTo(mySide)
-				val bomberSide = ship.owner.other.relativeTo(mySide)
+				val shipSide = ship.owner.relativeTo(mySide)
+				val (fighterSide, bomberSide) = when (shipSide) {
+					LocalSide.GREEN -> LocalSide.GREEN to LocalSide.RED
+					LocalSide.BLUE -> LocalSide.GREEN to LocalSide.RED
+					LocalSide.RED -> LocalSide.RED to LocalSide.GREEN
+				}
 				
 				if (ship.fighterWings.isNotEmpty()) {
 					span {
 						val (borderColor, fillColor) = when (fighterSide) {
 							LocalSide.GREEN -> "#5F5" to "#262"
+							LocalSide.BLUE -> "#5F5" to "#262"
 							LocalSide.RED -> "#F55" to "#622"
 						}
 						
@@ -660,6 +680,7 @@ object GameUI {
 					span {
 						val (borderColor, fillColor) = when (bomberSide) {
 							LocalSide.GREEN -> "#5F5" to "#262"
+							LocalSide.BLUE -> "#5F5" to "#262"
 							LocalSide.RED -> "#F55" to "#622"
 						}
 						
@@ -682,7 +703,7 @@ object GameUI {
 	
 	private fun TagConsumer<*>.drawDeployPhase(state: GameState, abilities: List<PlayerAbilityType>) {
 		val deployableShips = state.start.playerStart(mySide).deployableFleet
-		val remainingPoints = state.battleInfo.size.numPoints - state.ships.values.filter { it.owner == mySide }.sumOf { it.ship.pointCost }
+		val remainingPoints = state.getUsablePoints(mySide) - state.ships.values.filter { it.owner == mySide }.sumOf { it.ship.pointCost }
 		
 		div {
 			style = "height:19%;font-size:0.9em"

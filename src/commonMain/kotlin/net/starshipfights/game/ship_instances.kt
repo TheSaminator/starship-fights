@@ -9,7 +9,7 @@ import kotlin.math.sqrt
 @Serializable
 data class ShipInstance(
 	val ship: Ship,
-	val owner: GlobalSide,
+	val owner: GlobalShipController,
 	val position: ShipPosition,
 	
 	val isIdentified: Boolean = false,
@@ -113,7 +113,7 @@ data class ShipInstance(
 @Serializable
 data class ShipWreck(
 	val ship: Ship,
-	val owner: GlobalSide,
+	val owner: GlobalShipController,
 	val isEscape: Boolean = false,
 	val wreckedAt: Moment = Moment.now
 ) {
@@ -257,7 +257,7 @@ enum class ShipRenderMode {
 	FULL;
 }
 
-fun GameState.renderShipAs(ship: ShipInstance, forPlayer: GlobalSide) = if (ship.owner == forPlayer)
+fun GameState.renderShipAs(ship: ShipInstance, forPlayer: GlobalShipController) = if (ship.owner.side == forPlayer.side)
 	ShipRenderMode.FULL
 else if (phase == GamePhase.Deploy)
 	ShipRenderMode.NONE

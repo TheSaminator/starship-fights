@@ -606,9 +606,9 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon): PickRequest = when (w
 	)
 	else -> {
 		val targetSet = if ((weapon as? ShipWeapon.Hangar)?.wing == StrikeCraftWing.FIGHTERS)
-			setOf(owner)
+			setOf(owner.side)
 		else
-			setOf(owner.other)
+			setOf(owner.side.other)
 		
 		val weaponRangeMult = when (weapon) {
 			is ShipWeapon.Cannon -> firepower.rangeMultiplier
@@ -626,7 +626,7 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon): PickRequest = when (w
 				minDistance = weapon.minRange,
 				maxDistance = weapon.maxRange * weaponRangeMult,
 				firingArcs = weapon.firingArcs,
-				canSelfSelect = owner in targetSet
+				canSelfSelect = owner.side in targetSet
 			)
 		)
 	}

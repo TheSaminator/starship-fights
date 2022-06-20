@@ -89,10 +89,10 @@ private suspend fun enterGame(connectToken: String): Nothing {
 
 private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 	val playerLogin = Popup.getPlayerLogin(admirals)
-	val playerLoginSide = playerLogin.login.globalSide
+	val playerLoginSide = playerLogin.login
 	
-	if (playerLoginSide == null) {
-		val (battleInfo, enemyFaction) = playerLogin.login as LoginMode.Train
+	if (playerLoginSide is LoginMode.Train) {
+		val (battleInfo, enemyFaction) = playerLoginSide
 		enterTraining(playerLogin.admiral, battleInfo, enemyFaction)
 	}
 	
@@ -103,7 +103,7 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 			sendObject(PlayerLogin.serializer(), playerLogin)
 			
 			when (playerLoginSide) {
-				GlobalSide.HOST -> {
+				is LoginMode.Host1v1 -> {
 					var loadingText = "Awaiting join request..."
 					
 					do {
@@ -125,11 +125,11 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
 					enterGame(connectToken)
 				}
-				GlobalSide.GUEST -> {
+				is LoginMode.Join1v1 -> {
 					val listOfHosts = receiveObject(JoinListing.serializer()) { closeAndReturn { return@webSocket } }.openGames
 					
 					do {
-						val selectedHost = Popup.HostSelectScreen(listOfHosts).display() ?: closeAndReturn("Battle joining cancelled") { return@webSocket }
+						val selectedHost = Popup.Host1v1SelectScreen(listOfHosts).display() ?: closeAndReturn("Battle joining cancelled") { return@webSocket }
 						sendObject(JoinSelection.serializer(), JoinSelection(selectedHost))
 						
 						val joinAcceptance = Popup.CancellableLoadingScreen("Awaiting join response...") {
@@ -144,6 +144,51 @@ private suspend fun usePlayerLogin(admirals: List<InGameAdmiral>) {
 					
 					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
 					enterGame(connectToken)
+				}
+				is LoginMode.Host2v1 -> {
+					var loadingText = "Awaiting join request..."
+					
+					do {
+						val joinRequest = Popup.CancellableLoadingScreen(loadingText) {
+							receiveObject(JoinRequest.serializer()) { closeAndReturn { return@CancellableLoadingScreen null } }
+						}.display() ?: closeAndReturn("Battle hosting cancelled") { return@webSocket }
+						
+						val joinAcceptance = Popup.GuestRequestScreen(admiral, joinRequest.joiner).display() ?: closeAndReturn("Battle hosting cancelled") { return@webSocket }
+						sendObject(JoinResponse.serializer(), JoinResponse(joinAcceptance))
+						
+						val joinConnected = joinAcceptance && receiveObject(JoinResponseResponse.serializer()) { closeAndReturn { return@webSocket } }.connected
+						
+						loadingText = if (joinAcceptance)
+							"${joinRequest.joiner.name} cancelled join. Awaiting join request..."
+						else
+							"Awaiting join request..."
+					} while (!joinConnected)
+					
+					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
+					enterGame(connectToken)
+				}
+				is LoginMode.Join2v1 -> {
+					val listOfHosts = receiveObject(JoinListing.serializer()) { closeAndReturn { return@webSocket } }.openGames
+					
+					do {
+						val selectedHost = Popup.Host2v1SelectScreen(listOfHosts).display() ?: closeAndReturn("Battle joining cancelled") { return@webSocket }
+						sendObject(JoinSelection.serializer(), JoinSelection(selectedHost))
+						
+						val joinAcceptance = Popup.CancellableLoadingScreen("Awaiting join response...") {
+							receiveObject(JoinResponse.serializer()) { closeAndReturn { return@CancellableLoadingScreen null } }.accepted
+						}.display() ?: closeAndReturn("Battle joining cancelled") { return@webSocket }
+						
+						if (!joinAcceptance) {
+							val hostInfo = listOfHosts.getValue(selectedHost).admiral
+							Popup.JoinRejectedScreen(hostInfo).display()
+						}
+					} while (!joinAcceptance)
+					
+					val connectToken = receiveObject(GameReady.serializer()) { closeAndReturn { return@webSocket } }.connectToken
+					enterGame(connectToken)
+				}
+				else -> {
+					closeAndReturn { return@webSocket }
 				}
 			}
 		}

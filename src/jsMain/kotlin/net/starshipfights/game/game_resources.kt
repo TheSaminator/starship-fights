@@ -39,6 +39,7 @@ object RenderResources {
 		private set
 	
 	private const val friendlyMarkerUrl = "friendly-marker"
+	private const val neutralMarkerUrl = "neutral-marker"
 	private const val hostileMarkerUrl = "hostile-marker"
 	
 	lateinit var markerFactory: CustomRenderFactory<LocalSide>
@@ -156,11 +157,16 @@ object RenderResources {
 			
 			launch {
 				val friendlyMarkerPromise = async { loadTexture(friendlyMarkerUrl) }
+				val neutralMarkerPromise = async { loadTexture(neutralMarkerUrl) }
 				val hostileMarkerPromise = async { loadTexture(hostileMarkerUrl) }
 				
 				val friendlyMarkerTexture = friendlyMarkerPromise.await()
 				friendlyMarkerTexture.minFilter = LinearFilter
 				friendlyMarkerTexture.magFilter = LinearFilter
+				
+				val neutralMarkerTexture = neutralMarkerPromise.await()
+				neutralMarkerTexture.minFilter = LinearFilter
+				neutralMarkerTexture.magFilter = LinearFilter
 				
 				val hostileMarkerTexture = hostileMarkerPromise.await()
 				hostileMarkerTexture.minFilter = LinearFilter
@@ -168,6 +174,12 @@ object RenderResources {
 				
 				val friendlyMarkerMaterial = MeshBasicMaterial(configure {
 					map = friendlyMarkerTexture
+					alphaTest = 0.5
+					side = DoubleSide
+				})
+				
+				val neutralMarkerMaterial = MeshBasicMaterial(configure {
+					map = neutralMarkerTexture
 					alphaTest = 0.5
 					side = DoubleSide
 				})
@@ -181,14 +193,17 @@ object RenderResources {
 				val plane = PlaneGeometry(4, 4)
 				
 				val friendlyMarkerMesh = Mesh(plane, friendlyMarkerMaterial)
+				val neutralMarkerMesh = Mesh(plane, neutralMarkerMaterial)
 				val hostileMarkerMesh = Mesh(plane, hostileMarkerMaterial)
 				
 				friendlyMarkerMesh.rotateX(PI / 2)
+				neutralMarkerMesh.rotateX(PI / 2)
 				hostileMarkerMesh.rotateX(PI / 2)
 				
 				markerFactory = CustomRenderFactory { side ->
 					when (side) {
 						LocalSide.GREEN -> friendlyMarkerMesh
+						LocalSide.BLUE -> neutralMarkerMesh
 						LocalSide.RED -> hostileMarkerMesh
 					}.clone(true)
 				}
@@ -238,12 +253,19 @@ object RenderResources {
 						uniforms["outlineColor"]!!.value = Color(LocalSide.GREEN.htmlColor)
 					}
 					
+					val blueOutlineMaterial = outlineMaterial.clone().unsafeCast<ShaderMaterial>().apply {
+						uniforms["outlineColor"]!!.value = Color(LocalSide.BLUE.htmlColor)
+					}
+					
 					val redOutlineMaterial = outlineMaterial.clone().unsafeCast<ShaderMaterial>().apply {
 						uniforms["outlineColor"]!!.value = Color(LocalSide.RED.htmlColor)
 					}
 					
 					val outlineGreen = mesh.clone(true).unsafeCast<Mesh>()
 					outlineGreen.material = greenOutlineMaterial
+					
+					val outlineBlue = mesh.clone(true).unsafeCast<Mesh>()
+					outlineBlue.material = blueOutlineMaterial
 					
 					val outlineRed = mesh.clone(true).unsafeCast<Mesh>()
 					outlineRed.material = redOutlineMaterial
@@ -263,6 +285,7 @@ object RenderResources {
 							},
 							when (side) {
 								LocalSide.GREEN -> outlineGreen
+								LocalSide.BLUE -> outlineBlue
 								LocalSide.RED -> outlineRed
 							}.clone(true).unsafeCast<Mesh>()
 						).group

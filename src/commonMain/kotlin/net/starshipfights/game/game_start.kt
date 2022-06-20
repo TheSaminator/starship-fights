@@ -8,13 +8,13 @@ data class GameStart(
 	val battlefieldWidth: Double,
 	val battlefieldLength: Double,
 	
-	val hostStart: PlayerStart,
-	val guestStart: PlayerStart
+	val hostStarts: Map<String, PlayerStart>,
+	val guestStarts: Map<String, PlayerStart>
 )
 
-fun GameStart.playerStart(side: GlobalSide) = when (side) {
-	GlobalSide.HOST -> hostStart
-	GlobalSide.GUEST -> guestStart
+fun GameStart.playerStart(side: GlobalShipController) = when (side.side) {
+	GlobalSide.HOST -> hostStarts.getValue(side.disambiguation)
+	GlobalSide.GUEST -> guestStarts.getValue(side.disambiguation)
 }
 
 @Serializable
@@ -25,5 +25,6 @@ data class PlayerStart(
 	val deployZone: PickBoundary.Rectangle,
 	val deployFacing: Double,
 	
-	val deployableFleet: Map<Id<Ship>, Ship>
+	val deployableFleet: Map<Id<Ship>, Ship>,
+	val deployPointsFactor: Double = 1.0,
 )

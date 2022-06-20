@@ -76,24 +76,52 @@ sealed class TrainingOpponent {
 
 @Serializable
 sealed class LoginMode {
-	abstract val globalSide: GlobalSide?
+	abstract val mySide: GlobalShipController?
+	abstract val otherPlayerSide: GlobalShipController?
 	
 	@Serializable
 	data class Train(val battleInfo: BattleInfo, val enemyFaction: TrainingOpponent) : LoginMode() {
-		override val globalSide: GlobalSide?
+		override val mySide: GlobalShipController?
+			get() = null
+		
+		override val otherPlayerSide: GlobalShipController?
 			get() = null
 	}
 	
 	@Serializable
-	data class Host(val battleInfo: BattleInfo) : LoginMode() {
-		override val globalSide: GlobalSide
-			get() = GlobalSide.HOST
+	data class Host1v1(val battleInfo: BattleInfo) : LoginMode() {
+		override val mySide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+		
+		override val otherPlayerSide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.GUEST, GlobalShipController.Player1Disambiguation)
 	}
 	
 	@Serializable
-	object Join : LoginMode() {
-		override val globalSide: GlobalSide
-			get() = GlobalSide.GUEST
+	object Join1v1 : LoginMode() {
+		override val mySide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.GUEST, GlobalShipController.Player1Disambiguation)
+		
+		override val otherPlayerSide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+	}
+	
+	@Serializable
+	data class Host2v1(val battleInfo: BattleInfo, val enemyFaction: TrainingOpponent) : LoginMode() {
+		override val mySide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+		
+		override val otherPlayerSide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation)
+	}
+	
+	@Serializable
+	object Join2v1 : LoginMode() {
+		override val mySide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation)
+		
+		override val otherPlayerSide: GlobalShipController
+			get() = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
 	}
 }
 
@@ -126,6 +154,7 @@ data class JoinListing(
 data class Joinable(
 	val admiral: InGameAdmiral,
 	val battleInfo: BattleInfo,
+	val enemyFaction: Faction?,
 )
 
 @Serializable

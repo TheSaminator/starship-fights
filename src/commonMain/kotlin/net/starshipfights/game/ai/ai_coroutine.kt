@@ -10,17 +10,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import net.starshipfights.game.GameEvent
 import net.starshipfights.game.GameState
-import net.starshipfights.game.GlobalSide
+import net.starshipfights.game.GlobalShipController
 import net.starshipfights.game.PlayerAction
 
 data class AISession(
-	val mySide: GlobalSide,
+	val mySide: GlobalShipController,
 	val actions: SendChannel<PlayerAction>,
 	val events: ReceiveChannel<GameEvent>,
 	val instincts: Instincts = Instincts(),
 )
 
-suspend fun aiPlayer(session: AISession, initialState: GameState) = coroutineScope {
+suspend fun aiPlayer(session: AISession, initialState: GameState): Unit = coroutineScope {
 	val gameDone = Job()
 	
 	val errors = Channel<String>()

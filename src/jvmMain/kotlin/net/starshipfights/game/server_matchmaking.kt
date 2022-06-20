@@ -10,16 +10,29 @@ import kotlinx.coroutines.launch
 import net.starshipfights.data.admiralty.getInGameAdmiral
 import net.starshipfights.data.auth.User
 
-private val openSessions = ConcurrentCurator(mutableListOf<HostInvitation>())
+private val open1v1Sessions = ConcurrentCurator(mutableListOf<Host1v1Invitation>())
 
-class HostInvitation(admiral: InGameAdmiral, battleInfo: BattleInfo) {
-	val joinable = Joinable(admiral, battleInfo)
-	val joinInvitations = Channel<JoinInvitation>()
+class Host1v1Invitation(admiral: InGameAdmiral, battleInfo: BattleInfo) {
+	val joinable = Joinable(admiral, battleInfo, null)
+	val joinInvitations = Channel<Join1v1Invitation>()
 	
 	val gameIdHandler = CompletableDeferred<String>()
 }
 
-class JoinInvitation(val joinRequest: JoinRequest, val responseHandler: CompletableDeferred<JoinResponse>) {
+class Join1v1Invitation(val joinRequest: JoinRequest, val responseHandler: CompletableDeferred<JoinResponse>) {
+	val gameIdHandler = CompletableDeferred<String>()
+}
+
+private val open2v1Sessions = ConcurrentCurator(mutableListOf<Host2v1Invitation>())
+
+class Host2v1Invitation(admiral: InGameAdmiral, battleInfo: BattleInfo, opponent: TrainingOpponent) {
+	val joinable = Joinable(admiral, battleInfo, opponent.faction)
+	val joinInvitations = Channel<Join2v1Invitation>()
+	
+	val gameIdHandler = CompletableDeferred<String>()
+}
+
+class Join2v1Invitation(val joinRequest: JoinRequest, val responseHandler: CompletableDeferred<JoinResponse>) {
 	val gameIdHandler = CompletableDeferred<String>()
 }
 
@@ -33,18 +46,18 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 		is LoginMode.Train -> {
 			closeAndReturn("Invalid input: LoginMode.Train should redirect you directly to training endpoint") { return false }
 		}
-		is LoginMode.Host -> {
+		is LoginMode.Host1v1 -> {
 			val battleInfo = loginMode.battleInfo
-			val hostInvitation = HostInvitation(inGameAdmiral, battleInfo)
+			val hostInvitation = Host1v1Invitation(inGameAdmiral, battleInfo)
 			
-			openSessions.use { it.add(hostInvitation) }
+			open1v1Sessions.use { it.add(hostInvitation) }
 			
 			closeReason.invokeOnCompletion {
 				hostInvitation.joinInvitations.close()
 				
 				@OptIn(DelicateCoroutinesApi::class)
 				GlobalScope.launch {
-					openSessions.use {
+					open1v1Sessions.use {
 						it.remove(hostInvitation)
 					}
 				}
@@ -70,7 +83,7 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				if (joinResponse.accepted) {
 					sendObject(JoinResponseResponse.serializer(), JoinResponseResponse(true))
 					
-					val (hostId, joinId) = GameManager.initGame(inGameAdmiral, joinInvitation.joinRequest.joiner, loginMode.battleInfo)
+					val (hostId, joinId) = GameManager.init1v1Game(inGameAdmiral, joinInvitation.joinRequest.joiner, loginMode.battleInfo)
 					hostInvitation.gameIdHandler.complete(hostId)
 					joinInvitation.gameIdHandler.complete(joinId)
 					
@@ -81,11 +94,11 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 			val gameId = hostInvitation.gameIdHandler.await()
 			sendObject(GameReady.serializer(), GameReady(gameId))
 		}
-		LoginMode.Join -> {
+		LoginMode.Join1v1 -> {
 			val joinRequest = JoinRequest(inGameAdmiral)
 			
 			while (true) {
-				val openGames = openSessions.use {
+				val openGames = open1v1Sessions.use {
 					it.toList()
 				}.filter { sess ->
 					sess.joinable.battleInfo.size <= inGameAdmiral.rank.maxBattleSize
@@ -98,7 +111,97 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				val hostInvitation = openGames.getValue(joinSelection.selectedId)
 				
 				val joinResponseHandler = CompletableDeferred<JoinResponse>()
-				val joinInvitation = JoinInvitation(joinRequest, joinResponseHandler)
+				val joinInvitation = Join1v1Invitation(joinRequest, joinResponseHandler)
+				closeReason.invokeOnCompletion {
+					joinResponseHandler.cancel()
+				}
+				
+				try {
+					hostInvitation.joinInvitations.send(joinInvitation)
+				} catch (ex: ClosedSendChannelException) {
+					sendObject(JoinResponse.serializer(), JoinResponse(false))
+					continue
+				}
+				
+				val joinResponse = joinResponseHandler.await()
+				sendObject(JoinResponse.serializer(), joinResponse)
+				
+				if (joinResponse.accepted) {
+					val gameId = joinInvitation.gameIdHandler.await()
+					sendObject(GameReady.serializer(), GameReady(gameId))
+					break
+				}
+			}
+		}
+		is LoginMode.Host2v1 -> {
+			val battleInfo = loginMode.battleInfo
+			val hostInvitation = Host2v1Invitation(inGameAdmiral, battleInfo, loginMode.enemyFaction)
+			
+			open2v1Sessions.use { it.add(hostInvitation) }
+			
+			closeReason.invokeOnCompletion {
+				hostInvitation.joinInvitations.close()
+				
+				@OptIn(DelicateCoroutinesApi::class)
+				GlobalScope.launch {
+					open2v1Sessions.use {
+						it.remove(hostInvitation)
+					}
+				}
+			}
+			
+			for (joinInvitation in hostInvitation.joinInvitations) {
+				sendObject(JoinRequest.serializer(), joinInvitation.joinRequest)
+				val joinResponse = receiveObject(JoinResponse.serializer()) {
+					closeAndReturn {
+						joinInvitation.responseHandler.complete(JoinResponse(false))
+						return false
+					}
+				}
+				
+				if (joinInvitation.responseHandler.isCancelled) {
+					if (joinResponse.accepted)
+						sendObject(JoinResponseResponse.serializer(), JoinResponseResponse(false))
+					continue
+				}
+				
+				joinInvitation.responseHandler.complete(joinResponse)
+				
+				if (joinResponse.accepted) {
+					sendObject(JoinResponseResponse.serializer(), JoinResponseResponse(true))
+					
+					val enemyFaction = loginMode.enemyFaction.faction ?: Faction.values().random()
+					val enemyFlavor = loginMode.enemyFaction.flavor ?: FactionFlavor.optionsForAiEnemy(enemyFaction).random()
+					
+					val (hostId, joinId) = GameManager.init2v1Game(inGameAdmiral, joinInvitation.joinRequest.joiner, enemyFaction, enemyFlavor, loginMode.battleInfo)
+					hostInvitation.gameIdHandler.complete(hostId)
+					joinInvitation.gameIdHandler.complete(joinId)
+					
+					break
+				}
+			}
+			
+			val gameId = hostInvitation.gameIdHandler.await()
+			sendObject(GameReady.serializer(), GameReady(gameId))
+		}
+		LoginMode.Join2v1 -> {
+			val joinRequest = JoinRequest(inGameAdmiral)
+			
+			while (true) {
+				val openGames = open2v1Sessions.use {
+					it.toList()
+				}.filter { sess ->
+					sess.joinable.battleInfo.size <= inGameAdmiral.rank.maxBattleSize
+				}.mapIndexed { i, host -> "$i" to host }.toMap()
+				
+				val joinListing = JoinListing(openGames.mapValues { (_, invitation) -> invitation.joinable })
+				sendObject(JoinListing.serializer(), joinListing)
+				
+				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return false } }
+				val hostInvitation = openGames.getValue(joinSelection.selectedId)
+				
+				val joinResponseHandler = CompletableDeferred<JoinResponse>()
+				val joinInvitation = Join2v1Invitation(joinRequest, joinResponseHandler)
 				closeReason.invokeOnCompletion {
 					joinResponseHandler.cancel()
 				}

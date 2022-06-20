@@ -1,30 +1,10 @@
 package net.starshipfights.game
 
-import kotlinx.serialization.Serializable
 import net.starshipfights.data.Id
 
-@Serializable
-data class InitiativePair(
-	val hostSide: Double,
-	val guestSide: Double
-) {
-	constructor(map: Map<GlobalSide, Double>) : this(
-		map[GlobalSide.HOST] ?: 0.0,
-		map[GlobalSide.GUEST] ?: 0.0,
-	)
-	
-	operator fun get(side: GlobalSide) = when (side) {
-		GlobalSide.HOST -> hostSide
-		GlobalSide.GUEST -> guestSide
-	}
-	
-	fun copy(map: Map<GlobalSide, Double>) = copy(
-		hostSide = map[GlobalSide.HOST] ?: hostSide,
-		guestSide = map[GlobalSide.GUEST] ?: guestSide,
-	)
-}
+typealias InitiativeMap = Map<GlobalShipController, Double>
 
-fun GameState.calculateMovePhaseInitiative(): InitiativePair = InitiativePair(
+fun GameState.calculateMovePhaseInitiative(): InitiativeMap =
 	ships
 		.values
 		.groupBy { it.owner }
@@ -33,7 +13,6 @@ fun GameState.calculateMovePhaseInitiative(): InitiativePair = InitiativePair(
 				.filter { !it.isDoneCurrentPhase }
 				.sumOf { it.ship.pointCost * it.movementCoefficient }
 		}
-)
 
 fun GameState.getValidAttackersWith(target: ShipInstance): Map<Id<ShipInstance>, Set<Id<ShipWeapon>>> {
 	return ships.mapValues { (_, ship) -> isValidAttackerWith(ship, target) }
@@ -50,9 +29,9 @@ fun GameState.isValidTarget(ship: ShipInstance, weapon: ShipWeaponInstance, pick
 	
 	return when (val weaponSpec = weapon.weapon) {
 		is AreaWeapon ->
-			target.owner != ship.owner && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length < weaponSpec.areaRadius
+			target.owner.side != ship.owner.side && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length < weaponSpec.areaRadius
 		else ->
-			target.owner in (pickRequest.type as PickType.Ship).allowSides && isValidPick(pickRequest, PickResponse.Ship(target.id))
+			target.owner.side in (pickRequest.type as PickType.Ship).allowSides && isValidPick(pickRequest, PickResponse.Ship(target.id))
 	}
 }
 
@@ -69,7 +48,7 @@ fun GameState.getValidTargets(ship: ShipInstance, weapon: ShipWeaponInstance): L
 	return aggregateValidTargets(ship, weapon) { filter(it) }
 }
 
-fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
+fun GameState.calculateAttackPhaseInitiative(): InitiativeMap =
 	ships
 		.values
 		.groupBy { it.owner }
@@ -87,26 +66,22 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativePair = InitiativePair(
 					ship.ship.pointCost * (usableWeaponShots.toDouble() / allWeaponShots)
 				}
 		}
-)
 
-fun GameState.withRecalculatedInitiative(initiativePairAccessor: GameState.() -> InitiativePair): GameState {
-	val initiativePair = initiativePairAccessor()
+
+fun GameState.withRecalculatedInitiative(initiativeMapAccessor: GameState.() -> InitiativeMap): GameState {
+	val initiativePair = initiativeMapAccessor()
 	
 	return copy(
-		calculatedInitiative = when {
-			initiativePair.hostSide > initiativePair.guestSide -> GlobalSide.HOST
-			initiativePair.hostSide < initiativePair.guestSide -> GlobalSide.GUEST
-			else -> calculatedInitiative?.other
-		}
+		calculatedInitiative = (initiativePair - doneWithPhase).maxByOrNull { (_, it) -> it }?.key
 	)
 }
 
 fun GameState.canShipMove(ship: Id<ShipInstance>): Boolean {
 	val shipInstance = ships[ship] ?: return false
-	return currentInitiative != shipInstance.owner.other
+	return currentInitiative == shipInstance.owner
 }
 
 fun GameState.canShipAttack(ship: Id<ShipInstance>): Boolean {
 	val shipInstance = ships[ship] ?: return false
-	return currentInitiative != shipInstance.owner.other
+	return currentInitiative == shipInstance.owner
 }

@@ -18,6 +18,32 @@
     * Felinae Felices (Masra Draetsen, Vestigium)
     * Isarnareykk (Mechyrdia, Masra Draetsen)
 
+### Characters
+
+The player of the campaign plays as their own admiral character.
+
+#### Mission givers
+
+These characters give missions to the player
+
+* Mechyrdia: Admiral of the Empire Lucius Valerius Maximus, Chancellor Marc Adlerovich Basileiov
+* Masra Draetsen: Envoy Apolluon, Ogus Khan
+* Vestigium: President Alexander Mack
+* NdRC: CEO Lukas van Jastoval
+* Felinae Felices: *Maxima* Lucia Iunia Drusilla, (replaced as Maxima by) Tanaquil Cassia Pulchra
+* Isarnareykk: *Haukmarscal* Demeter Ursalia
+
+#### Lieutenants
+
+These characters advise and hype up the player character
+
+* Mechyrdia: (Captain) Tiberius Kirche
+* Masra Draetsen: (Khod) Uqqans Arrhya
+* Vestigium: (Lieutenant) Joseph Quenn
+* NdRC: (Luitenant) Joris Tijkon
+* Felinae Felices: (Feles Lupata) Gaia Fulvia Agrippina
+* Isarnareykk: (Kapitaen) Ulari Sathalan
+
 ## Plots
 
 ### Mechyrdian campaign
@@ -99,9 +125,9 @@ Destroy the Presidential Moon Base in the Corvus Cluster
 
 Go east and defeat the resurgent Ilkhan Commune, restoring the liberal Ilkhan Republic
 
-##### *The Midnight Iron Sky*
+##### *Midnight of the Iron Sky*
 
-Defeat the Neuia Fulkreykk rebellion in Theudareykk, causing Isarnareykk to enter into negotiations with to Mechyrdia
+Defeat Captain Ulari Sathalan, leader of the Neuia Fulkreykk rebellion in Theudareykk, causing Isarnareykk to enter into negotiations with to Mechyrdia
 
 ##### *Panzerfaustian Bargain* - Isarnareyksk ending #1
 

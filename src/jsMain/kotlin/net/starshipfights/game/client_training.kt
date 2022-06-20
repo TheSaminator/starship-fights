@@ -16,24 +16,23 @@ class GameSession(gameState: GameState) {
 	
 	val state = stateMutable.asStateFlow()
 	
-	private val hostErrorMessages = Channel<String>(Channel.UNLIMITED)
-	private val guestErrorMessages = Channel<String>(Channel.UNLIMITED)
+	private val errorMessageChannels = mutableMapOf<GlobalShipController, Channel<String>>()
 	
-	private fun errorMessageChannel(player: GlobalSide) = when (player) {
-		GlobalSide.HOST -> hostErrorMessages
-		GlobalSide.GUEST -> guestErrorMessages
-	}
+	private fun errorMessageChannel(player: GlobalShipController) =
+		errorMessageChannels[player] ?: Channel<String>(Channel.UNLIMITED).also {
+			errorMessageChannels[player] = it
+		}
 	
-	fun errorMessages(player: GlobalSide): ReceiveChannel<String> = when (player) {
-		GlobalSide.HOST -> hostErrorMessages
-		GlobalSide.GUEST -> guestErrorMessages
-	}
+	fun errorMessages(player: GlobalShipController): ReceiveChannel<String> =
+		errorMessageChannels[player] ?: Channel<String>(Channel.UNLIMITED).also {
+			errorMessageChannels[player] = it
+		}
 	
 	private val gameEndMutable = CompletableDeferred<GameEvent.GameEnd>()
 	val gameEnd: Deferred<GameEvent.GameEnd>
 		get() = gameEndMutable
 	
-	suspend fun onPacket(player: GlobalSide, packet: PlayerAction) {
+	suspend fun onPacket(player: GlobalShipController, packet: PlayerAction) {
 		stateMutex.withLock {
 			when (val result = state.value.after(player, packet)) {
 				is GameEvent.StateChange -> {
@@ -54,7 +53,7 @@ class GameSession(gameState: GameState) {
 private suspend fun GameNetworkInteraction.execute(): GameEvent.GameEnd {
 	val gameSession = GameSession(gameState.value)
 	
-	val aiSide = mySide.other
+	val aiSide = GlobalShipController(mySide.side.other, GlobalShipController.Player1Disambiguation)
 	val aiActions = Channel<PlayerAction>()
 	val aiEvents = Channel<GameEvent>()
 	val aiSession = AISession(aiSide, aiActions, aiEvents)
@@ -122,7 +121,7 @@ suspend fun trainingMain(state: GameState) {
 	
 	initializePicking()
 	
-	mySide = GlobalSide.HOST
+	mySide = GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
 	
 	val gameState = MutableStateFlow(state)
 	val playerActions = Channel<PlayerAction>(Channel.UNLIMITED)

@@ -16,19 +16,19 @@ sealed interface CombatAbility {
 
 @Serializable
 sealed class PlayerAbilityType {
-	abstract suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData?
-	abstract fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent
+	abstract suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData?
+	abstract fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent
 	
 	@Serializable
 	data class DonePhase(val phase: GamePhase) : PlayerAbilityType() {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase != phase) return null
 			return if (gameState.canFinishPhase(playerSide))
 				PlayerAbilityData.DonePhase
 			else null
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			return if (phase == gameState.phase) {
 				if (gameState.canFinishPhase(playerSide))
 					GameEvent.StateChange(gameState.afterPlayerReady(playerSide))
@@ -39,9 +39,9 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class DeployShip(val ship: Id<Ship>) : PlayerAbilityType() {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase != GamePhase.Deploy) return null
-			if (gameState.doneWithPhase == playerSide) return null
+			if (playerSide in gameState.doneWithPhase) return null
 			val pickBoundary = gameState.start.playerStart(playerSide).deployZone
 			
 			val playerStart = gameState.start.playerStart(playerSide)
@@ -53,7 +53,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.DeployShip(shipPosition)
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.DeployShip) return GameEvent.InvalidAction("Internal error from using player ability")
 			val playerStart = gameState.start.playerStart(playerSide)
 			val shipData = playerStart.deployableFleet[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -73,7 +73,7 @@ sealed class PlayerAbilityType {
 			
 			val newShipSet = gameState.ships + mapOf(shipInstance.id to shipInstance)
 			
-			if (newShipSet.values.filter { it.owner == playerSide }.sumOf { it.ship.pointCost } > gameState.battleInfo.size.numPoints)
+			if (newShipSet.values.filter { it.owner == playerSide }.sumOf { it.ship.pointCost } > gameState.getUsablePoints(playerSide))
 				return GameEvent.InvalidAction("Not enough points to deploy this ship")
 			
 			val deployableShips = playerStart.deployableFleet - ship
@@ -82,9 +82,9 @@ sealed class PlayerAbilityType {
 			return GameEvent.StateChange(
 				with(gameState) {
 					copy(
-						start = when (playerSide) {
-							GlobalSide.HOST -> start.copy(hostStart = newPlayerStart)
-							GlobalSide.GUEST -> start.copy(guestStart = newPlayerStart)
+						start = when (playerSide.side) {
+							GlobalSide.HOST -> start.copy(hostStarts = start.hostStarts + mapOf(playerSide.disambiguation to newPlayerStart))
+							GlobalSide.GUEST -> start.copy(guestStarts = start.guestStarts + mapOf(playerSide.disambiguation to newPlayerStart))
 						},
 						ships = newShipSet
 					)
@@ -95,11 +95,11 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class UndeployShip(val ship: Id<ShipInstance>) : PlayerAbilityType() {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
-			return if (gameState.phase == GamePhase.Deploy && gameState.doneWithPhase != playerSide) PlayerAbilityData.UndeployShip else null
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+			return if (gameState.phase == GamePhase.Deploy && playerSide !in gameState.doneWithPhase) PlayerAbilityData.UndeployShip else null
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship is not deployed")
 			val shipData = shipInstance.ship
 			
@@ -113,9 +113,9 @@ sealed class PlayerAbilityType {
 			return GameEvent.StateChange(
 				with(gameState) {
 					copy(
-						start = when (playerSide) {
-							GlobalSide.HOST -> start.copy(hostStart = newPlayerStart)
-							GlobalSide.GUEST -> start.copy(guestStart = newPlayerStart)
+						start = when (playerSide.side) {
+							GlobalSide.HOST -> start.copy(hostStarts = start.hostStarts + mapOf(playerSide.disambiguation to newPlayerStart))
+							GlobalSide.GUEST -> start.copy(guestStarts = start.guestStarts + mapOf(playerSide.disambiguation to newPlayerStart))
 						},
 						ships = newShipSet
 					)
@@ -126,7 +126,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class DistributePower(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Power) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -138,7 +138,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.DistributePower(data)
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.DistributePower) return GameEvent.InvalidAction("Internal error from using player ability")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -166,7 +166,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class ConfigurePower(override val ship: Id<ShipInstance>, val powerMode: FelinaeShipPowerMode) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Power) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -175,7 +175,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.ConfigurePower
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
 			if (shipInstance.ship.reactor != FelinaeShipReactor) return GameEvent.InvalidAction("Invalid ship reactor type")
 			
@@ -192,7 +192,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class MoveShip(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Move) return null
 			if (!gameState.canShipMove(ship)) return null
 			
@@ -231,7 +231,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.MoveShip(newPosition)
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.MoveShip) return GameEvent.InvalidAction("Internal error from using player ability")
 			if (!gameState.canShipMove(ship)) return GameEvent.InvalidAction("You do not have the initiative")
 			
@@ -309,7 +309,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class UseInertialessDrive(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Move) return null
 			if (!gameState.canShipMove(ship)) return null
 			
@@ -332,7 +332,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.UseInertialessDrive(positionPickRes.position)
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.UseInertialessDrive) return GameEvent.InvalidAction("Internal error from using player ability")
 			if (!gameState.canShipMove(ship)) return GameEvent.InvalidAction("You do not have the initiative")
 			
@@ -410,7 +410,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class ChargeLance(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -423,7 +423,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.ChargeLance
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only charge lances during Phase III")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -450,7 +450,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class UseWeapon(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -463,7 +463,7 @@ sealed class PlayerAbilityType {
 			return pickResponse?.let { PlayerAbilityData.UseWeapon(it) }
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.UseWeapon) return GameEvent.InvalidAction("Internal error from using player ability")
 			
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only attack during Phase III")
@@ -484,7 +484,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class RecallStrikeCraft(override val ship: Id<ShipInstance>, override val weapon: Id<ShipWeapon>) : PlayerAbilityType(), CombatAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -496,7 +496,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.RecallStrikeCraft
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only recall strike craft during Phase III")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -526,7 +526,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class DisruptionPulse(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -536,7 +536,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.DisruptionPulse
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only emit Disruption Pulses during Phase III")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -581,7 +581,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class BoardingParty(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Attack) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -591,7 +591,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.BoardingParty(pickResponse.id)
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (data !is PlayerAbilityData.BoardingParty) return GameEvent.InvalidAction("Internal error from using player ability")
 			
 			if (gameState.phase !is GamePhase.Attack) return GameEvent.InvalidAction("Ships can only send Boarding Parties during Phase III")
@@ -626,7 +626,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class RepairShipModule(override val ship: Id<ShipInstance>, val module: ShipModule) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -637,7 +637,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.RepairShipModule
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only repair modules during Phase IV")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -662,7 +662,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class ExtinguishFire(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -673,7 +673,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.ExtinguishFire
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -698,7 +698,7 @@ sealed class PlayerAbilityType {
 	
 	@Serializable
 	data class Recoalesce(override val ship: Id<ShipInstance>) : PlayerAbilityType(), ShipAbility {
-		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalSide, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
+		override suspend fun beginOnClient(gameState: GameState, playerSide: GlobalShipController, pick: suspend (PickRequest) -> PickResponse?): PlayerAbilityData? {
 			if (gameState.phase !is GamePhase.Repair) return null
 			
 			val shipInstance = gameState.ships[ship] ?: return null
@@ -708,7 +708,7 @@ sealed class PlayerAbilityType {
 			return PlayerAbilityData.Recoalesce
 		}
 		
-		override fun finishOnServer(gameState: GameState, playerSide: GlobalSide, data: PlayerAbilityData): GameEvent {
+		override fun finishOnServer(gameState: GameState, playerSide: GlobalShipController, data: PlayerAbilityData): GameEvent {
 			if (gameState.phase !is GamePhase.Repair) return GameEvent.InvalidAction("Ships can only extinguish fires during Phase IV")
 			
 			val shipInstance = gameState.ships[ship] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -797,7 +797,7 @@ sealed class PlayerAbilityData {
 	object Recoalesce : PlayerAbilityData()
 }
 
-fun GameState.getPossibleAbilities(forPlayer: GlobalSide): List<PlayerAbilityType> = if (doneWithPhase == forPlayer)
+fun GameState.getPossibleAbilities(forPlayer: GlobalShipController): List<PlayerAbilityType> = if (forPlayer in doneWithPhase)
 	emptyList()
 else when (phase) {
 	GamePhase.Deploy -> {
@@ -806,7 +806,7 @@ else when (phase) {
 			.sumOf { it.ship.pointCost }
 		
 		val deployShips = start.playerStart(forPlayer).deployableFleet
-			.filterValues { usedPoints + it.pointCost <= battleInfo.size.numPoints }.keys
+			.filterValues { usedPoints + it.pointCost <= getUsablePoints(forPlayer) }.keys
 			.map { PlayerAbilityType.DeployShip(it) }
 		
 		val undeployShips = ships

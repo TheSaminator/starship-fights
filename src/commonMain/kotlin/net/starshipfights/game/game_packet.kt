@@ -39,7 +39,7 @@ sealed class GameEvent {
 	) : GameEvent()
 }
 
-fun GameState.after(player: GlobalSide, packet: PlayerAction): GameEvent = when (packet) {
+fun GameState.after(player: GlobalShipController, packet: PlayerAction): GameEvent = when (packet) {
 	is PlayerAction.SendChatMessage -> {
 		GameEvent.StateChange(
 			copy(
@@ -58,16 +58,14 @@ fun GameState.after(player: GlobalSide, packet: PlayerAction): GameEvent = when 
 			GameEvent.InvalidAction("That ability cannot be used right now")
 	}
 	PlayerAction.TimeOut -> {
-		val loserName = admiralInfo(player).fullName
-		val winnerName = admiralInfo(player.other).fullName
+		val noShowName = admiralInfo(player).fullName
 		
-		GameEvent.GameEnd(player.other, "$loserName never joined the battle, yielding victory to $winnerName!", emptyMap())
+		GameEvent.GameEnd(null, "$noShowName never joined the battle", emptyMap())
 	}
 	PlayerAction.Disconnect -> {
-		val loserName = admiralInfo(player).fullName
-		val winnerName = admiralInfo(player.other).fullName
+		val quitterName = admiralInfo(player).fullName
 		
-		GameEvent.GameEnd(player.other, "$loserName has disconnected from the battle, yielding victory to $winnerName!", emptyMap())
+		GameEvent.GameEnd(null, "$quitterName has disconnected from the battle", emptyMap())
 	}
 }.let { event ->
 	if (event is GameEvent.StateChange) {

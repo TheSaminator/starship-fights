@@ -19,7 +19,7 @@ data class AIPlayer(
 )
 
 @OptIn(FlowPreview::class)
-suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
+suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) {
 	try {
 		coroutineScope {
 			val brain = Brain()
@@ -30,7 +30,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 				var prevSentAt = Moment.now
 				
 				for (state in gameState.produceIn(this)) {
-					phasePipe.send(state.phase to (state.doneWithPhase != mySide && (!state.phase.usesInitiative || state.currentInitiative != mySide.other)))
+					phasePipe.send(state.phase to (mySide !in state.doneWithPhase && (!state.phase.usesInitiative || state.currentInitiative == mySide)))
 					
 					for (msg in state.chatBox.takeLastWhile { msg -> msg.sentAt > prevSentAt }) {
 						if (msg.sentAt > prevSentAt)
@@ -189,7 +189,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 									if (ship.owner == mySide && ship.canSendBoardingParty) {
 										val pickRequest = ship.getBoardingPickRequest()
 										state.ships.values.filter { target ->
-											target.owner == mySide.other && target.position.location in pickRequest.boundary
+											target.owner.side == mySide.side.other && target.position.location in pickRequest.boundary
 										}.map { target -> ship to target }
 									} else emptyList()
 								}.associateWith { (ship, target) ->
@@ -206,7 +206,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 										logWarning("Error when boarding target ship ID ${target.id} with assault parties of ship ID ${ship.id} - $error")
 										
 										val nextState = gameState.value
-										phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
+										phasePipe.send(nextState.phase to (mySide !in nextState.doneWithPhase && (!nextState.phase.usesInitiative || nextState.currentInitiative == mySide)))
 									}
 									
 									continue@loop
@@ -259,7 +259,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 									doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 								else {
 									val nextState = gameState.value
-									phasePipe.send(nextState.phase to (nextState.doneWithPhase != mySide && (!nextState.phase.usesInitiative || nextState.currentInitiative != mySide.other)))
+									phasePipe.send(nextState.phase to (mySide !in nextState.doneWithPhase && (!nextState.phase.usesInitiative || nextState.currentInitiative == mySide)))
 								}
 							}
 						}
@@ -294,9 +294,9 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalSide) {
 	}
 }
 
-fun deploy(gameState: GameState, mySide: GlobalSide, instincts: Instincts): Map<Id<ShipInstance>, Position> {
+fun deploy(gameState: GameState, mySide: GlobalShipController, instincts: Instincts): Map<Id<ShipInstance>, Position> {
 	val size = gameState.battleInfo.size
-	val totalPoints = size.numPoints
+	val totalPoints = gameState.getUsablePoints(mySide)
 	val maxTier = size.maxTier
 	
 	val myStart = gameState.start.playerStart(mySide)

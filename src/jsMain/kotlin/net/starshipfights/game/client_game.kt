@@ -24,7 +24,7 @@ class GameRenderInteraction(
 	val errorMessages: ReceiveChannel<String>
 )
 
-lateinit var mySide: GlobalSide
+lateinit var mySide: GlobalShipController
 
 private val pickContextDeferred = CompletableDeferred<PickContext>()
 
@@ -124,7 +124,7 @@ private suspend fun GameNetworkInteraction.execute(token: String): GameEvent.Gam
 			}.display()
 			
 			if (!opponentJoined)
-				Popup.GameOver(mySide, "Unfortunately, your opponent never entered the battle.", emptyMap(), gameState.value).display()
+				Popup.GameOver(mySide.side, "Unfortunately, your opponent never entered the battle.", emptyMap(), gameState.value).display()
 			
 			val sendActionsJob = launch {
 				for (action in playerActions)
@@ -177,7 +177,7 @@ private class GameUIResponderImpl(scope: CoroutineScope, private val actions: Se
 
 private fun CoroutineScope.uiResponder(actions: SendChannel<PlayerAction>) = GameUIResponderImpl(this, actions)
 
-suspend fun gameMain(side: GlobalSide, token: String, state: GameState) {
+suspend fun gameMain(side: GlobalShipController, token: String, state: GameState) {
 	interruptExit = true
 	
 	initializePicking()
