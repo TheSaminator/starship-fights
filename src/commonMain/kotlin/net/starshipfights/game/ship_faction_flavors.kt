@@ -87,3 +87,9 @@ enum class FactionFlavor(val displayName: String, val colorReplacement: IntColor
 		}
 	}
 }
+
+val FactionFlavor.flagUrl: String
+	get() = if (name.endsWith("VESTIGIUM"))
+		"/static/images/flag/vestigium.svg"
+	else
+		"/static/images/flag/${toUrlSlug()}.svg"

@@ -260,7 +260,7 @@ sealed class Popup<out T> {
 					button {
 						+faction.navyName
 						+Entities.nbsp
-						img(alt = faction.shortName, src = faction.flagUrl) {
+						img(src = faction.flagUrl) {
 							style = "width:1.2em;height:0.75em"
 						}
 						
@@ -300,6 +300,10 @@ sealed class Popup<out T> {
 				for (flavor in FactionFlavor.optionsForAiEnemy(forFaction)) {
 					button {
 						+flavor.displayName
+						+Entities.nbsp
+						img(src = flavor.flagUrl) {
+							style = "width:1.2em;height:0.75em"
+						}
 						
 						onClickFunction = { e ->
 							e.preventDefault()
