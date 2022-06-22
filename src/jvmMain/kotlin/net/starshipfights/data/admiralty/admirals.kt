@@ -14,6 +14,7 @@ import net.starshipfights.game.*
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
 import java.time.Instant
+import kotlin.random.Random
 
 @Serializable
 data class Admiral(
@@ -40,17 +41,23 @@ data class Admiral(
 	})
 }
 
-fun genAI(faction: Faction, forBattleSize: BattleSize) = Admiral(
-	id = Id("advanced_robotical_admiral"),
-	owningUser = Id("fake_player_actually_an_AI"),
-	name = "M-5 Computational Unit",
-	isFemale = true,
-	faction = faction,
-	acumen = AdmiralRank.values().first {
-		it.maxBattleSize >= forBattleSize
-	}.minAcumen + 500,
-	money = 0
-)
+fun genAIName(faction: Faction, isFemale: Boolean) = AdmiralNames.randomName(AdmiralNameFlavor.forFaction(faction).random(), isFemale)
+
+fun genAI(faction: Faction, forBattleSize: BattleSize): Admiral {
+	val isFemale = Random.nextBoolean()
+	
+	return Admiral(
+		id = Id("advanced_robotical_admiral"),
+		owningUser = Id("fake_player_actually_an_AI"),
+		name = genAIName(faction, isFemale),
+		isFemale = isFemale,
+		faction = faction,
+		acumen = AdmiralRank.values().first {
+			it.maxBattleSize >= forBattleSize
+		}.minAcumen + 500,
+		money = 0
+	)
+}
 
 infix fun AdmiralRank.Companion.eq(rank: AdmiralRank): Bson = when (rank.ordinal) {
 	0 -> Admiral::acumen lt AdmiralRank.values()[1].minAcumen

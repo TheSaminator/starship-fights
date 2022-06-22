@@ -60,7 +60,10 @@ suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info:
 	val deployWidth2 = battleWidth / 2
 	val deployLength2 = 875.0
 	
-	val hostDeployCenter = Position(Vec2(0.0, (-battleLength / 2) + deployLength2))
+	val deployWidth4 = deployWidth2 / 2
+	
+	val hostDeployCenter1 = Position(Vec2(deployWidth4, (-battleLength / 2) + deployLength2))
+	val hostDeployCenter2 = Position(Vec2(-deployWidth4, (-battleLength / 2) + deployLength2))
 	val guestDeployCenter = Position(Vec2(0.0, (battleLength / 2) - deployLength2))
 	
 	val aiAdmiral = genAI(enemyFaction, battleInfo.size)
@@ -70,17 +73,17 @@ suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info:
 		
 		hostStarts = mapOf(
 			GlobalShipController.Player1Disambiguation to PlayerStart(
-				cameraPosition = hostDeployCenter,
+				cameraPosition = hostDeployCenter1,
 				cameraFacing = PI / 2,
-				deployZone = PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
+				deployZone = PickBoundary.Rectangle(hostDeployCenter1, deployWidth4, deployLength2),
 				deployFacing = PI / 2,
 				deployableFleet = getAdmiralsShips(player1Info.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier },
 				deployPointsFactor = 0.75
 			),
 			GlobalShipController.Player2Disambiguation to PlayerStart(
-				cameraPosition = hostDeployCenter,
+				cameraPosition = hostDeployCenter2,
 				cameraFacing = PI / 2,
-				deployZone = PickBoundary.Rectangle(hostDeployCenter, deployWidth2, deployLength2),
+				deployZone = PickBoundary.Rectangle(hostDeployCenter2, deployWidth4, deployLength2),
 				deployFacing = PI / 2,
 				deployableFleet = getAdmiralsShips(player2Info.id.reinterpret()).filterValues { it.shipType.weightClass.tier <= battleInfo.size.maxTier },
 				deployPointsFactor = 0.75

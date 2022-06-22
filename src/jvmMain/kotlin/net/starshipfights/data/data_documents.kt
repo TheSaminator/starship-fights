@@ -13,6 +13,7 @@ import org.litote.kmongo.util.KMongoUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
@@ -68,7 +69,8 @@ interface DocumentTable<T : DataDocument<T>> {
 		}
 		
 		fun <T : DataDocument<T>> create(kclass: KClass<T>, initFunc: suspend DocumentTable<T>.() -> Unit = {}): DocumentTable<T> = DocumentTableImpl(kclass) {
-			runBlocking {
+			val nameContext = kclass.simpleName?.let { name -> CoroutineName(name) } ?: EmptyCoroutineContext
+			runBlocking(coroutineContext + nameContext) {
 				it.initFunc()
 			}
 		}
@@ -85,11 +87,13 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	}
 	
 	override suspend fun index(vararg properties: KProperty1<T, *>) {
-		collection().ensureIndex(*properties)
+		if (properties.isNotEmpty())
+			collection().ensureIndex(*properties)
 	}
 	
 	override suspend fun unique(vararg properties: KProperty1<T, *>) {
-		collection().ensureUniqueIndex(*properties)
+		if (properties.isNotEmpty())
+			collection().ensureUniqueIndex(*properties)
 	}
 	
 	override suspend fun put(doc: T) {
@@ -97,12 +101,13 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 	}
 	
 	override suspend fun put(docs: Iterable<T>) {
-		collection().bulkWrite(
-			docs.map { doc ->
-				replaceOne(KMongoUtil.idFilterQuery(doc.id), doc, ReplaceOptions().upsert(true))
-			},
-			BulkWriteOptions().ordered(false)
-		)
+		if (docs.any())
+			collection().bulkWrite(
+				docs.map { doc ->
+					replaceOne(KMongoUtil.idFilterQuery(doc.id), doc, ReplaceOptions().upsert(true))
+				},
+				BulkWriteOptions().ordered(false)
+			)
 	}
 	
 	override suspend fun set(id: Id<T>, set: Bson): Boolean {
