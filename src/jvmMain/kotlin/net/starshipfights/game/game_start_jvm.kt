@@ -124,7 +124,13 @@ suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info:
 			)
 		),
 		battleInfo = battleInfo,
-		subplots = generateSubplots(battleInfo.size, GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation))
+		subplots = generateSubplots(
+			battleInfo.size,
+			GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
+		) + generateSubplots(
+			battleInfo.size,
+			GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation)
+		)
 	)
 }
 
@@ -182,12 +188,6 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 			)
 		),
 		battleInfo = battleInfo,
-		subplots = generateSubplots(
-			battleInfo.size,
-			GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation)
-		) + generateSubplots(
-			battleInfo.size,
-			GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation)
-		)
+		subplots = generateSubplots(battleInfo.size, GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation))
 	)
 }
