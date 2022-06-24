@@ -79,7 +79,7 @@ infix fun VecN.dot(other: VecN): Double {
 }
 
 infix fun VecN.project(onto: VecN): VecN {
-	return this * ((this dot onto) / (this dot this))
+	return onto * ((this dot onto) / (onto dot onto))
 }
 
 operator fun VecN.plus(other: VecN): VecN {
