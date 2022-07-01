@@ -4,24 +4,19 @@ package externals.threejs
 
 import org.w3c.dom.events.EventTarget
 
-external interface CameraControlsSettings {
+external interface CampaignCameraControlsSettings {
 	var panSpeed: Number?
 	
-	var zoomBase: Number?
-	var zoomSteps: Number?
-	
-	var rotationSpeed: Number?
+	var zoomSpeed: Number?
 	
 	var minZoom: Number?
 	var maxZoom: Number?
 	
-	var rotationTop: Number?
-	var rotationBottom: Number?
+	var cameraXMin: Number?
+	var cameraZMin: Number?
+	var cameraXMax: Number?
+	var cameraZMax: Number?
 	
-	var cameraXBound: Number?
-	var cameraZBound: Number?
-	
-	var rotateMouseButton: Int?
 	var panForwardsKey: String?
 	var panLeftwardsKey: String?
 	var panBackwardsKey: String?
@@ -31,7 +26,7 @@ external interface CameraControlsSettings {
 	var keyDomElement: EventTarget?
 }
 
-external open class CameraControls(camera: Camera, settings: CameraControlsSettings) {
+external open class CampaignCameraControls(camera: Camera, settings: CampaignCameraControlsSettings) {
 	open fun update(dt: Double)
 	open fun dispose()
 	
@@ -39,16 +34,13 @@ external open class CameraControls(camera: Camera, settings: CameraControlsSetti
 	open val cameraParent: Group
 	
 	open var panSpeed: Number
-	open var zoomBase: Number
-	open var zoomSteps: Number
-	open var rotationSpeed: Number
+	open var zoomSpeed: Number
 	open var minZoom: Number
 	open var maxZoom: Number
-	open var rotationTop: Number
-	open var rotationBottom: Number
-	open var cameraXBound: Number
-	open var cameraZBound: Number
-	open var rotateMouseButton: Int
+	open var cameraXMin: Number
+	open var cameraZMin: Number
+	open var cameraXMax: Number
+	open var cameraZMax: Number
 	open var panForwardsKey: String
 	open var panLeftwardsKey: String
 	open var panBackwardsKey: String

@@ -24,9 +24,10 @@ fun ClientMode.view(): HTML.() -> Unit = {
 		script(src = "/static/game/three-extras.js") {}
 		
 		when (this@view) {
+			is ClientMode.CampaignMap -> title("Starship Fights | In Campaign")
 			is ClientMode.MatchmakingMenu -> title("Starship Fights | Lobby")
 			is ClientMode.InTrainingGame -> title("Starship Fights | Training")
-			is ClientMode.InGame -> title("Starship Fights | In-Game")
+			is ClientMode.InGame -> title("Starship Fights | In Game")
 			is ClientMode.Error -> title("Starship Fights | Error!")
 		}
 	}

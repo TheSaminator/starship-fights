@@ -74,14 +74,14 @@ fun Id<ShipWeapon>.expectedAdvantageFromWeaponUsage(gameState: GameState, ship: 
 		is ShipWeaponInstance.Torpedo -> if (target.shieldAmount > 0) 0.5 else 2.0
 		is ShipWeaponInstance.Hangar -> when (weaponInstance.weapon.wing) {
 			StrikeCraftWing.BOMBERS -> {
-				val calculatedPrevBombing = target.calculateBombing(gameState.ships) ?: 0.0
-				val calculatedNextBombing = target.calculateBombing(gameState.ships, extraBombers = weaponInstance.wingHealth) ?: 0.0
+				val calculatedPrevBombing = target.calculateBombing(gameState.ships)
+				val calculatedNextBombing = target.calculateBombing(gameState.ships, extraBombers = weaponInstance.wingHealth)
 				
 				calculateShipDamageChanceFromBombing(calculatedNextBombing) - calculateShipDamageChanceFromBombing(calculatedPrevBombing)
 			}
 			StrikeCraftWing.FIGHTERS -> {
-				val calculatedPrevBombing = target.calculateBombing(gameState.ships) ?: 0.0
-				val calculatedNextBombing = target.calculateBombing(gameState.ships, extraFighters = weaponInstance.wingHealth) ?: 0.0
+				val calculatedPrevBombing = target.calculateBombing(gameState.ships)
+				val calculatedNextBombing = target.calculateBombing(gameState.ships, extraFighters = weaponInstance.wingHealth)
 				
 				calculateShipDamageChanceFromBombing(calculatedPrevBombing) - calculateShipDamageChanceFromBombing(calculatedNextBombing)
 			}

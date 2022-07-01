@@ -469,9 +469,9 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 	}
 }
 
-fun ShipInstance.calculateBombing(otherShips: Map<Id<ShipInstance>, ShipInstance>, extraBombers: Double = 0.0, extraFighters: Double = 0.0): Double? {
+fun ShipInstance.calculateBombing(otherShips: Map<Id<ShipInstance>, ShipInstance>, extraBombers: Double = 0.0, extraFighters: Double = 0.0): Double {
 	if (bomberWings.isEmpty() && extraBombers < EPSILON)
-		return null
+		return 0.0
 	
 	val totalFighterHealth = fighterWings.sumOf { (carrierId, wingId) ->
 		(otherShips[carrierId]?.armaments?.get(wingId) as? ShipWeaponInstance.Hangar)?.wingHealth ?: 0.0
@@ -482,16 +482,16 @@ fun ShipInstance.calculateBombing(otherShips: Map<Id<ShipInstance>, ShipInstance
 	} + extraBombers
 	
 	if (totalBomberHealth < EPSILON)
-		return null
+		return 0.0
 	
 	return totalBomberHealth - totalFighterHealth
 }
 
 fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, strikeWingDamage: MutableMap<ShipHangarWing, Double>): ImpactResult {
-	val calculatedBombing = calculateBombing(otherShips) ?: return ImpactResult.Damaged(this, ImpactDamage.OtherEffect)
+	val calculatedBombing = calculateBombing(otherShips)
 	
-	val maxBomberWingOutput = smoothNegative(calculatedBombing)
-	val maxFighterWingOutput = smoothNegative(-calculatedBombing)
+	val maxBomberWingOutput = exp(calculatedBombing)
+	val maxFighterWingOutput = exp(-calculatedBombing)
 	
 	for (it in fighterWings)
 		strikeWingDamage[it] = Random.nextDouble() * maxBomberWingOutput
@@ -499,7 +499,7 @@ fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, st
 	for (it in bomberWings)
 		strikeWingDamage[it] = Random.nextDouble() * maxFighterWingOutput
 	
-	val chanceOfShipDamage = smoothNegative(maxBomberWingOutput - maxFighterWingOutput)
+	val chanceOfShipDamage = smoothNegative(calculatedBombing)
 	val hits = floor(chanceOfShipDamage).let { floored ->
 		floored.roundToInt() + (if (Random.nextDouble() < chanceOfShipDamage - floored) 1 else 0)
 	}

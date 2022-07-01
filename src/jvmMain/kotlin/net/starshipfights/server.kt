@@ -14,7 +14,11 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.util.*
 import io.ktor.websocket.*
+import kotlinx.coroutines.runBlocking
+import net.starshipfights.admin.awaitShutDown
+import net.starshipfights.admin.installAdmin
 import net.starshipfights.auth.AuthProvider
+import net.starshipfights.campaign.installCampaign
 import net.starshipfights.data.ConnectionHolder
 import net.starshipfights.data.DataRoutines
 import net.starshipfights.game.installGame
@@ -38,7 +42,7 @@ fun main() {
 	
 	val dataRoutines = DataRoutines.initializeRoutines()
 	
-	embeddedServer(Netty, port = CurrentConfiguration.port, host = CurrentConfiguration.host) {
+	val server = embeddedServer(Netty, port = CurrentConfiguration.port, host = CurrentConfiguration.host) {
 		install(IgnoreTrailingSlash)
 		install(XForwardedHeaderSupport)
 		
@@ -101,18 +105,13 @@ fun main() {
 			pingPeriodMillis = 500L
 		}
 		
-		if (CurrentConfiguration.isDevEnv) {
-			install(ShutDownUrl.ApplicationCallFeature) {
-				shutDownUrl = "/dev/shutdown"
-				exitCodeSupplier = { 0 }
-			}
-		}
-		
 		AuthProvider.install(this)
 		
 		routing {
 			installPages()
 			installGame()
+			installAdmin()
+			installCampaign()
 			
 			static("/static") {
 				// I HAVE TO DO THIS MANUALLY
@@ -164,7 +163,13 @@ fun main() {
 				}
 			}
 		}
-	}.start(wait = true)
+	}.start(wait = false)
+	
+	runBlocking { awaitShutDown() }
+	
+	server.stop(1_000L, 1_000L)
 	
 	dataRoutines.cancel()
+	
+	CurrentConfiguration.dbConn.shutdown()
 }

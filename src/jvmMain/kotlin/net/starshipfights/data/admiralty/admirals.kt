@@ -10,6 +10,7 @@ import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.invoke
+import net.starshipfights.data.space.StarCluster
 import net.starshipfights.game.*
 import org.bson.conversions.Bson
 import org.litote.kmongo.*
@@ -29,6 +30,8 @@ data class Admiral(
 	val faction: Faction,
 	val acumen: Int,
 	val money: Int,
+	
+	val inCluster: Id<StarCluster>? = null,
 ) : DataDocument<Admiral> {
 	val rank: AdmiralRank
 		get() = AdmiralRank.fromAcumen(acumen)
@@ -38,6 +41,7 @@ data class Admiral(
 	
 	companion object Table : DocumentTable<Admiral> by DocumentTable.create({
 		index(Admiral::owningUser)
+		index(Admiral::inCluster)
 	})
 }
 

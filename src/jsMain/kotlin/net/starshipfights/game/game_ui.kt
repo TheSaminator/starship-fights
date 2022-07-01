@@ -157,7 +157,7 @@ object GameUI {
 			helpMessages.textContent = value
 		}
 	
-	fun updateGameUI(controls: CameraControls) {
+	fun renderGameUI(controls: BattleCameraControls) {
 		shipsOverlayCamera.position.copy(controls.camera.getWorldPosition(shipsOverlayCamera.position))
 		shipsOverlayCamera.quaternion.copy(controls.camera.getWorldQuaternion(shipsOverlayCamera.quaternion))
 		shipsOverlayRenderer.render(shipsOverlayScene, shipsOverlayCamera)
@@ -165,7 +165,7 @@ object GameUI {
 		textFit(document.getElementsByClassName("ship-label"))
 	}
 	
-	fun drawGameUI(state: GameState) {
+	fun updateGameUI(state: GameState) {
 		chatHistory.clear()
 		chatHistory.append {
 			for (entry in state.chatBox.sortedBy { it.sentAt }) {

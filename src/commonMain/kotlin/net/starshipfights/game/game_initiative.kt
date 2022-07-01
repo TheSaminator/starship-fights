@@ -60,13 +60,18 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativeMap =
 						.filterValues { weapon -> hasValidTargets(ship, weapon) }
 					val usableWeapons = allWeapons - ship.usedArmaments
 					
-					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + ship.troopsAmount
-					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + (if (ship.canSendBoardingParty) ship.troopsAmount else 0)
+					val boardingPartyShot = (if (ship.canSendBoardingParty || ship.hasSentBoardingParty) 1 else 0)
+					val usableBoardingPartyShot = (if (ship.canSendBoardingParty) 1 else 0)
+					
+					val disruptionPulseShot = (if (ship.canUseDisruptionPulse || ship.hasUsedDisruptionPulse) 1 else 0)
+					val usableDisruptionPulseShot = (if (ship.canUseDisruptionPulse) 1 else 0)
+					
+					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + boardingPartyShot + disruptionPulseShot
+					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + usableBoardingPartyShot + usableDisruptionPulseShot
 					
 					ship.ship.pointCost * (usableWeaponShots.toDouble() / allWeaponShots)
 				}
 		}
-
 
 fun GameState.withRecalculatedInitiative(initiativeMapAccessor: GameState.() -> InitiativeMap): GameState {
 	val initiativePair = initiativeMapAccessor()

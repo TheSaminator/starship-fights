@@ -88,8 +88,7 @@ val ShipType.armaments: ShipArmaments
 				FiringArc.ABEAM_STARBOARD to 4,
 			),
 			mapOf(
-				FiringArc.FIRE_FORE_270 to 1,
-				FiringArc.FIRE_BROADSIDE to 1,
+				FiringArc.FIRE_FORE_270 to 2,
 			)
 		)
 		ShipType.BOBCAT -> felinaeShipWeapons(

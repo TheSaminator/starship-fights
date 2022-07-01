@@ -25,12 +25,16 @@ import kotlin.system.exitProcess
 @Serializable
 sealed class ConnectionType {
 	abstract fun createUrl(): String
+	open fun shutdown() = Unit
 	
 	@Serializable
 	@SerialName("embedded")
 	data class Embedded(val dataDir: String = "mongodb") : ConnectionType() {
 		@Transient
 		val log: Logger = LoggerFactory.getLogger(javaClass)
+		
+		@Transient
+		private var process: MongodProcess? = null
 		
 		override fun createUrl(): String {
 			val dataDirPath = File(dataDir).apply { mkdirs() }.absolutePath
@@ -46,14 +50,6 @@ sealed class ConnectionType {
 				.cmdOptions(MongoCmdOptions.builder().useNoJournal(false).build())
 				.build()
 			
-			var process: MongodProcess? = null
-			Runtime.getRuntime().addShutdownHook(
-				Thread(
-					{ process?.stop() },
-					"Shutdown Thread"
-				)
-			)
-			
 			try {
 				process = starter.prepare(config).start()
 			} catch (ex: Exception) {
@@ -63,6 +59,17 @@ sealed class ConnectionType {
 			}
 			
 			return "mongodb://localhost:27017"
+		}
+		
+		override fun shutdown() {
+			process?.stop()
+			
+			while (true) {
+				if (File(dataDir, "mongod.lock").delete())
+					break
+				
+				println("Failed to delete embedded MongoDB lockfile! Attempting again...")
+			}
 		}
 	}
 	

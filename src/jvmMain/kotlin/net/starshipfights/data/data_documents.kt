@@ -1,13 +1,14 @@
 package net.starshipfights.data
 
 import com.mongodb.client.model.BulkWriteOptions
+import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.ReplaceOptions
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerialName
 import org.bson.conversions.Bson
+import org.litote.kmongo.*
 import org.litote.kmongo.coroutine.coroutine
-import org.litote.kmongo.replaceOne
 import org.litote.kmongo.serialization.IdController
 import org.litote.kmongo.util.KMongoUtil
 import org.slf4j.Logger
@@ -40,8 +41,8 @@ object DocumentIdController : IdController {
 interface DocumentTable<T : DataDocument<T>> {
 	fun initialize()
 	
-	suspend fun index(vararg properties: KProperty1<T, *>)
-	suspend fun unique(vararg properties: KProperty1<T, *>)
+	suspend fun index(property: KProperty1<T, *>)
+	suspend fun unique(property: KProperty1<T, *>)
 	
 	suspend fun put(doc: T)
 	suspend fun put(docs: Iterable<T>)
@@ -86,14 +87,12 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 		initFunc(this)
 	}
 	
-	override suspend fun index(vararg properties: KProperty1<T, *>) {
-		if (properties.isNotEmpty())
-			collection().ensureIndex(*properties)
+	override suspend fun index(property: KProperty1<T, *>) {
+		collection().ensureIndex(property)
 	}
 	
-	override suspend fun unique(vararg properties: KProperty1<T, *>) {
-		if (properties.isNotEmpty())
-			collection().ensureUniqueIndex(*properties)
+	override suspend fun unique(property: KProperty1<T, *>) {
+		collection().ensureUniqueIndex(property, indexOptions = IndexOptions().partialFilterExpression(property.exists()))
 	}
 	
 	override suspend fun put(doc: T) {

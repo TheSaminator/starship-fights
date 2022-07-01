@@ -31,7 +31,7 @@ private val pickContextDeferred = CompletableDeferred<PickContext>()
 suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	GameUI.initGameUI(scope.uiResponder(playerActions))
 	
-	GameUI.drawGameUI(gameState.value)
+	GameUI.updateGameUI(gameState.value)
 	
 	val gameStart = gameState.value.start
 	val playerStart = gameStart.playerStart(mySide)
@@ -49,15 +49,12 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	renderer.setPixelRatio(window.devicePixelRatio)
 	renderer.setSize(window.innerWidth, window.innerHeight)
 	
-	renderer.shadowMap.enabled = true
-	renderer.shadowMap.type = VSMShadowMap
-	
 	val scene = Scene()
 	val battleGrid = RenderResources.battleGrid.generate(gameStart.battlefieldWidth to gameStart.battlefieldLength)
 	scene.add(battleGrid)
 	scene.add(camera)
 	
-	val cameraControls = CameraControls(camera, configure {
+	val cameraControls = BattleCameraControls(camera, configure {
 		domElement = renderer.domElement
 		keyDomElement = window
 		
@@ -89,7 +86,7 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 			deltaTimeFlow.collect { dt ->
 				cameraControls.update(dt)
 				renderer.render(scene, camera)
-				GameUI.updateGameUI(cameraControls)
+				GameUI.renderGameUI(cameraControls)
 			}
 		}
 		
@@ -101,7 +98,7 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 		launch {
 			gameState.collect { state ->
 				GameRender.renderGameState(scene, state)
-				GameUI.drawGameUI(state)
+				GameUI.updateGameUI(state)
 				
 				if (state.phase != GamePhase.Deploy)
 					launch {

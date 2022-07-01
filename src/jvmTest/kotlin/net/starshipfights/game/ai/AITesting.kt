@@ -248,6 +248,6 @@ object AITesting {
 			}
 		}
 		
-		File("test_results.html").writeText(results)
+		File("test_output/ai_results.html").writeText(results)
 	}
 }

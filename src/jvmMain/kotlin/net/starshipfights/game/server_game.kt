@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import net.starshipfights.admin.announcements
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
 import net.starshipfights.data.admiralty.Admiral
@@ -36,6 +37,8 @@ object GameManager {
 		
 		val session = GameSession1v1(gameState)
 		DocumentTable.launch {
+			launch { session.receiveAnnouncements() }
+			
 			session.gameStart.join()
 			val startedAt = Instant.now()
 			
@@ -60,12 +63,12 @@ object GameManager {
 		
 		val session = GameSession2v1(gameState)
 		DocumentTable.launch {
+			launch { session.receiveAnnouncements() }
+			
 			session.gameStart.join()
 			val startedAt = Instant.now()
 			
 			val aiJob = launch {
-				session.gameStart.join()
-				
 				val aiSide = GlobalShipController(GlobalSide.GUEST, GlobalShipController.Player1Disambiguation)
 				val aiActions = Channel<PlayerAction>()
 				val aiEvents = Channel<GameEvent>()
@@ -122,6 +125,23 @@ sealed class GameSession(gameState: GameState, private val stateInterceptor: Gam
 		get() = gameStartMutable
 	
 	abstract suspend fun enter(player: GlobalShipController): Boolean
+	
+	suspend fun receiveAnnouncements() {
+		coroutineScope {
+			gameStart.join()
+			
+			val announcementsJob = launch {
+				announcements.collect {
+					for (channel in errorMessages.values)
+						channel.send(it)
+				}
+			}
+			
+			gameEnd.await()
+			
+			announcementsJob.cancel()
+		}
+	}
 	
 	private val stateMutable = MutableStateFlow(gameState)
 	private val stateMutex = Mutex()

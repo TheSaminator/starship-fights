@@ -240,7 +240,7 @@ private fun nameMasraDraetsenShip(weightClass: ShipWeightClass) = when (weightCl
 	else -> error("Invalid Masra Draetsen ship weight!")
 }
 
-private enum class LatinNounForm {
+enum class LatinNounForm {
 	MAS_SG,
 	FEM_SG,
 	NEU_SG,
@@ -249,12 +249,16 @@ private enum class LatinNounForm {
 	NEU_PL,
 }
 
-private data class LatinNoun(
+data class LatinNoun(
 	val noun: String,
 	val form: LatinNounForm
-)
+) {
+	override fun toString(): String {
+		return noun
+	}
+}
 
-private data class LatinAdjective(
+data class LatinAdjective(
 	val masculineSingular: String,
 	val feminineSingular: String,
 	val neuterSingular: String,
@@ -272,7 +276,7 @@ private data class LatinAdjective(
 	}
 }
 
-private infix fun LatinNoun.describedBy(adjective: LatinAdjective) = "$noun ${adjective.get(form)}"
+infix fun LatinNoun.describedBy(adjective: LatinAdjective) = LatinNoun("$this ${adjective.get(form)}", form)
 
 private fun felinaeFelicesEscortShipName() = "ES-" + (1000..9999).random().toString()
 
@@ -315,10 +319,10 @@ private val felinaeFelicesLineShipNames2 = listOf(
 
 private fun nameFelinaeFelicesShip(weightClass: ShipWeightClass) = when (weightClass) {
 	ShipWeightClass.FF_ESCORT -> felinaeFelicesEscortShipName()
-	ShipWeightClass.FF_DESTROYER -> felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()
-	ShipWeightClass.FF_CRUISER -> felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()
-	ShipWeightClass.FF_BATTLECRUISER -> felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()
-	ShipWeightClass.FF_BATTLESHIP -> if (Random.nextDouble() < 0.01) "Big Floppa" else (felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random())
+	ShipWeightClass.FF_DESTROYER -> "${felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()}"
+	ShipWeightClass.FF_CRUISER -> "${felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()}"
+	ShipWeightClass.FF_BATTLECRUISER -> "${felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()}"
+	ShipWeightClass.FF_BATTLESHIP -> if (Random.nextDouble() < 0.01) "Big Floppa" else "${felinaeFelicesLineShipNames1.random() describedBy felinaeFelicesLineShipNames2.random()}"
 	else -> error("Invalid Felinae Felices ship weight!")
 }
 

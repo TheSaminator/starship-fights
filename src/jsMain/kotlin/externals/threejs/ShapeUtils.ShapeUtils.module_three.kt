@@ -3,10 +3,10 @@
 
 package externals.threejs.ShapeUtils
 
-import externals.threejs.Vec2
+import externals.threejs.VecXY
 
-external fun area(contour: Array<Vec2>): Number
+external fun area(contour: Array<VecXY>): Number
 
-external fun triangulateShape(contour: Array<Vec2>, holes: Array<Array<Vec2>>): Array<Array<Number>>
+external fun triangulateShape(contour: Array<VecXY>, holes: Array<Array<VecXY>>): Array<Array<Number>>
 
-external fun isClockWise(pts: Array<Vec2>): Boolean
+external fun isClockWise(pts: Array<VecXY>): Boolean

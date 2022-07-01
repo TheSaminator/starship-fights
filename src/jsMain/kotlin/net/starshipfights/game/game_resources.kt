@@ -21,34 +21,36 @@ fun interface CustomRenderFactory<T> {
 val ClientMode.isSmallLoad: Boolean
 	get() = this !is ClientMode.InGame && this !is ClientMode.InTrainingGame
 
+val ClientMode.usesOwnLoad: Boolean
+	get() = this is ClientMode.CampaignMap
+
 object RenderResources {
 	const val LOGO_URL = "/static/images/logo.svg"
 	
-	private val spaceboxUrls = BattleBackground.values().associateWith { "spacebox-${it.toUrlSlug()}" }
+	private val spaceboxUrls = BattleBackground.values().associateWith { "battle/spacebox/${it.toUrlSlug()}" }
 	
 	lateinit var spaceboxes: Map<BattleBackground, Texture>
 		private set
 	
-	private const val enemySignalUrl = "enemy-signal"
+	private const val enemySignalUrl = "battle/enemy-signal"
 	
 	lateinit var enemySignal: CustomRenderFactory<Position>
 		private set
 	
-	private const val gridTileUrl = "grid-tile"
+	private const val gridTileUrl = "battle/grid-tile"
 	lateinit var battleGrid: CustomRenderFactory<Pair<Double, Double>>
 		private set
 	
-	private const val friendlyMarkerUrl = "friendly-marker"
-	private const val neutralMarkerUrl = "neutral-marker"
-	private const val hostileMarkerUrl = "hostile-marker"
+	private const val friendlyMarkerUrl = "battle/friendly-marker"
+	private const val neutralMarkerUrl = "battle/neutral-marker"
+	private const val hostileMarkerUrl = "battle/hostile-marker"
 	
 	lateinit var markerFactory: CustomRenderFactory<LocalSide>
 		private set
 	
 	private val shipMeshesRaw = mutableMapOf<ShipType, RenderFactory>()
 	
-	lateinit var shipMeshes: Map<ShipType, CustomRenderFactory<ShipInstance>>
-		private set
+	private lateinit var shipMeshes: Map<ShipType, CustomRenderFactory<ShipInstance>>
 	
 	lateinit var shipMesh: CustomRenderFactory<ShipInstance>
 		private set
@@ -156,19 +158,19 @@ object RenderResources {
 			}
 			
 			launch {
-				val friendlyMarkerPromise = async { loadTexture(friendlyMarkerUrl) }
-				val neutralMarkerPromise = async { loadTexture(neutralMarkerUrl) }
-				val hostileMarkerPromise = async { loadTexture(hostileMarkerUrl) }
+				val friendlyMarkerAsync = async { loadTexture(friendlyMarkerUrl) }
+				val neutralMarkerAsync = async { loadTexture(neutralMarkerUrl) }
+				val hostileMarkerAsync = async { loadTexture(hostileMarkerUrl) }
 				
-				val friendlyMarkerTexture = friendlyMarkerPromise.await()
+				val friendlyMarkerTexture = friendlyMarkerAsync.await()
 				friendlyMarkerTexture.minFilter = LinearFilter
 				friendlyMarkerTexture.magFilter = LinearFilter
 				
-				val neutralMarkerTexture = neutralMarkerPromise.await()
+				val neutralMarkerTexture = neutralMarkerAsync.await()
 				neutralMarkerTexture.minFilter = LinearFilter
 				neutralMarkerTexture.magFilter = LinearFilter
 				
-				val hostileMarkerTexture = hostileMarkerPromise.await()
+				val hostileMarkerTexture = hostileMarkerAsync.await()
 				hostileMarkerTexture.minFilter = LinearFilter
 				hostileMarkerTexture.magFilter = LinearFilter
 				
@@ -279,8 +281,6 @@ object RenderResources {
 							ship.id,
 							markerFactory.generate(side).unsafeCast<Mesh>(),
 							mesh.clone(true).unsafeCast<Mesh>().apply {
-								receiveShadow = true
-								castShadow = true
 								material = material.unsafeCast<MeshPhongMaterial>().forShip(faction, flavor)
 							},
 							when (side) {
@@ -355,14 +355,30 @@ object RenderResources {
 	}
 }
 
-data class ShipRender(
-	val shipId: Id<ShipInstance>,
+external interface ShipRender {
+	var shipIdString: String
 	
-	val bottomMarker: Mesh,
-	val shipMesh: Mesh,
-	val shipOutline: Mesh
-) {
-	val group: Group = Group().also { g ->
+	var bottomMarker: Mesh
+	var shipMesh: Mesh
+	var shipOutline: Mesh
+	var group: Group
+}
+
+val ShipRender.shipId: Id<ShipInstance>
+	get() = Id(shipIdString)
+
+fun ShipRender(
+	shipId: Id<ShipInstance>,
+	
+	bottomMarker: Mesh,
+	shipMesh: Mesh,
+	shipOutline: Mesh
+) = configure<ShipRender> {
+	this.shipIdString = shipId.id
+	this.bottomMarker = bottomMarker
+	this.shipMesh = shipMesh
+	this.shipOutline = shipOutline
+	this.group = Group().also { g ->
 		bottomMarker.userData = this
 		shipMesh.userData = this
 		shipOutline.userData = this

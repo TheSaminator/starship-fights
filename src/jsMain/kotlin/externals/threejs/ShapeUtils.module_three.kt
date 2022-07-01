@@ -3,7 +3,7 @@
 
 package externals.threejs
 
-external interface Vec2 {
+external interface VecXY {
 	var x: Number
 	var y: Number
 }

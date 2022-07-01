@@ -1,6 +1,7 @@
 package net.starshipfights.data.admiralty
 
 import net.starshipfights.game.Faction
+import net.starshipfights.game.FactionFlavor
 import kotlin.random.Random
 
 enum class AdmiralNameFlavor {
@@ -32,6 +33,35 @@ enum class AdmiralNameFlavor {
 			Faction.FELINAE_FELICES -> setOf(OLYMPIA)
 			Faction.ISARNAREYKK -> setOf(FULKREYKK)
 			Faction.VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
+		}
+		
+		fun forFactionFlavor(flavor: FactionFlavor) = when (flavor) {
+			FactionFlavor.MECHYRDIA -> setOf(MECHYRDIA, TYLA, DUTCH)
+			FactionFlavor.TYLA -> setOf(TYLA)
+			FactionFlavor.OLYMPIA -> setOf(OLYMPIA)
+			FactionFlavor.TEXANDRIA -> setOf(MECHYRDIA, TYLA, DUTCH)
+			
+			FactionFlavor.NDRC -> setOf(DUTCH)
+			FactionFlavor.CCC -> setOf(MECHYRDIA, TYLA, DUTCH)
+			FactionFlavor.MJOLNIR_ENERGY -> setOf(MECHYRDIA, TYLA, DUTCH)
+			
+			FactionFlavor.MASRA_DRAETSEN -> setOf(CALIBOR, NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI)
+			FactionFlavor.AEDON_CULTISTS -> setOf(NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI)
+			FactionFlavor.FERTHLON_EXILES -> setOf(MECHYRDIA, CALIBOR)
+			
+			FactionFlavor.RES_NOSTRA -> setOf(OLYMPIA)
+			FactionFlavor.CORSAIRS -> setOf(OLYMPIA, CALIBOR)
+			FactionFlavor.FELINAE_FELICES -> setOf(OLYMPIA)
+			
+			FactionFlavor.ISARNAREYKK -> setOf(FULKREYKK)
+			FactionFlavor.SWARTAREYKK -> setOf(FULKREYKK)
+			FactionFlavor.THEUDAREYKK -> setOf(FULKREYKK)
+			FactionFlavor.STAHLAREYKK -> setOf(FULKREYKK)
+			FactionFlavor.LYUDAREYKK -> setOf(FULKREYKK)
+			FactionFlavor.NEUIA_FULKREYKK -> setOf(FULKREYKK)
+			
+			FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
+			FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
 		}
 	}
 }
@@ -260,7 +290,7 @@ object AdmiralNames {
 		"Publius",
 		"Quintus",
 		"Titus",
-		"Gnaeus"
+		"Gnaeus",
 	)
 	
 	private val latinMaleRarePraenomina = listOf(
@@ -268,7 +298,7 @@ object AdmiralNames {
 		"Spurius",
 		"Tiberius",
 		"Servius",
-		"Hostus"
+		"Hostus",
 	)
 	
 	private val latinFemaleCommonPraenomina = listOf(
@@ -287,14 +317,14 @@ object AdmiralNames {
 		"Septima",
 		"Octavia",
 		"Nona",
-		"Decima"
+		"Decima",
 	)
 	
 	private val latinFemaleRarePraenomina = listOf(
 		"Caesula",
 		"Titia",
 		"Tiberia",
-		"Tanaquil"
+		"Tanaquil",
 	)
 	
 	private val latinNominaGentilica = listOf(

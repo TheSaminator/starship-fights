@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
+import net.starshipfights.campaign.campaignMain
 import org.w3c.dom.HTMLScriptElement
 
 val rootPathWs = "ws" + window.location.origin.removePrefix("http")
@@ -45,11 +46,13 @@ fun main() {
 	})
 	
 	AppScope.launch {
-		Popup.LoadingScreen("Loading resources...") {
-			RenderResources.load(clientMode.isSmallLoad)
-		}.display()
+		if (!clientMode.usesOwnLoad)
+			Popup.LoadingScreen("Loading resources...") {
+				RenderResources.load(clientMode.isSmallLoad)
+			}.display()
 		
 		when (clientMode) {
+			is ClientMode.CampaignMap -> campaignMain(clientMode.playingAs, clientMode.admirals, clientMode.clusterToken, clientMode.clusterView)
 			is ClientMode.MatchmakingMenu -> matchmakingMain(clientMode.admirals)
 			is ClientMode.InTrainingGame -> trainingMain(clientMode.initialState)
 			is ClientMode.InGame -> gameMain(clientMode.playerSide, clientMode.connectToken, clientMode.initialState)

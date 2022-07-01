@@ -187,3 +187,9 @@ tasks.create("runAiTest", JavaExec::class.java) {
 	classpath = sourceSets.getByName("test").runtimeClasspath
 	mainClass.set("net.starshipfights.game.ai.AITesting")
 }
+
+tasks.create("runClusterGenTest", JavaExec::class.java) {
+	group = "test"
+	classpath = sourceSets.getByName("test").runtimeClasspath
+	mainClass.set("net.starshipfights.campaign.ClusterGenTesting")
+}
