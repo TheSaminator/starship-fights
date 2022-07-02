@@ -131,9 +131,18 @@ sealed class GameSession(gameState: GameState, private val stateInterceptor: Gam
 			gameStart.join()
 			
 			val announcementsJob = launch {
-				announcements.collect {
-					for (channel in errorMessages.values)
-						channel.send(it)
+				announcements.collect { announcement ->
+					stateMutex.withLock {
+						val gameState = stateMutable.value
+						stateMutable.value = gameState.copy(
+							chatBox = gameState.chatBox + listOf(
+								ChatEntry.AdminAnnouncement(
+									sentAt = Moment.now,
+									message = announcement
+								)
+							)
+						)
+					}
 				}
 			}
 			

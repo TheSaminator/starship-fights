@@ -8,6 +8,12 @@ sealed class ChatEntry {
 	abstract val sentAt: Moment
 	
 	@Serializable
+	data class AdminAnnouncement(
+		override val sentAt: Moment,
+		val message: String
+	) : ChatEntry()
+	
+	@Serializable
 	data class PlayerMessage(
 		val senderSide: GlobalShipController,
 		override val sentAt: Moment,

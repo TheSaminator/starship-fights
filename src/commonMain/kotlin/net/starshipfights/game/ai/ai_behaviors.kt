@@ -37,9 +37,6 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 							prevSentAt = msg.sentAt
 						
 						when (msg) {
-							is ChatEntry.PlayerMessage -> {
-								// ignore
-							}
 							is ChatEntry.ShipIdentified -> {
 								state.ships[msg.ship]?.let { identifiedShip ->
 									if (identifiedShip.owner != mySide)
@@ -76,6 +73,9 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 									if (targetedShip.owner == mySide && msg.destroyedBy is ShipAttacker.EnemyShip)
 										brain[shipAttackPriority forShip msg.destroyedBy.id] += instincts[combatAvengeShipwrecks] * (targetedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatAvengeShipWeight])
 								}
+							}
+							else -> {
+								// ignore
 							}
 						}
 					}

@@ -173,6 +173,9 @@ object GameUI {
 					title = "At ${entry.sentAt.date}"
 					
 					when (entry) {
+						is ChatEntry.AdminAnnouncement -> {
+							+entry.message
+						}
 						is ChatEntry.PlayerMessage -> {
 							val senderInfo = state.admiralInfo(entry.senderSide)
 							val senderSide = entry.senderSide.relativeTo(mySide)
