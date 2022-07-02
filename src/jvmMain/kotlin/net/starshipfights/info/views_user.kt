@@ -9,7 +9,9 @@ import kotlinx.html.*
 import net.starshipfights.auth.*
 import net.starshipfights.data.Id
 import net.starshipfights.data.admiralty.*
-import net.starshipfights.data.auth.*
+import net.starshipfights.data.auth.PreferredTheme
+import net.starshipfights.data.auth.User
+import net.starshipfights.data.auth.UserSession
 import net.starshipfights.forbid
 import net.starshipfights.game.*
 import net.starshipfights.redirect
@@ -32,69 +34,9 @@ suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val admirals = Admiral.filter(Admiral::owningUser eq user.id).toList()
 	
 	return page(
-		user.profileName, standardNavBar(), CustomSidebar {
-			if (user.showDiscordName) {
-				img(src = user.discordAvatarUrl) {
-					style = "border-radius:50%"
-				}
-				p {
-					style = "text-align:center"
-					+user.discordName
-					+"#"
-					+user.discordDiscriminator
-				}
-			} else {
-				img(src = user.anonymousAvatarUrl) {
-					style = "border-radius:50%"
-				}
-			}
-			for (trophy in user.getTrophies())
-				renderTrophy(trophy)
-			
-			if (user.showUserStatus) {
-				p {
-					style = "text-align:center"
-					+when (user.status) {
-						UserStatus.IN_BATTLE -> "In Battle"
-						UserStatus.READY_FOR_BATTLE -> "In Battle"
-						UserStatus.IN_MATCHMAKING -> "In Matchmaking"
-						UserStatus.AVAILABLE -> if (hasOpenSessions) "Online" else "Offline"
-					}
-				}
-				p {
-					style = "text-align:center"
-					+"Registered at "
-					span(classes = "moment") {
-						style = "display:none"
-						+user.registeredAt.toEpochMilli().toString()
-					}
-					br
-					+"Last active at "
-					span(classes = "moment") {
-						style = "display:none"
-						+user.lastActivity.toEpochMilli().toString()
-					}
-				}
-			}
-			if (isCurrentUser) {
-				hr { style = "border-color:#036" }
-				div(classes = "list") {
-					div(classes = "item") {
-						a(href = "/admiral/new") { +"Create New Admiral" }
-					}
-					div(classes = "item") {
-						a(href = "/me/manage") { +"Edit Profile" }
-					}
-				}
-			} /*else if (currentUser != null) {
-				hr { style = "border-color:#036" }
-				div(classes = "list") {
-					div(classes = "item") {
-						a(href = "/user/${userId}/send") { +"Send Message" }
-					}
-				}
-			}*/
-		}
+		user.profileName,
+		standardNavBar(),
+		UserProfileSidebar(user, isCurrentUser, hasOpenSessions)
 	) {
 		section {
 			h1 { +user.profileName }

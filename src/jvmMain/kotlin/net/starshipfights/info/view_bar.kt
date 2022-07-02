@@ -1,6 +1,10 @@
 package net.starshipfights.info
 
 import kotlinx.html.*
+import net.starshipfights.data.auth.User
+import net.starshipfights.data.auth.UserStatus
+import net.starshipfights.data.auth.getTrophies
+import net.starshipfights.data.auth.renderTrophy
 import net.starshipfights.game.ShipType
 import net.starshipfights.game.getDefiniteShortName
 
@@ -33,6 +37,65 @@ data class PageNavSidebar(val contents: List<NavItem>) : Sidebar() {
 			for (it in contents) {
 				div(classes = "item") {
 					it.displayIn(this)
+				}
+			}
+		}
+	}
+}
+
+data class UserProfileSidebar(val user: User, val isCurrentUser: Boolean, val hasOpenSessions: Boolean) : Sidebar() {
+	override fun TagConsumer<*>.display() {
+		if (user.showDiscordName) {
+			img(src = user.discordAvatarUrl) {
+				style = "border-radius:50%"
+			}
+			p {
+				style = "text-align:center"
+				+user.discordName
+				+"#"
+				+user.discordDiscriminator
+			}
+		} else {
+			img(src = user.anonymousAvatarUrl) {
+				style = "border-radius:50%"
+			}
+		}
+		for (trophy in user.getTrophies())
+			renderTrophy(trophy)
+		
+		if (user.showUserStatus) {
+			p {
+				style = "text-align:center"
+				+when (user.status) {
+					UserStatus.IN_BATTLE -> "In Battle"
+					UserStatus.READY_FOR_BATTLE -> "In Battle"
+					UserStatus.IN_MATCHMAKING -> "In Matchmaking"
+					UserStatus.AVAILABLE -> if (hasOpenSessions) "Online" else "Offline"
+				}
+			}
+			p {
+				style = "text-align:center"
+				+"Registered at "
+				span(classes = "moment") {
+					style = "display:none"
+					+user.registeredAt.toEpochMilli().toString()
+				}
+				br
+				+"Last active at "
+				span(classes = "moment") {
+					style = "display:none"
+					+user.lastActivity.toEpochMilli().toString()
+				}
+			}
+		}
+		if (isCurrentUser) {
+			hr { style = "border-color:#036" }
+			div(classes = "list") {
+				div(classes = "item") {
+					a(href = "/admiral/new") { +"Create New Admiral" }
+				}
+				div(classes = "item") {
+					a(href = "/me/manage") { +"Edit Profile" }
 				}
 			}
 		}

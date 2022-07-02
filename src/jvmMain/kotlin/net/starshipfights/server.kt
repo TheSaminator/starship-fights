@@ -23,6 +23,7 @@ import net.starshipfights.data.ConnectionHolder
 import net.starshipfights.data.DataRoutines
 import net.starshipfights.game.installGame
 import net.starshipfights.info.*
+import net.starshipfights.labs.installLabs
 import org.slf4j.event.Level
 import java.io.InputStream
 import java.util.concurrent.atomic.AtomicLong
@@ -110,8 +111,9 @@ fun main() {
 		routing {
 			installPages()
 			installGame()
-			installAdmin()
 			installCampaign()
+			installAdmin()
+			installLabs()
 			
 			static("/static") {
 				// I HAVE TO DO THIS MANUALLY
