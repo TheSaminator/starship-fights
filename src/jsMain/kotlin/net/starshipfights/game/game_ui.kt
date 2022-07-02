@@ -161,8 +161,6 @@ object GameUI {
 		shipsOverlayCamera.position.copy(controls.camera.getWorldPosition(shipsOverlayCamera.position))
 		shipsOverlayCamera.quaternion.copy(controls.camera.getWorldQuaternion(shipsOverlayCamera.quaternion))
 		shipsOverlayRenderer.render(shipsOverlayScene, shipsOverlayCamera)
-		
-		textFit(document.getElementsByClassName("ship-label"))
 	}
 	
 	fun updateGameUI(state: GameState) {
@@ -509,6 +507,8 @@ object GameUI {
 					position.y = 7.5
 				})
 		}
+		
+		textFit(document.getElementsByClassName("ship-label"))
 	}
 	
 	private fun DIV.drawShipLabel(state: GameState, abilities: List<PlayerAbilityType>, shipId: Id<ShipInstance>, ship: ShipInstance) {

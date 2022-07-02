@@ -119,14 +119,14 @@ object CampaignUI {
 				}.also { systemsOverlayScene.add(it) }
 			}
 		}
+		
+		textFit(document.getElementsByClassName("system-label"))
 	}
 	
 	fun renderCampaignUI(controls: CampaignCameraControls) {
 		systemsOverlayCamera.position.copy(controls.camera.getWorldPosition(systemsOverlayCamera.position))
 		systemsOverlayCamera.quaternion.copy(controls.camera.getWorldQuaternion(systemsOverlayCamera.quaternion))
 		systemsOverlayRenderer.render(systemsOverlayScene, systemsOverlayCamera)
-		
-		textFit(document.getElementsByClassName("system-label"))
 	}
 	
 	fun updateCampaignUI() {
