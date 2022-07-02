@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 enum class ClusterSize(val maxStars: Int, val maxHyperlaneDistanceFactor: Double) {
 	SMALL(15, 1.5), MEDIUM(25, 2.0), LARGE(35, 2.5);
@@ -27,13 +28,19 @@ enum class ClusterPlanetDensity(val chanceToAdd: Double) {
 }
 
 enum class ClusterCorruption(val corruptedStarsPortion: Double) {
-	SACROSANCT(0.05), MATERIAL(0.15), INFERNAL(0.25);
+	SACROSANCT(0.075), MATERIAL(0.15), INFERNAL(0.3);
 	
 	fun getNumCorruptedStars(size: ClusterSize): Int {
-		val min = floor(corruptedStarsPortion * size.maxStars).roundToInt()
-		val max = ceil(corruptedStarsPortion * size.maxStars).roundToInt()
+		val corruptedStars = corruptedStarsPortion * size.maxStars
+		val min = floor(corruptedStars).roundToInt()
+		val max = ceil(corruptedStars).roundToInt()
 		
-		return (min..max).random()
+		val chance = corruptedStars - min
+		
+		return if (Random.nextDouble() < chance)
+			max
+		else
+			min
 	}
 	
 	val displayName: String
