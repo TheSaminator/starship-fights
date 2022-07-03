@@ -17,6 +17,7 @@ sealed class Selection {
 	object None : Selection()
 	data class System(val id: Id<StarSystem>) : Selection()
 	data class CelestialObject(val pointer: CelestialObjectPointer) : Selection()
+	data class FleetPresence(val pointer: FleetPresencePointer) : Selection()
 }
 
 private val selectionMutable = MutableStateFlow<Selection>(Selection.None)
@@ -44,6 +45,16 @@ fun addSelectionHandler(starClusterView: StarClusterView, camera: PerspectiveCam
 				x = (me.clientX.toDouble() / window.innerWidth) * 2 - 1
 				y = 1 - (me.clientY.toDouble() / window.innerHeight) * 2
 			}, camera)
+			
+			val fleetCounters = scene.children
+				.single { it.isStarCluster }.children
+				.single { it.isStarClusterFleets }
+			
+			val fleetPresence = raycaster.intersectObject(fleetCounters, recursive = true).firstOrNull()?.`object`?.fleetPresenceRender
+			if (fleetPresence != null) {
+				selectionMutable.value = Selection.FleetPresence(fleetPresence)
+				return
+			}
 			
 			val position = raycaster.intersectXZPlane()
 			if (position == null) {

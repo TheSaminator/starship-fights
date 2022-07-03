@@ -16,15 +16,18 @@ object CampaignResources {
 		private set
 	
 	private lateinit var starTypes: Map<StarType, RenderFactory>
-	lateinit var star: CustomRenderFactory<CelestialObjectWithPointer<CelestialObject.Star>>
-		private set
+	private lateinit var star: CustomRenderFactory<CelestialObjectWithPointer<CelestialObject.Star>>
 	
 	private lateinit var planetTypes: Map<PlanetType, RenderFactory>
-	lateinit var planet: CustomRenderFactory<CelestialObjectWithPointer<CelestialObject.Planet>>
-		private set
+	private lateinit var planet: CustomRenderFactory<CelestialObjectWithPointer<CelestialObject.Planet>>
 	
-	lateinit var starSystem: CustomRenderFactory<StarSystemWithId>
-		private set
+	private lateinit var fleetMeshesRaw: Map<ShipType, RenderFactory>
+	private lateinit var fleetMeshes: Map<FactionFlavor, RenderFactory>
+	private lateinit var fleetCounter: CustomRenderFactory<FleetPresenceWithPointer>
+	private lateinit var fleetCountersInSystem: CustomRenderFactory<StarSystemWithId>
+	private lateinit var fleetCountersInCluster: CustomRenderFactory<StarClusterView>
+	
+	private lateinit var starSystem: CustomRenderFactory<StarSystemWithId>
 	
 	private lateinit var warpLane: CustomRenderFactory<WarpLaneData>
 	
@@ -260,12 +263,89 @@ object CampaignResources {
 					obj
 				}
 			}
+			
+			launch {
+				val shipTypes = FactionFlavor.values().map { it.mapCounterShipClass }.distinct()
+				
+				fleetMeshesRaw = shipTypes.associateWith { shipType ->
+					async { loadModel(shipType.meshName) }
+				}.mapValues { (_, meshAsync) ->
+					val mesh = meshAsync.await()
+					mesh.scale.setScalar(0.25)
+					RenderFactory { mesh.clone(true) }
+				}
+				
+				fleetMeshes = FactionFlavor.values().associateWith { flavor ->
+					val shipTypeMesh = fleetMeshesRaw.getValue(flavor.mapCounterShipClass).generate().unsafeCast<Mesh>()
+					
+					shipTypeMesh.material = shipTypeMesh.material.unsafeCast<MeshPhongMaterial>()
+						.apply { emissive = flavor.mapColor.shadow.to3JS() }
+						.forShip(flavor.mapCounterShipClass.faction, flavor)
+					
+					RenderFactory { shipTypeMesh.clone(true) }
+				}
+				
+				fleetCounter = CustomRenderFactory { (ptr, fleet) ->
+					fleetMeshes.getValue(fleet.owner).generate().apply {
+						userData = FleetPresenceRender(ptr)
+					}
+				}
+				
+				fleetCountersInSystem = CustomRenderFactory { (systemId, system) ->
+					val fleetList = system.fleets
+						.map { (id, fleet) -> FleetPresenceWithPointer(FleetPresencePointer(systemId, id), fleet) }
+						.sortedBy { (_, fleet) -> fleet.owner }
+					
+					val friendFleets = fleetList.filter { (_, fleet) ->
+						getFleetSide(fleet.owner) == FleetSide.FRIEND
+					}
+					
+					val enemyFleets = fleetList.filter { (_, fleet) ->
+						getFleetSide(fleet.owner) == FleetSide.ENEMY
+					}
+					
+					val worldRadius = CampaignScaling.toWorldLength(system.radius)
+					val worldCenter = CampaignScaling.toWorldPosition(system.position)
+					val friendPositions = FleetSide.FRIEND.getPositions(friendFleets.size, worldRadius, worldCenter)
+					val enemyPositions = FleetSide.ENEMY.getPositions(enemyFleets.size, worldRadius, worldCenter)
+					
+					val friendFleetRenders = (friendFleets.map { fleetCounter.generate(it) } zip friendPositions).map { (obj3d, pos) ->
+						obj3d.apply { applyRenderPosition(pos) }
+					}
+					val enemyFleetRenders = (enemyFleets.map { fleetCounter.generate(it) } zip enemyPositions).map { (obj3d, pos) ->
+						obj3d.apply { applyRenderPosition(pos) }
+					}
+					
+					Group().apply {
+						for (friendFleetRender in friendFleetRenders)
+							add(friendFleetRender)
+						
+						for (enemyFleetRender in enemyFleetRenders)
+							add(enemyFleetRender)
+						
+						userData = systemId.id
+					}
+				}
+				
+				fleetCountersInCluster = CustomRenderFactory { cluster ->
+					val systemsFleets = cluster.systems.map { (id, system) ->
+						fleetCountersInSystem.generate(StarSystemWithId(id, system))
+					}
+					
+					Group().apply {
+						for (systemFleets in systemsFleets)
+							add(systemFleets)
+						
+						userData = "fleet counters"
+					}
+				}
+			}
 		}
 		
 		starSystem = CustomRenderFactory { (ssId, starSystem) ->
 			val torusGeom = TorusGeometry(CampaignScaling.toWorldLength(starSystem.radius), 0.25, 4, 64)
 			val torusMat = MeshBasicMaterial(configure {
-				color = (starSystem.holder?.getMapColor ?: IntColor(255, 255, 255)).to3JS()
+				color = (starSystem.holder?.mapColor ?: IntColor(255, 255, 255)).to3JS()
 			})
 			
 			val torus = Mesh(torusGeom, torusMat)
@@ -305,6 +385,8 @@ object CampaignResources {
 				for (lane in cluster.lanes)
 					add(warpLane.generate(lane.resolve(cluster) ?: continue))
 				
+				add(fleetCountersInCluster.generate(cluster))
+				
 				userData = "star cluster"
 			}
 		}
@@ -312,24 +394,24 @@ object CampaignResources {
 }
 
 object CampaignScaling {
-	private const val CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR = 0.25
+	const val CELESTIAL_BODY_SIZE_PER_3JS_UNITS = 4.0
 	
 	fun toWorldRotation(facing: Double, obj: Object3D) {
 		obj.rotateY(facing)
 	}
 	
-	fun toSpaceLength(length3js: Double) = length3js / CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR
-	fun toWorldLength(lengthSc: Double) = lengthSc * CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR
+	fun toSpaceLength(length3js: Double) = length3js * CELESTIAL_BODY_SIZE_PER_3JS_UNITS
+	fun toWorldLength(lengthSc: Double) = lengthSc / CELESTIAL_BODY_SIZE_PER_3JS_UNITS
 	
 	fun toSpacePosition(v3: Vector3) = Position(
-		Vec2(v3.x.toDouble(), v3.z.toDouble()) / CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR
+		Vec2(v3.x.toDouble(), v3.z.toDouble()) * CELESTIAL_BODY_SIZE_PER_3JS_UNITS
 	)
 	
-	fun toWorldPosition(pos: Position) = (pos.vector * CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR).let { (x, y) ->
+	fun toWorldPosition(pos: Position) = (pos.vector / CELESTIAL_BODY_SIZE_PER_3JS_UNITS).let { (x, y) ->
 		Vector3(x, 0, y)
 	}
 	
-	fun toWorldScale(size: Int) = sqrt(size * 32.0) * CELESTIAL_BODY_SIZE_TO_3JS_UNITS_FACTOR
+	fun toWorldScale(size: Int) = sqrt(size * 32.0) / CELESTIAL_BODY_SIZE_PER_3JS_UNITS
 }
 
 external interface CelestialObjectRender {
@@ -378,6 +460,27 @@ val Object3D.starSystemRender: Id<StarSystem>?
 	else
 		parent?.starSystemRender
 
+external interface FleetPresenceRender {
+	var isFleetPresence: Boolean
+	var fleetPresenceId: String
+	var starSystemId: String
+}
+
+fun FleetPresenceRender(ptr: FleetPresencePointer) = configure<FleetPresenceRender> {
+	isFleetPresence = true
+	starSystemId = ptr.starSystem.id
+	fleetPresenceId = ptr.fleetPresence.id
+}
+
+val FleetPresenceRender.pointer: FleetPresencePointer
+	get() = FleetPresencePointer(Id(starSystemId), Id(fleetPresenceId))
+
+val Object3D.fleetPresenceRender: FleetPresencePointer?
+	get() = if (userData.isFleetPresence == true)
+		userData.unsafeCast<FleetPresenceRender>().pointer
+	else
+		parent?.fleetPresenceRender
+
 val StarClusterBackground.ambientColor: IntColor
 	get() = when (this) {
 		StarClusterBackground.BLUE -> IntColor(34, 51, 85)
@@ -392,3 +495,8 @@ val StarClusterBackground.ambientColor: IntColor
 
 val Object3D.isStarCluster: Boolean
 	get() = userData == "star cluster"
+
+val Object3D.isStarClusterFleets: Boolean
+	get() = userData == "fleet counters"
+
+fun Object3D.isStarSystemFleets(system: Id<StarSystem>) = (parent?.isStarClusterFleets == true) && userData == system.id

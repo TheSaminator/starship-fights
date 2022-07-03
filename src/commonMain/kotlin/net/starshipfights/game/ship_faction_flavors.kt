@@ -19,6 +19,15 @@ data class IntColor(val red: Int, val green: Int, val blue: Int) {
 	}
 }
 
+val IntColor.shadow: IntColor
+	get() = let { (r, g, b) ->
+		IntColor(
+			r * 2 / 3,
+			g * 2 / 3,
+			b * 2 / 3,
+		)
+	}
+
 val IntColor.highlight: IntColor
 	get() = let { (r, g, b) ->
 		IntColor(

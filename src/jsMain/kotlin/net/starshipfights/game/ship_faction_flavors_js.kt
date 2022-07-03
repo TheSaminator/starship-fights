@@ -149,6 +149,7 @@ fun MeshPhongMaterial.forShip(faction: Faction, flavor: FactionFlavor): ShaderMa
 	return shipShaderMaterial.clone().unsafeCast<ShaderMaterial>().also { material ->
 		material.uniforms["diffuse"]?.value?.unsafeCast<Color>()?.copy(color)
 		material.uniforms["specular"]?.value?.unsafeCast<Color>()?.copy(specular)
+		material.uniforms["emissive"]?.value?.unsafeCast<Color>()?.copy(emissive)
 		material.uniforms["shininess"]?.value = shininess.toDouble().coerceAtLeast(EPSILON)
 		
 		map?.let { material.uniforms["map"]?.value = it }

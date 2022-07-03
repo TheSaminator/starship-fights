@@ -19,6 +19,7 @@ import kotlin.math.PI
 
 interface CampaignUIResponder {
 	fun getStarCluster(): StarClusterView
+	fun getRenderScene(): Scene
 }
 
 object CampaignUI {
@@ -38,6 +39,9 @@ object CampaignUI {
 	
 	private val selectedObjectIndicators = mutableMapOf<CelestialObjectPointer, CSS3DSprite>()
 	private val visibleSelectedObjectIndicators = mutableSetOf<CelestialObjectPointer>()
+	
+	private val selectedFleetIndicators = mutableMapOf<FleetPresencePointer, CSS3DSprite>()
+	private val visibleSelectedFleetIndicators = mutableSetOf<FleetPresencePointer>()
 	
 	private lateinit var errorMessages: HTMLParagraphElement
 	private lateinit var helpMessages: HTMLParagraphElement
@@ -81,6 +85,10 @@ object CampaignUI {
 			systemsOverlayRenderer.setSize(window.innerWidth, window.innerHeight)
 		})
 		
+		val fleetRenders = responder.getRenderScene()
+			.children.single { it.isStarCluster }
+			.children.single { it.isStarClusterFleets }
+		
 		for ((systemId, system) in responder.getStarCluster().systems) {
 			val systemWithId = StarSystemWithId(systemId, system)
 			systemsOverlayScene.add(CSS3DSprite(document.create.div {
@@ -91,7 +99,7 @@ object CampaignUI {
 				element.style.asDynamic().pointerEvents = "none"
 				
 				position.copy(CampaignScaling.toWorldPosition(system.position))
-				position.y = 50
+				position.y = 64
 			})
 			
 			selectedSystemIndicators[systemId] = CSS3DObject(document.create.img(src = "/static/game/images/crosshair-round.svg")).apply {
@@ -118,9 +126,33 @@ object CampaignUI {
 					visible = false
 				}.also { systemsOverlayScene.add(it) }
 			}
+			
+			val fleetRender = fleetRenders
+				.children.single { it.isStarSystemFleets(systemId) }
+			
+			for (fleetId in system.fleets.keys) {
+				val fleetPtr = FleetPresencePointer(systemId, fleetId)
+				val currFleetRender = fleetRender
+					.children.single { it.fleetPresenceRender == fleetPtr }
+				
+				selectedFleetIndicators[fleetPtr] = CSS3DSprite(document.create.img(src = "/static/game/images/crosshair.svg")).apply {
+					scale.setScalar(0.004)
+					
+					element.style.asDynamic().pointerEvents = "none"
+					
+					position.copy(currFleetRender.position)
+					
+					visible = false
+				}.also { systemsOverlayScene.add(it) }
+			}
 		}
-		
+	}
+	
+	private var labelsFit = false
+	fun fitLabels() {
+		if (labelsFit) return
 		textFit(document.getElementsByClassName("system-label"))
+		labelsFit = true
 	}
 	
 	fun renderCampaignUI(controls: CampaignCameraControls) {
@@ -146,6 +178,11 @@ object CampaignUI {
 		}
 		visibleSelectedObjectIndicators.clear()
 		
+		for (ptr in visibleSelectedFleetIndicators) {
+			selectedFleetIndicators[ptr]?.visible = false
+		}
+		visibleSelectedFleetIndicators.clear()
+		
 		topRightBar.clear()
 		topRightBar.append {
 			when (selection) {
@@ -168,6 +205,12 @@ object CampaignUI {
 					p {
 						style = "text-align:center"
 						+(system.holder?.loyalties?.first()?.getDefiniteShortName()?.let { "Controlled by $it" } ?: "Wilderness")
+						br
+						system.holder?.let {
+							img(alt = it.displayName, src = it.flagUrl) {
+								style = "width:4em;height:2.5em"
+							}
+						}
 					}
 					
 					selectedSystemIndicators[selection.id]?.visible = true
@@ -194,6 +237,31 @@ object CampaignUI {
 					selectedObjectIndicators[selection.pointer]?.visible = true
 					visibleSelectedObjectIndicators += selection.pointer
 				}
+				is Selection.FleetPresence -> {
+					val fleet = selection.pointer.resolve(starCluster) ?: return@append selectionRender(clearSelection())
+					
+					p {
+						style = "text-align:center"
+						strong(classes = "heading") {
+							+fleet.name
+						}
+					}
+					p {
+						style = "text-align:center"
+						+"${fleet.ships.size} ships"
+					}
+					p {
+						style = "text-align:center"
+						+"Operated by ${fleet.owner.loyalties.first().getDefiniteShortName()}"
+						br
+						img(alt = fleet.owner.displayName, src = fleet.owner.flagUrl) {
+							style = "width:4em;height:2.5em"
+						}
+					}
+					
+					selectedFleetIndicators[selection.pointer]?.visible = true
+					visibleSelectedFleetIndicators += selection.pointer
+				}
 			}
 		}
 	}
@@ -219,7 +287,7 @@ object CampaignUI {
 		attributes["data-ship-id"] = system.id.toString()
 		
 		p(classes = "system-label") {
-			val color = system.starSystem.holder?.getMapColor?.toString() ?: "#fff"
+			val color = system.starSystem.holder?.mapColor?.toString() ?: "#fff"
 			style = "color:$color;margin:0;white-space:nowrap;width:640px;height:125px"
 			+system.starSystem.name
 		}
@@ -228,7 +296,29 @@ object CampaignUI {
 			style = "text-align:center;color:#fff;margin:0;white-space:nowrap;width:640px;height:125px"
 			system.starSystem.holder?.let { flavor ->
 				img(src = flavor.flagUrl, alt = flavor.displayName) {
-					style = "width:200px;height:125px"
+					style = "width:640px;height:400px;transform-origin:top center;transform:scale(0.32)"
+				}
+			}
+		}
+	}
+	
+	private fun redrawSystemLabel(system: StarSystemWithId) {
+		val div = document.getElementById("system-overlay-${system.id}").unsafeCast<HTMLDivElement>()
+		
+		div.clear()
+		div.append {
+			p(classes = "system-label") {
+				val color = system.starSystem.holder?.mapColor?.toString() ?: "#fff"
+				style = "color:$color;margin:0;white-space:nowrap;width:640px;height:125px"
+				+system.starSystem.name
+			}
+			
+			p(classes = "system-faction") {
+				style = "text-align:center;color:#fff;margin:0;white-space:nowrap;width:640px;height:125px"
+				system.starSystem.holder?.let { flavor ->
+					img(src = flavor.flagUrl, alt = flavor.displayName) {
+						style = "width:640px;height:400px;transform-origin:top center;transform:scale(0.32)"
+					}
 				}
 			}
 		}

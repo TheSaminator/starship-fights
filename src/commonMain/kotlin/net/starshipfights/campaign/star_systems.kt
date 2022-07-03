@@ -13,7 +13,7 @@ enum class StarClusterBackground {
 }
 
 @Serializable
-class StarClusterView(
+data class StarClusterView(
 	val background: StarClusterBackground,
 	val systems: Map<Id<StarSystem>, StarSystem>,
 	val lanes: Set<WarpLane>

@@ -87,6 +87,7 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 				cameraControls.update(dt)
 				renderer.render(scene, camera)
 				GameUI.renderGameUI(cameraControls)
+				GameUI.fitLabels()
 			}
 		}
 		

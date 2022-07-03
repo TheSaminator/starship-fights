@@ -114,7 +114,7 @@ fun Routing.installCampaign() {
 		
 		val cluster = ClusterGenerator(
 			ClusterGenerationSettings(color, size, density, planets, corruption)
-		).generateCluster()
+		).generateCluster().testPostProcess()
 		
 		val clientMode = ClientMode.CampaignMap(
 			Id(""),

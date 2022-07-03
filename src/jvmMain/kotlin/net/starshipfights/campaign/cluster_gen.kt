@@ -183,6 +183,11 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 		if (detachedSystems.isEmpty())
 			return warpLanes
 		
+		val lanesWithSegments = warpLanes.map { lane ->
+			val (aId, bId) = lane
+			lane to LineSegment(positions.getValue(aId), positions.getValue(bId))
+		}
+		
 		val possibleLanes = discoveredSystems.map { a ->
 			val aPos = positions.getValue(a)
 			val (b, bPos) = detachedSystems.map { b ->
@@ -193,9 +198,15 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 				(aPos - bPos).magnitude
 			}!!
 			WarpLane(a, b) to LineSegment(aPos, bPos)
+		}.filter { (warpLane, segment) ->
+			lanesWithSegments.none { (l, s) ->
+				warpLane !in l && s in segment
+			} && positions.none { (id, pos) ->
+				id !in warpLane && segment.intersectsCircle(pos, MAX_SYSTEM_SIZE)
+			}
 		}.sortedBy { (_, it) -> it.length }.map { (it, _) -> it }
 		
-		return fixWarpLanes(positions, warpLanes + possibleLanes.take(settings.laneDensity.numToAdd))
+		return fixWarpLanes(positions, warpLanes + possibleLanes.take(1))
 	}
 	
 	private fun createStarSystems() = flow {
@@ -363,12 +374,6 @@ private data class UnplacedStarSystem(
 private val UnplacedStarSystem.numHabitableWorlds: Int
 	get() = bodies.count { it is CelestialObject.Planet && it.type == PlanetType.TERRESTRIAL }
 
-private val UnplacedStarSystem.isEldritch: Boolean
-	get() = bodies.any { it is CelestialObject.Star && it.type == StarType.X }
-
-private val UnplacedStarSystem.numWorlds: Int
-	get() = bodies.count { it is CelestialObject.Planet }
-
 @JvmInline
 private value class UnnamedCelestialObject private constructor(private val celestialObject: CelestialObject) {
 	val position: Position
@@ -470,11 +475,8 @@ private val CelestialObject.Star.surfaceLuminosity: Double
 		val gray = type.lightColor.let { (r, g, b) -> r + g + b } / 765.0
 		val area = 4 * PI * size // radius is proportional to sqrt(size)
 		
-		// screw it
-		val hueTemperature = exp(hue)
-		
 		// neutron stars look blue, but emit light as if they were gray
-		val temperature = if (type == StarType.NEUTRON_STAR) 0.6441 else hueTemperature
+		val temperature = exp(if (type == StarType.NEUTRON_STAR) 0.0 else hue)
 		
 		// not-so-physically-accurate variant of Stefan-Boltzmann equation
 		return gray * area * temperature

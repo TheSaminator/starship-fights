@@ -13,10 +13,14 @@ import kotlinx.coroutines.launch
 import net.starshipfights.data.Id
 import net.starshipfights.game.*
 
-suspend fun campaignMain(playingAs: Id<InGameAdmiral>, otherAdmirals: Map<Id<InGameAdmiral>, CampaignAdmiral>, clusterToken: Id<StarClusterView>, clusterView: StarClusterView) {
+var mySide: CampaignAdmiral? = null
+
+suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAdmiral>, CampaignAdmiral>, clusterToken: Id<StarClusterView>, clusterView: StarClusterView) {
 	Popup.LoadingScreen("Loading resources...") {
 		CampaignResources.load()
 	}.display()
+	
+	mySide = admirals[playingAs]
 	
 	val updateLoop = Popup.LoadingScreen<FlowCollector<Double>>("Rendering cluster...") {
 		delay(500L)
@@ -61,7 +65,7 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, otherAdmirals: Map<Id<InG
 		
 		renderer.render(scene, camera)
 		
-		CampaignUI.initCampaignUI(uiResponder(clusterView))
+		CampaignUI.initCampaignUI(uiResponder(clusterView, scene))
 		
 		addSelectionHandler(clusterView, camera, scene)
 		
@@ -71,6 +75,7 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, otherAdmirals: Map<Id<InG
 			cameraControls.update(dt)
 			renderer.render(scene, camera)
 			CampaignUI.renderCampaignUI(cameraControls)
+			CampaignUI.fitLabels()
 			
 			scene.traverse { obj3d ->
 				obj3d.celestialObjectRenderImmediate?.let { ptr ->

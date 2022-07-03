@@ -13,8 +13,8 @@ enum class ClusterSize(val maxStars: Int, val maxHyperlaneDistanceFactor: Double
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
 }
 
-enum class ClusterLaneDensity(val chanceToRemove: Double, val numToAdd: Int) {
-	SPARSE(0.72, 1), MEDIUM(0.36, 2), DENSE(0.12, 3);
+enum class ClusterLaneDensity(val chanceToRemove: Double) {
+	SPARSE(0.72), MEDIUM(0.36), DENSE(0.12);
 	
 	val displayName: String
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
