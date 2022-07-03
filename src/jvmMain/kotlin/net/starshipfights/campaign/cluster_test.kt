@@ -14,7 +14,7 @@ fun StarClusterView.testPostProcess(): StarClusterView {
 	val ownedSystems = (systems.toList().shuffled() zip ownerFlavors).associate { (systemWithId, flavor) ->
 		val (systemId, system) = systemWithId
 		
-		val numOfFleets = (1..3).random()
+		val numOfFleets = (0..1).random() + (0..1).random() + 1
 		val fleets = (1..numOfFleets).associate { i ->
 			Id<FleetPresence>("${systemId.id}-fleet-$i") to FleetPresence(
 				"Test Fleet $i",

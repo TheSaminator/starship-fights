@@ -271,7 +271,7 @@ object CampaignResources {
 					async { loadModel(shipType.meshName) }
 				}.mapValues { (_, meshAsync) ->
 					val mesh = meshAsync.await()
-					mesh.scale.setScalar(0.25)
+					mesh.scale.setScalar(0.4)
 					RenderFactory { mesh.clone(true) }
 				}
 				

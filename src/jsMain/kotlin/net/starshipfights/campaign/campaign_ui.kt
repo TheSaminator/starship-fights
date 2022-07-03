@@ -136,7 +136,7 @@ object CampaignUI {
 					.children.single { it.fleetPresenceRender == fleetPtr }
 				
 				selectedFleetIndicators[fleetPtr] = CSS3DSprite(document.create.img(src = "/static/game/images/crosshair.svg")).apply {
-					scale.setScalar(0.004)
+					scale.setScalar(0.00875)
 					
 					element.style.asDynamic().pointerEvents = "none"
 					
@@ -206,10 +206,10 @@ object CampaignUI {
 						style = "text-align:center"
 						+(system.holder?.loyalties?.first()?.getDefiniteShortName()?.let { "Controlled by $it" } ?: "Wilderness")
 						br
+						system.holder?.let { +"(${it.displayName})" }
+						br
 						system.holder?.let {
-							img(alt = it.displayName, src = it.flagUrl) {
-								style = "width:4em;height:2.5em"
-							}
+							img(alt = it.displayName, src = it.flagUrl) { style = "width:4em;height:2.5em" }
 						}
 					}
 					
@@ -248,15 +248,17 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
-						+"${fleet.ships.size} ships"
-					}
-					p {
-						style = "text-align:center"
 						+"Operated by ${fleet.owner.loyalties.first().getDefiniteShortName()}"
+						br
+						+"(${fleet.owner.displayName})"
 						br
 						img(alt = fleet.owner.displayName, src = fleet.owner.flagUrl) {
 							style = "width:4em;height:2.5em"
 						}
+					}
+					p {
+						style = "text-align:center"
+						+"${fleet.ships.size} ships"
 					}
 					
 					selectedFleetIndicators[selection.pointer]?.visible = true

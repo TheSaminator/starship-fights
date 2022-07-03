@@ -36,7 +36,7 @@ enum class FleetSide {
 		}
 		
 		return angles.map { theta ->
-			val position = Vector3(cosFactor * cos(theta) * worldRadius, 9.6, sin(theta) * worldRadius).add(worldCenter)
+			val position = Vector3(cosFactor * cos(theta) * worldRadius, 14.4, sin(theta) * worldRadius).add(worldCenter)
 			
 			val rotation = atan2(-cos(theta) * cosFactor, -sin(theta))
 			
