@@ -20,7 +20,10 @@ fun StarClusterView.testPostProcess(): StarClusterView {
 	val ownedSystems = (systems.toList().shuffled() zip ownerFlavors).associate { (systemWithId, flavor) ->
 		val (systemId, system) = systemWithId
 		
-		val numOfFleets = (0..2).random() + (0..2).random() + 1
+		val numOfFleets = (0..1).random() + (0..1).random() + (0..1).random()
+		if (numOfFleets == 0)
+			return@associate systemId to system
+		
 		val fleets = (1..numOfFleets).associate { _ ->
 			val admiralRank = AdmiralRank.values().random()
 			val admiralIsFemale = flavor == FactionFlavor.FELINAE_FELICES || Random.nextBoolean()
