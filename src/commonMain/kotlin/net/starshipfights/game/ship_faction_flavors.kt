@@ -50,7 +50,7 @@ val Faction.trimColor: IntColor?
 enum class FactionFlavor(val displayName: String, val colorReplacement: IntColor) {
 	MECHYRDIA("Štelflót Ciarstuos Mehurdiasi", IntColor(255, 204, 51)),
 	TYLA("Helasram Kasashtam Moashtas Tulasras", IntColor(51, 102, 204)),
-	OLYMPIA("Classis Nautica Rei Publicae Olympicae", IntColor(204, 51, 51)),
+	OLYMPIA("Classis Astronautica Rei Publicae Olympicae", IntColor(204, 51, 51)),
 	TEXANDRIA("Texandrische Sternenmarine der Volkswehr", IntColor(255, 221, 119)),
 	
 	NDRC("Sterrenvloot der NdRC", IntColor(255, 153, 51)),
