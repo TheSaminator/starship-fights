@@ -53,7 +53,7 @@ object CampaignResources {
 					CampaignScaling.toWorldPosition(bEdge),
 				),
 				1,
-				0.24,
+				0.25,
 				4,
 				false
 			)
@@ -343,7 +343,7 @@ object CampaignResources {
 		}
 		
 		starSystem = CustomRenderFactory { (ssId, starSystem) ->
-			val torusGeom = TorusGeometry(CampaignScaling.toWorldLength(starSystem.radius), 0.25, 4, 64)
+			val torusGeom = TorusGeometry(CampaignScaling.toWorldLength(starSystem.radius), 0.4, 4, 64)
 			val torusMat = MeshBasicMaterial(configure {
 				color = (starSystem.holder?.mapColor ?: IntColor(255, 255, 255)).to3JS()
 			})
