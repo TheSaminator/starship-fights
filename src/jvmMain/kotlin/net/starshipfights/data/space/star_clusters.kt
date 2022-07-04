@@ -2,21 +2,24 @@ package net.starshipfights.data.space
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.starshipfights.campaign.*
 import net.starshipfights.data.DataDocument
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
+import net.starshipfights.data.invoke
 import net.starshipfights.game.FactionFlavor
 import net.starshipfights.game.Position
+import org.litote.kmongo.eq
 
 @Serializable
 data class StarCluster(
 	override val id: Id<StarCluster>,
 	
 	val background: StarClusterBackground,
-	val systems: Set<Id<ClusterStarSystem>>,
 	val lanes: Set<WarpLane>
 ) : DataDocument<StarCluster> {
 	companion object Table : DocumentTable<StarCluster> by DocumentTable.create()
@@ -25,110 +28,149 @@ data class StarCluster(
 @Serializable
 data class ClusterStarSystem(
 	override val id: Id<ClusterStarSystem>,
+	val clusterId: Id<StarCluster>,
 	
 	val name: String,
 	val holder: FactionFlavor?,
-	val fleets: Set<Id<ClusterFleetPresence>>,
 	
 	val position: Position,
 	val radius: Double,
-	val bodies: Set<Id<ClusterCelestialObject>>,
 ) : DataDocument<ClusterStarSystem> {
-	companion object Table : DocumentTable<ClusterStarSystem> by DocumentTable.create()
+	companion object Table : DocumentTable<ClusterStarSystem> by DocumentTable.create({
+		index(ClusterStarSystem::clusterId)
+	})
 }
 
 @Serializable
 data class ClusterCelestialObject(
 	override val id: Id<ClusterCelestialObject>,
+	val starSystemId: Id<ClusterStarSystem>,
 	
 	val celestialObject: CelestialObject
 ) : DataDocument<ClusterCelestialObject> {
-	companion object Table : DocumentTable<ClusterCelestialObject> by DocumentTable.create()
+	companion object Table : DocumentTable<ClusterCelestialObject> by DocumentTable.create({
+		index(ClusterCelestialObject::starSystemId)
+	})
 }
 
 @Serializable
 data class ClusterFleetPresence(
 	override val id: Id<ClusterFleetPresence>,
+	val starSystemId: Id<ClusterStarSystem>,
 	
 	val fleetPresence: FleetPresence
 ) : DataDocument<ClusterFleetPresence> {
-	companion object Table : DocumentTable<ClusterFleetPresence> by DocumentTable.create()
+	companion object Table : DocumentTable<ClusterFleetPresence> by DocumentTable.create({
+		index(ClusterFleetPresence::starSystemId)
+	})
 }
 
 suspend fun deleteCluster(clusterId: Id<StarCluster>) {
 	coroutineScope {
-		val cluster = StarCluster.get(clusterId) ?: return@coroutineScope
-		
-		for (systemId in cluster.systems)
-			launch {
-				val system = ClusterStarSystem.get(systemId) ?: return@launch
-				
-				for (bodyId in system.bodies)
-					launch {
-						ClusterCelestialObject.del(bodyId)
-					}
-				
-				for (fleetId in system.fleets)
-					launch {
-						ClusterFleetPresence.del(fleetId)
-					}
-				
-				ClusterStarSystem.del(systemId)
+		launch { StarCluster.del(clusterId) }
+		launch {
+			ClusterStarSystem.filter(ClusterStarSystem::clusterId eq clusterId).collect { cSystem ->
+				launch {
+					ClusterCelestialObject.remove(ClusterCelestialObject::starSystemId eq cSystem.id)
+				}
+				launch {
+					ClusterFleetPresence.remove(ClusterFleetPresence::starSystemId eq cSystem.id)
+				}
+				launch {
+					ClusterStarSystem.del(cSystem.id)
+				}
 			}
-		
-		StarCluster.del(clusterId)
+		}
 	}
 }
 
-suspend fun view(clusterId: Id<StarCluster>): StarClusterView? {
-	return coroutineScope {
-		val cluster = StarCluster.get(clusterId) ?: return@coroutineScope null
-		
-		val systems = cluster.systems.map { systemId ->
-			systemId.reinterpret<StarSystem>() to async {
-				val system = ClusterStarSystem.get(systemId) ?: return@async null
-				
-				val bodiesAsync = async {
-					system.bodies
-						.map { bodyId ->
-							bodyId to async { ClusterCelestialObject.get(bodyId) }
-						}
-						.mapNotNull { (id, deferred) ->
-							deferred.await()?.let { id to it }
-						}
-						.associate { (id, clusterObject) ->
-							id.reinterpret<CelestialObject>() to clusterObject.celestialObject
-						}
-				}
-				
-				val fleetsAsync = async {
-					system.fleets
-						.map { fleetId ->
-							fleetId to async { ClusterFleetPresence.get(fleetId) }
-						}
-						.mapNotNull { (id, deferred) ->
-							deferred.await()?.let { id to it }
-						}
-						.associate { (id, clusterFleet) ->
-							id.reinterpret<FleetPresence>() to clusterFleet.fleetPresence
-						}
-				}
-				
-				val bodies = bodiesAsync.await()
-				val fleets = fleetsAsync.await()
-				
-				StarSystem(
+suspend fun createCluster(clusterView: StarClusterView): Id<StarCluster> {
+	val cluster = StarCluster(
+		id = Id(),
+		background = clusterView.background,
+		lanes = clusterView.lanes
+	)
+	
+	coroutineScope {
+		launch { StarCluster.put(cluster) }
+		launch {
+			for ((systemId, system) in clusterView.systems) {
+				val clusterSystem = ClusterStarSystem(
+					id = systemId.reinterpret(),
+					clusterId = cluster.id,
 					name = system.name,
 					holder = system.holder,
-					fleets = fleets,
 					position = system.position,
-					radius = system.radius,
-					bodies = bodies
+					radius = system.radius
 				)
+				
+				launch { ClusterStarSystem.put(clusterSystem) }
+				launch {
+					for ((bodyId, body) in system.bodies)
+						launch {
+							ClusterCelestialObject.put(
+								ClusterCelestialObject(
+									id = bodyId.reinterpret(),
+									starSystemId = clusterSystem.id,
+									celestialObject = body
+								)
+							)
+						}
+				}
+				launch {
+					for ((fleetId, fleet) in system.fleets)
+						launch {
+							ClusterFleetPresence.put(
+								ClusterFleetPresence(
+									id = fleetId.reinterpret(),
+									starSystemId = clusterSystem.id,
+									fleetPresence = fleet
+								)
+							)
+						}
+				}
 			}
-		}.mapNotNull { (id, deferred) ->
-			deferred.await()?.let { id to it }
-		}.toMap()
+		}
+	}
+	
+	return cluster.id
+}
+
+suspend fun viewCluster(clusterId: Id<StarCluster>): StarClusterView? {
+	return coroutineScope {
+		val clusterAsync = async { StarCluster.get(clusterId) }
+		val systemsAsync = async {
+			ClusterStarSystem.filter(ClusterStarSystem::clusterId eq clusterId).map { cSystem ->
+				async {
+					val bodiesAsync = async {
+						val bodies = ClusterCelestialObject.filter(ClusterCelestialObject::starSystemId eq cSystem.id).toList()
+						
+						bodies.associate { cBody ->
+							cBody.id.reinterpret<CelestialObject>() to cBody.celestialObject
+						}
+					}
+					val fleetsAsync = async {
+						val fleets = ClusterFleetPresence.filter(ClusterFleetPresence::starSystemId eq cSystem.id).toList()
+						
+						fleets.associate { cFleet ->
+							cFleet.id.reinterpret<FleetPresence>() to cFleet.fleetPresence
+						}
+					}
+					
+					cSystem.id.reinterpret<StarSystem>() to StarSystem(
+						cSystem.name,
+						cSystem.holder,
+						fleetsAsync.await(),
+						cSystem.position,
+						cSystem.radius,
+						bodiesAsync.await()
+					)
+				}
+			}.toList().associate { it.await() }
+		}
+		
+		val cluster = clusterAsync.await() ?: return@coroutineScope null
+		val systems = systemsAsync.await()
 		
 		StarClusterView(
 			background = cluster.background,

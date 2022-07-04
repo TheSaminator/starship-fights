@@ -3,6 +3,7 @@ package net.starshipfights.campaign
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.starshipfights.data.Id
+import net.starshipfights.data.invoke
 import net.starshipfights.game.*
 import net.starshipfights.game.ai.mean
 import net.starshipfights.game.ai.random
@@ -38,7 +39,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 			
 			val systems = (positions.toList() zip unplacedStarSystems).associate { (idAndPos, data) ->
 				val (id, pos) = idAndPos
-				id to data.place(id, pos)
+				id to data.place(pos)
 			}
 			
 			StarClusterView(
@@ -88,9 +89,9 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 	}
 	
 	private suspend fun indexPositions(positions: List<Vec2>): Map<Id<StarSystem>, Vec2> {
-		return positions.withIndex().associate { (i, pos) ->
+		return positions.associateBy {
 			throttle()
-			Id<StarSystem>("star-system-${i + 1}") to pos
+			Id()
 		}
 	}
 	
@@ -361,13 +362,13 @@ private data class UnplacedStarSystem(
 	val radius: Double,
 	val bodies: Set<CelestialObject>
 ) {
-	fun place(id: Id<StarSystem>, position: Vec2) = StarSystem(
+	fun place(position: Vec2) = StarSystem(
 		name = name,
 		holder = null,
 		fleets = emptyMap(),
 		position = Position(position),
 		radius = radius,
-		bodies = bodies.withIndex().associate { (i, body) -> Id<CelestialObject>("${id.id}-body-$i") to body }
+		bodies = bodies.associateBy { Id() }
 	)
 }
 
