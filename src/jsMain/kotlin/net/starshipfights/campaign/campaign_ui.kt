@@ -131,10 +131,22 @@ object CampaignUI {
 			val fleetRender = fleetRenders
 				.children.single { it.isStarSystemFleets(systemId) }
 			
-			for (fleetId in system.fleets.keys) {
+			for ((fleetId, fleet) in system.fleets) {
 				val fleetPtr = FleetPresencePointer(systemId, fleetId)
+				val fleetWithPtr = FleetPresenceWithPointer(fleetPtr, fleet)
 				val currFleetRender = fleetRender
 					.children.single { it.fleetPresenceRender == fleetPtr }
+				
+				systemsOverlayScene.add(CSS3DSprite(document.create.div {
+					drawFleetLabel(fleetWithPtr)
+				}).apply {
+					scale.setScalar(0.125)
+					
+					element.style.asDynamic().pointerEvents = "none"
+					
+					position.copy(currFleetRender.position)
+					position.y = 32
+				})
 				
 				selectedFleetIndicators[fleetPtr] = CSS3DSprite(document.create.img(src = "/static/game/images/crosshair.svg")).apply {
 					scale.setScalar(0.00875)
@@ -153,6 +165,7 @@ object CampaignUI {
 	fun fitLabels() {
 		if (labelsFit) return
 		textFit(document.getElementsByClassName("system-label"))
+		textFit(document.getElementsByClassName("fleet-label"))
 		labelsFit = true
 	}
 	
@@ -205,7 +218,10 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
-						+when (system.bodies.values.filterIsInstance<CelestialObject.Star>().size) {
+						val stars = system.bodies.values.filterIsInstance<CelestialObject.Star>()
+						+if (stars.any { it.type == StarType.X })
+							"Veil rift"
+						else when (system.bodies.values.filterIsInstance<CelestialObject.Star>().size) {
 							1 -> "Unary star system"
 							2 -> "Binary star system"
 							3 -> "Trinary star system"
@@ -302,6 +318,19 @@ object CampaignUI {
 		delay(5000)
 		
 		errorMessages.textContent = ""
+	}
+	
+	private fun DIV.drawFleetLabel(fleet: FleetPresenceWithPointer) {
+		id = "fleet-overlay-${fleet.id.fleetPresence}"
+		classes = setOf("fleet-overlay")
+		style = "background-color:${fleet.fleetPresence.owner.mapColor};width:160px;height:75px;opacity:0.8;font-size:2em;text-align:center;vertical-align:middle"
+		attributes["data-fleet-id"] = fleet.id.fleetPresence.toString()
+		attributes["data-system-id"] = fleet.id.starSystem.toString()
+		
+		p(classes = "fleet-label") {
+			style = "color:#fff;margin:0;white-space:nowrap;width:160px;height:75px"
+			+"${fleet.fleetPresence.pointValue}"
+		}
 	}
 	
 	private fun DIV.drawSystemLabel(system: StarSystemWithId) {
