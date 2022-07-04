@@ -1,4 +1,4 @@
-package net.starshipfights.campaign
+package net.starshipfights.data.space
 
 import net.starshipfights.data.admiralty.LatinAdjective
 import net.starshipfights.data.admiralty.LatinNoun

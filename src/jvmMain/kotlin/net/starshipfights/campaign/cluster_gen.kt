@@ -4,6 +4,8 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.starshipfights.data.Id
 import net.starshipfights.data.invoke
+import net.starshipfights.data.space.randomStarName
+import net.starshipfights.data.space.toRomanNumerals
 import net.starshipfights.game.*
 import net.starshipfights.game.ai.mean
 import net.starshipfights.game.ai.random
