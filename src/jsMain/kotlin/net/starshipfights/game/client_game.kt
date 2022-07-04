@@ -71,6 +71,8 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	})
 	
 	GameRender.renderGameState(scene, gameState.value)
+	GameUI.renderGameUI(cameraControls)
+	GameUI.fitLabels()
 	
 	window.addEventListener("resize", {
 		camera.aspect = window.aspectRatio
@@ -87,7 +89,6 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 				cameraControls.update(dt)
 				renderer.render(scene, camera)
 				GameUI.renderGameUI(cameraControls)
-				GameUI.fitLabels()
 			}
 		}
 		

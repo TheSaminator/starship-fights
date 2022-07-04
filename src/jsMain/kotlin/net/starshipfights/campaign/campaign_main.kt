@@ -67,6 +67,9 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAd
 		
 		CampaignUI.initCampaignUI(uiResponder(clusterView, scene))
 		
+		CampaignUI.renderCampaignUI(cameraControls)
+		CampaignUI.fitLabels()
+		
 		addSelectionHandler(clusterView, camera, scene)
 		
 		delay(500L)
@@ -75,7 +78,6 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAd
 			cameraControls.update(dt)
 			renderer.render(scene, camera)
 			CampaignUI.renderCampaignUI(cameraControls)
-			CampaignUI.fitLabels()
 			
 			scene.traverse { obj3d ->
 				obj3d.celestialObjectRenderImmediate?.let { ptr ->
