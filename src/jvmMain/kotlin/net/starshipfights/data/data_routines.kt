@@ -1,10 +1,7 @@
 package net.starshipfights.data
 
 import kotlinx.coroutines.*
-import net.starshipfights.data.admiralty.Admiral
-import net.starshipfights.data.admiralty.BattleRecord
-import net.starshipfights.data.admiralty.ShipInDrydock
-import net.starshipfights.data.admiralty.eq
+import net.starshipfights.data.admiralty.*
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.auth.UserSession
 import net.starshipfights.game.AdmiralRank
@@ -29,6 +26,7 @@ object DataRoutines {
 		Admiral.initialize()
 		BattleRecord.initialize()
 		ShipInDrydock.initialize()
+		ShipMemorial.initialize()
 		User.initialize()
 		UserSession.initialize()
 		
