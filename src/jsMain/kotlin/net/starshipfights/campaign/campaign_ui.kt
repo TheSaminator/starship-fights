@@ -205,6 +205,19 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
+						+when (system.bodies.values.filterIsInstance<CelestialObject.Star>().size) {
+							1 -> "Unary star system"
+							2 -> "Binary star system"
+							3 -> "Trinary star system"
+							0 -> "Rogue planet system"
+							else -> "Multiple star system"
+						}
+						val planets = system.bodies.values.filterIsInstance<CelestialObject.Planet>()
+						val habitablePlanets = planets.filter { it.type == PlanetType.TERRESTRIAL }
+						+" with ${planets.size} planets, ${habitablePlanets.size} of them habitable"
+					}
+					p {
+						style = "text-align:center"
 						+(system.holder?.loyalties?.first()?.getDefiniteShortName()?.let { "Controlled by $it" } ?: "Wilderness")
 						br
 						system.holder?.let { +"(${it.displayName})" }
@@ -212,6 +225,10 @@ object CampaignUI {
 						system.holder?.let {
 							img(alt = it.displayName, src = it.flagUrl) { style = "width:4em;height:2.5em" }
 						}
+					}
+					p {
+						style = "text-align:center"
+						+"${system.totalFleetStrength} fleet strength"
 					}
 					
 					selectedSystemIndicators[selection.id]?.visible = true

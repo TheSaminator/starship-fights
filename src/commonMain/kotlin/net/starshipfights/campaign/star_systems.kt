@@ -28,7 +28,10 @@ data class StarSystem(
 	val position: Position,
 	val radius: Double,
 	val bodies: Map<Id<CelestialObject>, CelestialObject>
-)
+) {
+	val totalFleetStrength: Int
+		get() = fleets.values.sumOf { it.pointValue }
+}
 
 @Serializable
 data class WarpLane(

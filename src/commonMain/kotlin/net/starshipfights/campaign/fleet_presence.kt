@@ -47,6 +47,9 @@ data class FleetPresence(
 	val admiralIsFemale: Boolean,
 	val admiralRank: AdmiralRank,
 ) {
+	val pointValue: Int
+		get() = ships.values.sumOf { it.pointCost }
+	
 	val admiralFullName: String
 		get() = "${admiralRank.getDisplayName(owner)} $admiralName"
 }
