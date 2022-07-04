@@ -32,6 +32,8 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAd
 			antialias = true
 		})
 		
+		renderer.sortObjects = false
+		
 		renderer.setPixelRatio(window.devicePixelRatio)
 		renderer.setSize(window.innerWidth, window.innerHeight)
 		
