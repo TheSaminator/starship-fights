@@ -10,6 +10,7 @@ import kotlinx.html.*
 import kotlinx.html.dom.append
 import kotlinx.html.dom.create
 import kotlinx.html.js.div
+import kotlinx.html.js.p
 import net.starshipfights.data.Id
 import net.starshipfights.game.*
 import org.w3c.dom.HTMLDivElement
@@ -258,7 +259,11 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
-						+"${fleet.ships.size} ships"
+						+"Commanded by ${fleet.admiralFullName}"
+					}
+					p {
+						style = "text-align:center"
+						+"${fleet.ships.values.sumOf { it.pointCost }} fleet strength"
 					}
 					
 					selectedFleetIndicators[selection.pointer]?.visible = true

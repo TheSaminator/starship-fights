@@ -2,9 +2,7 @@ package net.starshipfights.campaign
 
 import kotlinx.serialization.Serializable
 import net.starshipfights.data.Id
-import net.starshipfights.game.Faction
-import net.starshipfights.game.FactionFlavor
-import net.starshipfights.game.Ship
+import net.starshipfights.game.*
 
 val Faction.allegiences: Set<FactionFlavor>
 	get() = FactionFlavor.values().filter { this in it.loyalties }.toSet()
@@ -43,5 +41,12 @@ val FactionFlavor.loyalties: List<Faction>
 data class FleetPresence(
 	val name: String,
 	val owner: FactionFlavor,
-	val ships: Map<Id<Ship>, Ship>
-)
+	val ships: Map<Id<Ship>, Ship>,
+	
+	val admiralName: String,
+	val admiralIsFemale: Boolean,
+	val admiralRank: AdmiralRank,
+) {
+	val admiralFullName: String
+		get() = "${admiralRank.getDisplayName(owner)} $admiralName"
+}
