@@ -252,7 +252,10 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
-						+"${system.totalFleetStrength} fleet strength present"
+						+if (system.totalFleetStrength > 0)
+							"${system.totalFleetStrength} fleet strength present"
+						else
+							"No fleets present"
 					}
 					
 					selectedSystemIndicators[selection.id]?.visible = true
