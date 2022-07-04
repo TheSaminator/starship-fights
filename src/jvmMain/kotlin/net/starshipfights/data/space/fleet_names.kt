@@ -17,7 +17,7 @@ private fun rangedOrdinal(max: Int, min: Int = 1) = (min..max).random().toOrdina
 private fun rangedRomanNumeral(max: Int, min: Int = 1) = (min..max).random().toRomanNumerals()
 
 fun FactionFlavor.genFleetName(): String = when (this) {
-	FactionFlavor.MECHYRDIA -> "${rangedOrdinal(999, 100)} Expediciós Flót"
+	FactionFlavor.MECHYRDIA -> "${(100..999).random()}il Expediciós Flót"
 	FactionFlavor.TYLA -> "${(100..399).random()}a Kasaklas Safasra"
 	FactionFlavor.OLYMPIA -> "${rangedRomanNumeral(399, 50)} Classis Belligerens Astronautica"
 	FactionFlavor.TEXANDRIA -> "${(50..199).random()}te Wehrsflotte"
