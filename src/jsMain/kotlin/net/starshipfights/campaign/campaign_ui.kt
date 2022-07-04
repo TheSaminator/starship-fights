@@ -231,12 +231,12 @@ object CampaignUI {
 						val planets = system.bodies.values.filterIsInstance<CelestialObject.Planet>()
 						val habitablePlanets = planets.filter { it.type == PlanetType.TERRESTRIAL }
 						+" with "
-						if (habitablePlanets.size == planets.size)
-							+"${planets.size} habitable planets"
+						+if (habitablePlanets.size == planets.size)
+							"${planets.size} habitable planets"
 						else if (habitablePlanets.isEmpty())
-							+"${planets.size} non-habitable planets"
+							"${planets.size} non-habitable planets"
 						else
-							+"${planets.size} planets, ${habitablePlanets.size} of them habitable"
+							"${planets.size} planets, ${habitablePlanets.size} of them habitable"
 					}
 					p {
 						style = "text-align:center"
