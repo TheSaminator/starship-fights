@@ -44,8 +44,8 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAd
 			domElement = renderer.domElement
 			keyDomElement = window
 			
-			panSpeed = 256
-			zoomSpeed = 96
+			panSpeed = 384
+			zoomSpeed = 144
 			
 			minZoom = 72
 			maxZoom = 512
