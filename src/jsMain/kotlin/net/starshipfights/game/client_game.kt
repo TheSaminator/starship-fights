@@ -44,6 +44,7 @@ suspend fun GameRenderInteraction.execute(scope: CoroutineScope) {
 	val renderer = WebGLRenderer(configure {
 		canvas = document.getElementById("three-canvas")
 		antialias = true
+		powerPreference = "high-performance"
 	})
 	
 	renderer.setPixelRatio(window.devicePixelRatio)

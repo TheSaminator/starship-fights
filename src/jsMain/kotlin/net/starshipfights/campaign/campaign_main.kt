@@ -30,6 +30,7 @@ suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAd
 		val renderer = WebGLRenderer(configure {
 			canvas = document.getElementById("three-canvas")
 			antialias = true
+			powerPreference = "high-performance"
 		})
 		
 		renderer.sortObjects = false
