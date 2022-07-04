@@ -230,7 +230,13 @@ object CampaignUI {
 						}
 						val planets = system.bodies.values.filterIsInstance<CelestialObject.Planet>()
 						val habitablePlanets = planets.filter { it.type == PlanetType.TERRESTRIAL }
-						+" with ${planets.size} planet${if (planets.size == 1) "" else "s"}, ${habitablePlanets.size} of them habitable"
+						+" with "
+						if (habitablePlanets.size == planets.size)
+							"${planets.size} habitable planets"
+						else if (habitablePlanets.isEmpty())
+							+"${planets.size} non-habitable planets"
+						else
+							+"${planets.size} planets, ${habitablePlanets.size} of them habitable"
 					}
 					p {
 						style = "text-align:center"
@@ -244,7 +250,7 @@ object CampaignUI {
 					}
 					p {
 						style = "text-align:center"
-						+"${system.totalFleetStrength} fleet strength"
+						+"${system.totalFleetStrength} fleet strength present"
 					}
 					
 					selectedSystemIndicators[selection.id]?.visible = true
