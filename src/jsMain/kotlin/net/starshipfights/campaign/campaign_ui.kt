@@ -214,7 +214,7 @@ object CampaignUI {
 						}
 						val planets = system.bodies.values.filterIsInstance<CelestialObject.Planet>()
 						val habitablePlanets = planets.filter { it.type == PlanetType.TERRESTRIAL }
-						+" with ${planets.size} planets, ${habitablePlanets.size} of them habitable"
+						+" with ${planets.size} planet${if (planets.size == 1) "" else "s"}, ${habitablePlanets.size} of them habitable"
 					}
 					p {
 						style = "text-align:center"
