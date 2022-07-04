@@ -23,7 +23,7 @@ fun FactionFlavor.genFleetName(): String = when (this) {
 	FactionFlavor.TEXANDRIA -> "${(50..199).random()}te Wehrsflotte"
 	FactionFlavor.NDRC -> "${(100..699).random()}e Sterrenvloot"
 	FactionFlavor.CCC -> "${rangedRomanNumeral(299, 50)} Classis Comitans"
-	FactionFlavor.MJOLNIR_ENERGY -> "${(100..499).random()}i Stjarnnafloti"
+	FactionFlavor.MJOLNIR_ENERGY -> "${(100..499).random()}a Stjarnnafloti"
 	FactionFlavor.MASRA_DRAETSEN -> "${rangedOrdinal(4999, 500)} Conquest Armada"
 	FactionFlavor.AEDON_CULTISTS -> "${rangedOrdinal(1999, 200)} Defilement Armada"
 	FactionFlavor.FERTHLON_EXILES -> "${rangedOrdinal(399, 50)} Revolutionary Remnant Fleet"
