@@ -232,7 +232,7 @@ object CampaignUI {
 						val habitablePlanets = planets.filter { it.type == PlanetType.TERRESTRIAL }
 						+" with "
 						if (habitablePlanets.size == planets.size)
-							"${planets.size} habitable planets"
+							+"${planets.size} habitable planets"
 						else if (habitablePlanets.isEmpty())
 							+"${planets.size} non-habitable planets"
 						else
