@@ -241,10 +241,12 @@ object CampaignUI {
 					p {
 						style = "text-align:center"
 						+(system.holder?.loyalties?.first()?.getDefiniteShortName()?.let { "Controlled by $it" } ?: "Wilderness")
-						br
-						system.holder?.let { +"(${it.displayName})" }
-						br
 						system.holder?.let {
+							br
+							+"(${it.displayName})"
+						}
+						system.holder?.let {
+							br
 							img(alt = it.displayName, src = it.flagUrl) { style = "width:4em;height:2.5em" }
 						}
 					}
