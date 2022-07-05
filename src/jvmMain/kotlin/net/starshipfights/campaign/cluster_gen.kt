@@ -316,7 +316,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 				val planetType = habitability.randomPlanetType()
 				val planetSize = planetType.sizeRange.random()
 				
-				if (Random.nextDouble() < settings.planetDensity.chanceToAdd)
+				if (planetType == PlanetType.TERRESTRIAL || Random.nextDouble() < settings.planetDensity.chanceToAdd)
 					emit(
 						UnnamedCelestialObject.Planet(
 							position = planetPos,
