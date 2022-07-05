@@ -433,7 +433,7 @@ object AdmiralNames {
 		"Niels",
 		"Pieter",
 		"Renaat",
-		"Rogal",
+		"Rogaal",
 		"Ruben",
 		"Sebastiaan",
 		"Sigismund",

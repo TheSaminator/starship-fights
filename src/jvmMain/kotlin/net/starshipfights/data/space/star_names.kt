@@ -131,7 +131,7 @@ private val possessiveNames = listOf(
 	"Michel's",
 	"Pieter's",
 	"Renaat's",
-	"Rogal's",
+	"Rogaal's",
 	"Ruben's",
 	"Sebastiaan's",
 	"Sjaak's",
