@@ -36,7 +36,7 @@ val FactionFlavor.shipSource: Faction
 		FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> Faction.VESTIGIUM
 	}
 
-fun genNPCFleet(owner: FactionFlavor, rank: AdmiralRank): Map<Id<Ship>, Ship> {
+fun generateNPCFleet(owner: FactionFlavor, rank: AdmiralRank): Map<Id<Ship>, Ship> {
 	val battleSize = BattleSize.values().filter { rank >= it.minRank }.associateWith { 100.0 / it.numPoints }.weightedRandom()
 	
 	val possibleShips = ShipType.values().filter { it.faction == owner.shipSource && it.weightClass.tier <= battleSize.maxTier }

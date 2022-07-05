@@ -10,9 +10,11 @@ import net.starshipfights.campaign.*
 import net.starshipfights.data.DataDocument
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
+import net.starshipfights.data.admiralty.Admiral
 import net.starshipfights.data.invoke
 import net.starshipfights.game.FactionFlavor
 import net.starshipfights.game.Position
+import net.starshipfights.game.Ship
 import org.litote.kmongo.eq
 
 @Serializable
@@ -106,28 +108,26 @@ suspend fun createCluster(clusterView: StarClusterView): Id<StarCluster> {
 				
 				launch { ClusterStarSystem.put(clusterSystem) }
 				launch {
-					for ((bodyId, body) in system.bodies)
-						launch {
-							ClusterCelestialObject.put(
-								ClusterCelestialObject(
-									id = bodyId.reinterpret(),
-									starSystemId = clusterSystem.id,
-									celestialObject = body
-								)
+					ClusterCelestialObject.put(
+						system.bodies.map { (bodyId, body) ->
+							ClusterCelestialObject(
+								id = bodyId.reinterpret(),
+								starSystemId = clusterSystem.id,
+								celestialObject = body
 							)
 						}
+					)
 				}
 				launch {
-					for ((fleetId, fleet) in system.fleets)
-						launch {
-							ClusterFleetPresence.put(
-								ClusterFleetPresence(
-									id = fleetId.reinterpret(),
-									starSystemId = clusterSystem.id,
-									fleetPresence = fleet
-								)
+					ClusterFleetPresence.put(
+						system.fleets.map { (fleetId, fleet) ->
+							ClusterFleetPresence(
+								id = fleetId.reinterpret(),
+								starSystemId = clusterSystem.id,
+								fleetPresence = fleet
 							)
 						}
+					)
 				}
 			}
 		}
@@ -178,4 +178,16 @@ suspend fun viewCluster(clusterId: Id<StarCluster>): StarClusterView? {
 			lanes = cluster.lanes
 		)
 	}
+}
+
+suspend fun deployableFleet(systemId: Id<ClusterStarSystem>, admiral: Admiral): Map<Id<Ship>, Ship> {
+	return ClusterFleetPresence.filter(ClusterFleetPresence::starSystemId eq systemId)
+		.toList()
+		.filter { admiral.faction in it.fleetPresence.owner.loyalties }
+		.flatMap {
+			it.fleetPresence.ships.toList().filter { (_, ship) ->
+				ship.shipType.weightClass.tier <= admiral.rank.maxShipTier
+			}
+		}
+		.toMap()
 }

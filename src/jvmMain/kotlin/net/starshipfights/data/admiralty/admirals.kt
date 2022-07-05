@@ -45,15 +45,15 @@ data class Admiral(
 	})
 }
 
-fun genAIName(faction: Faction, isFemale: Boolean) = AdmiralNames.randomName(AdmiralNameFlavor.forFaction(faction).random(), isFemale)
+fun generateAIName(faction: Faction, isFemale: Boolean) = AdmiralNames.randomName(AdmiralNameFlavor.forFaction(faction).random(), isFemale)
 
-fun genAI(faction: Faction, forBattleSize: BattleSize): Admiral {
+fun generateAIAdmiral(faction: Faction, forBattleSize: BattleSize): Admiral {
 	val isFemale = Random.nextBoolean()
 	
 	return Admiral(
 		id = Id("advanced_robotical_admiral"),
 		owningUser = Id("fake_player_actually_an_AI"),
-		name = genAIName(faction, isFemale),
+		name = generateAIName(faction, isFemale),
 		isFemale = isFemale,
 		faction = faction,
 		acumen = AdmiralRank.values().first {

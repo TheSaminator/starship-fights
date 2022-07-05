@@ -35,7 +35,7 @@ val allInstincts = listOf(
 	navOptimality,
 )
 
-fun genInstinctCandidates(count: Int): Set<Instincts> {
+fun generateInstinctCandidates(count: Int): Set<Instincts> {
 	return Random.nextOrthonormalBasis(allInstincts.size).take(count).map { vector ->
 		Instincts.fromValues((allInstincts zip vector.values).associate { (key, value) ->
 			key.key to key.denormalize(value)

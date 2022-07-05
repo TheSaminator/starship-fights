@@ -19,9 +19,9 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 	suspend fun generateCluster(): StarClusterView {
 		return withTimeoutOrNull(10_000L) {
 			val positionsAsync = async {
-				val rp = fixPositions(genPositions().take(settings.size.maxStars).toList())
+				val rp = fixPositions(generatePositions().take(settings.size.maxStars).toList())
 				val p = indexPositions(rp)
-				p to fixWarpLanes(p, genWarpLanes(p))
+				p to fixWarpLanes(p, generateWarpLanes(p))
 			}
 			
 			val starSystemsAsync = async {
@@ -52,7 +52,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 		} ?: generateCluster()
 	}
 	
-	private fun genPositions() = flow {
+	private fun generatePositions() = flow {
 		val initial = Vec2(0.0, 0.0)
 		val samples = mutableSetOf(initial)
 		emit(initial)
@@ -103,7 +103,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 		return polarVector(r, theta)
 	}
 	
-	private suspend fun genWarpLanes(positions: Map<Id<StarSystem>, Vec2>): Set<WarpLane> {
+	private suspend fun generateWarpLanes(positions: Map<Id<StarSystem>, Vec2>): Set<WarpLane> {
 		val allSystems = positions.keys
 		
 		val maxDistance = positions.values.maxOf { it.magnitude } / settings.size.maxHyperlaneDistanceFactor
@@ -245,7 +245,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 			val starVec2 = Vec2(0.0, 0.0)
 			usedPositions += starVec2
 			
-			val starType = genStarType()
+			val starType = randomStarType()
 			val starSize = starType.sizeRange.random()
 			val star = UnnamedCelestialObject.Star(
 				position = Position(starVec2),
@@ -266,7 +266,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 			usedPositions += starAPos
 			usedPositions += starBPos
 			
-			val starAType = genStarType()
+			val starAType = randomStarType()
 			val starASize = starAType.sizeRange.random()
 			val starA = UnnamedCelestialObject.Star(
 				position = Position(starAPos),
@@ -275,7 +275,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 				type = starAType,
 			)
 			
-			val starBType = genStarType()
+			val starBType = randomStarType()
 			val starBSize = starBType.sizeRange.random()
 			val starB = UnnamedCelestialObject.Star(
 				position = Position(starBPos),
@@ -334,7 +334,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 	
 	private fun rotationSpeed() = (0.125..0.625).random() * (if ((1..7).random() == 1) -1 else 1)
 	
-	private fun genStarType() = (StarType.values().toSet() - StarType.X).random()
+	private fun randomStarType() = (StarType.values().toSet() - StarType.X).random()
 	
 	private suspend fun corruptStarSystem(starSystem: UnplacedStarSystem) = starSystem.copy(bodies = starSystem.bodies.map { obj ->
 		throttle()

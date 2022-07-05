@@ -16,7 +16,7 @@ fun Int.toOrdinal(): String {
 private fun rangedOrdinal(max: Int, min: Int = 1) = (min..max).random().toOrdinal()
 private fun rangedRomanNumeral(max: Int, min: Int = 1) = (min..max).random().toRomanNumerals()
 
-fun FactionFlavor.genFleetName(): String = when (this) {
+fun FactionFlavor.generateFleetName(): String = when (this) {
 	FactionFlavor.MECHYRDIA -> "${(100..999).random()}il Expediciós Flót"
 	FactionFlavor.TYLA -> "${(100..399).random()}a Kasaklas Safasra"
 	FactionFlavor.OLYMPIA -> "${rangedRomanNumeral(399, 50)} Classis Belligerens Astronautica"

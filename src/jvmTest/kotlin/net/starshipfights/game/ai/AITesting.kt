@@ -30,7 +30,7 @@ object AITesting {
 		if (instinctVectorIndex == JOptionPane.CLOSED_OPTION) return
 		
 		val instinctVectorCount = instinctVectorCounts[instinctVectorIndex]
-		val instinctVectors = genInstinctCandidates(instinctVectorCount)
+		val instinctVectors = generateInstinctCandidates(instinctVectorCount)
 		
 		val numTrialCounts = listOf(3, 5, 7, 10, 25)
 		val numTrialOptions = numTrialCounts.map { it.toString() }.toTypedArray()

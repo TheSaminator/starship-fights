@@ -4,7 +4,7 @@ import net.starshipfights.data.Id
 import net.starshipfights.data.admiralty.AdmiralNameFlavor
 import net.starshipfights.data.admiralty.AdmiralNames
 import net.starshipfights.data.invoke
-import net.starshipfights.data.space.genFleetName
+import net.starshipfights.data.space.generateFleetName
 import net.starshipfights.game.AdmiralRank
 import net.starshipfights.game.FactionFlavor
 import kotlin.random.Random
@@ -27,10 +27,10 @@ fun StarClusterView.testPostProcess(): StarClusterView {
 		val fleets = (1..numOfFleets).associate { _ ->
 			val admiralRank = AdmiralRank.values().random()
 			val admiralIsFemale = flavor == FactionFlavor.FELINAE_FELICES || Random.nextBoolean()
-			val admiralFleet = genNPCFleet(flavor, admiralRank)
+			val admiralFleet = generateNPCFleet(flavor, admiralRank)
 			
 			Id<FleetPresence>() to FleetPresence(
-				name = flavor.genFleetName(),
+				name = flavor.generateFleetName(),
 				owner = flavor,
 				ships = admiralFleet,
 				admiralName = AdmiralNames.randomName(AdmiralNameFlavor.forFactionFlavor(flavor).random(), admiralIsFemale),

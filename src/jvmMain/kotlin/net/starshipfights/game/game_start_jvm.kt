@@ -1,6 +1,6 @@
 package net.starshipfights.game
 
-import net.starshipfights.data.admiralty.genAI
+import net.starshipfights.data.admiralty.generateAIAdmiral
 import net.starshipfights.data.admiralty.generateFleet
 import net.starshipfights.data.admiralty.getAdmiralsShips
 import kotlin.math.PI
@@ -66,7 +66,7 @@ suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info:
 	val hostDeployCenter2 = Position(Vec2(-deployWidth4, (-battleLength / 2) + deployLength2))
 	val guestDeployCenter = Position(Vec2(0.0, (battleLength / 2) - deployLength2))
 	
-	val aiAdmiral = genAI(enemyFaction, battleInfo.size)
+	val aiAdmiral = generateAIAdmiral(enemyFaction, battleInfo.size)
 	
 	val gameStart = GameStart(
 		battlefieldWidth = battleWidth, battlefieldLength = battleLength,
@@ -143,7 +143,7 @@ suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction
 	val hostDeployCenter = Position(Vec2(0.0, (-battleLength / 2) + deployLength2))
 	val guestDeployCenter = Position(Vec2(0.0, (battleLength / 2) - deployLength2))
 	
-	val aiAdmiral = genAI(enemyFaction, battleInfo.size)
+	val aiAdmiral = generateAIAdmiral(enemyFaction, battleInfo.size)
 	
 	return GameState(
 		start = GameStart(
