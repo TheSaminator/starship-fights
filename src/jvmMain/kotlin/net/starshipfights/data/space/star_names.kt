@@ -57,11 +57,6 @@ fun Int.toRomanNumerals(): String {
 	return "$place3$place2$place1$place0"
 }
 
-private val letters = 'A'..'Z'
-private val numbers = (1000..9999)
-
-private fun catalogueName() = "${letters.random()}${letters.random()}-${numbers.random()}"
-
 private val possessiveNames = listOf(
 	"Mark's",
 	"Antony's",
@@ -264,32 +259,7 @@ private val latinAdjectives = listOf(
 
 private fun latinName() = "${latinNouns.random() describedBy latinAdjectives.random()}"
 
-private val constellationStarNames = listOf(
-	// Greek
-	"Alpha",
-	"Beta",
-	"Gamma",
-	"Delta",
-	"Epsilon",
-	"Zeta",
-	"Eta",
-	"Theta",
-	"Iota",
-	"Kappa",
-	"Iota",
-	"Mu",
-	"Nu",
-	"Xi",
-	"Omicron",
-	"Pi",
-	"Rho",
-	"Sigma",
-	"Tau",
-	"Upsilon",
-	"Phi",
-	"Khi",
-	"Psi",
-	"Omega",
+private val constellationBayerNames = listOf(
 	// Semitic
 	"Alep",
 	"Bet",
@@ -365,82 +335,95 @@ private val constellationStarNames = listOf(
 	"Yery"
 )
 
-private val constellationGenitiveNames = listOf(
-	"Antliae",
-	"Apodis",
-	"Aquarii",
-	"Aquilae",
-	"Arae",
-	"Argus Navis",
-	"Arietis",
-	"Aurigae",
-	"Boötis",
-	"Caeli",
-	"Caesaris Divi",
-	"Cancri",
-	"Canis Maioris",
-	"Canis Minoris",
-	"Canum Venaticorum",
-	"Capricorni",
-	"Cassiopeiae",
-	"Centauri",
-	"Cephei",
-	"Ceti",
-	"Circini",
-	"Columbae",
-	"Comae Berenices",
-	"Coronae Australis",
-	"Coronae Borealis",
-	"Corvi",
-	"Crateris",
-	"Crucis",
-	"Cygni",
-	"Delphini",
-	"Draconis",
-	"Eridani",
-	"Fornacis",
-	"Geminorum",
-	"Herculis",
-	"Hydrae",
-	"Indi",
-	"Lacertae",
-	"Leonis",
-	"Leonis Minoris",
-	"Leporis",
-	"Librae",
-	"Lupi",
-	"Lyrae",
-	"Mensae",
-	"Mentulae",
-	"Muscae",
-	"Normae",
-	"Ophiuchi",
-	"Orionis",
-	"Pavonis",
-	"Persei",
-	"Phoenicis",
-	"Pictoris",
-	"Piscium",
-	"Pyxidis Nauticae",
-	"Reticuli",
-	"Sagittarii",
-	"Scorpii",
-	"Scuti",
-	"Serpentis",
-	"Tauri",
-	"Trianguli",
-	"Ursae Maioris",
-	"Ursae Minoris",
-	"Verpae Magnae",
-	"Virginis",
-	"Vulpeculae"
+private val letters = 'A'..'Z'
+
+private fun Int.pow(x: Int) = (1..x).fold(1) { acc, _ -> acc * this }
+private fun generateNDigitNumber(n: Int) = (10.pow(n - 1) until 10.pow(n)).random()
+
+private fun generateConstellationStarName(): String {
+	val prefix = letters.shuffled().take((1..3).random())
+	val infix = listOf(" ", "-", "").random()
+	val suffix = generateNDigitNumber((2..4).random())
+	return "$prefix$infix$suffix"
+}
+
+private val constellationNamesWithGenitives = listOf(
+	"Antlia" to "Antliae",
+	"Apus" to "Apodis",
+	"Aquarius" to "Aquarii",
+	"Aquila" to "Aquilae",
+	"Ara" to "Arae",
+	"Argo Navis" to "Argus Navis",
+	"Aries" to "Arietis",
+	"Auriga" to "Aurigae",
+	"Boötes" to "Boötis",
+	"Caelum" to "Caeli",
+	"Caesar Divus" to "Caesaris Divi",
+	"Cancer" to "Cancri",
+	"Canis Maior" to "Canis Maioris",
+	"Canis Minor" to "Canis Minoris",
+	"Canes Venatici" to "Canum Venaticorum",
+	"Capricornus" to "Capricorni",
+	"Cassiopeia" to "Cassiopeiae",
+	"Centaurus" to "Centauri",
+	"Cepheus" to "Cephei",
+	"Cetus" to "Ceti",
+	"Circinus" to "Circini",
+	"Columba" to "Columbae",
+	"Coma Berenices" to "Comae Berenices",
+	"Corona Australis" to "Coronae Australis",
+	"Corona Borealis" to "Coronae Borealis",
+	"Corvus" to "Corvi",
+	"Crater" to "Crateris",
+	"Crux" to "Crucis",
+	"Cygnus" to "Cygni",
+	"Delphinus" to "Delphini",
+	"Draco" to "Draconis",
+	"Eridanus" to "Eridani",
+	"Fornax" to "Fornacis",
+	"Gemini" to "Geminorum",
+	"Hercules" to "Herculis",
+	"Hydra" to "Hydrae",
+	"Indus" to "Indi",
+	"Lacerta" to "Lacertae",
+	"Leo" to "Leonis",
+	"Leo Minor" to "Leonis Minoris",
+	"Lepus" to "Leporis",
+	"Libra" to "Librae",
+	"Lupus" to "Lupi",
+	"Lyra" to "Lyrae",
+	"Mensa" to "Mensae",
+	"Mentula" to "Mentulae",
+	"Musca" to "Muscae",
+	"Norma" to "Normae",
+	"Ophiuchus" to "Ophiuchi",
+	"Orion" to "Orionis",
+	"Pavo" to "Pavonis",
+	"Perseus" to "Persei",
+	"Phoenix" to "Phoenicis",
+	"Pictor" to "Pictoris",
+	"Pisces" to "Piscium",
+	"Pyxis Nautica" to "Pyxidis Nauticae",
+	"Reticulum" to "Reticuli",
+	"Sagittarius" to "Sagittarii",
+	"Scorpius" to "Scorpii",
+	"Scutum" to "Scuti",
+	"Serpens" to "Serpentis",
+	"Taurus" to "Tauri",
+	"Triangulum" to "Trianguli",
+	"Ursa Maior" to "Ursae Maioris",
+	"Ursa Minor" to "Ursae Minoris",
+	"Verpa Magna" to "Verpae Magnae",
+	"Virgo" to "Virginis",
+	"Vulpecula" to "Vulpeculae"
 )
 
-private fun constellationName() = "${constellationStarNames.random()} ${constellationGenitiveNames.random()}"
+private fun bayerName() = "${constellationBayerNames.random()} ${constellationNamesWithGenitives.random().second}"
+private fun constellationCatalogueName() = "${constellationNamesWithGenitives.random().first} ${generateConstellationStarName()}"
 
-fun randomStarName() = when {
-	(1..8).random() <= 3 -> constellationName()
-	(1..5).random() <= 2 -> catalogueName()
-	(1..3).random() <= 2 -> possessionName()
-	else -> latinName()
+fun randomStarName() = when ((1..10).random()) {
+	in 1..4 -> bayerName()
+	in 5..7 -> constellationCatalogueName()
+	in 8..9 -> latinName()
+	else -> possessionName()
 }
