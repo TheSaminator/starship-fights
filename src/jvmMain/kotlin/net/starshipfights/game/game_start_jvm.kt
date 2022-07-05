@@ -5,9 +5,10 @@ import net.starshipfights.data.admiralty.generateFleet
 import net.starshipfights.data.admiralty.getAdmiralsShips
 import kotlin.math.PI
 
+fun battleSize() = ((25..35).random() * 500.0) to ((15..45).random() * 500.0)
+
 suspend fun generate1v1GameInitialState(hostInfo: InGameAdmiral, guestInfo: InGameAdmiral, battleInfo: BattleInfo): GameState {
-	val battleWidth = (25..35).random() * 500.0
-	val battleLength = (15..45).random() * 500.0
+	val (battleWidth, battleLength) = battleSize()
 	
 	val deployWidth2 = battleWidth / 2
 	val deployLength2 = 875.0
@@ -54,8 +55,7 @@ suspend fun generate1v1GameInitialState(hostInfo: InGameAdmiral, guestInfo: InGa
 }
 
 suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info: InGameAdmiral, enemyFaction: Faction, enemyFlavor: FactionFlavor, battleInfo: BattleInfo): GameState {
-	val battleWidth = (25..35).random() * 500.0
-	val battleLength = (15..45).random() * 500.0
+	val (battleWidth, battleLength) = battleSize()
 	
 	val deployWidth2 = battleWidth / 2
 	val deployLength2 = 875.0
@@ -135,8 +135,7 @@ suspend fun generate2v1GameInitialState(player1Info: InGameAdmiral, player2Info:
 }
 
 suspend fun generateTrainingInitialState(playerInfo: InGameAdmiral, enemyFaction: Faction, enemyFlavor: FactionFlavor, battleInfo: BattleInfo): GameState {
-	val battleWidth = (25..35).random() * 500.0
-	val battleLength = (15..45).random() * 500.0
+	val (battleWidth, battleLength) = battleSize()
 	
 	val deployWidth2 = battleWidth / 2
 	val deployLength2 = 875.0
