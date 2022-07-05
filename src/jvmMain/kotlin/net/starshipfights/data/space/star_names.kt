@@ -341,7 +341,7 @@ private fun Int.pow(x: Int) = (1..x).fold(1) { acc, _ -> acc * this }
 private fun generateNDigitNumber(n: Int) = (10.pow(n - 1) until 10.pow(n)).random()
 
 private fun generateConstellationStarName(): String {
-	val prefix = letters.shuffled().take((1..3).random())
+	val prefix = letters.shuffled().take((1..3).random()).joinToString(separator = "")
 	val infix = listOf(" ", "-", "").random()
 	val suffix = generateNDigitNumber((2..4).random())
 	return "$prefix$infix$suffix"
