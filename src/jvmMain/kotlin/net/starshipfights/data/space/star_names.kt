@@ -5,6 +5,10 @@ import net.starshipfights.data.admiralty.LatinNoun
 import net.starshipfights.data.admiralty.LatinNounForm
 import net.starshipfights.data.admiralty.describedBy
 
+fun newStarName(existingNames: MutableSet<String>) = generateSequence {
+	randomStarName()
+}.take(20).dropWhile { it in existingNames }.firstOrNull()?.also { existingNames.add(it) }
+
 fun Int.toRomanNumerals(): String {
 	require(this in 1..3999) { "Roman numerals must be in the range [1, 4000)!" }
 	

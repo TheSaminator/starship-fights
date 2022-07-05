@@ -4,7 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import net.starshipfights.data.Id
 import net.starshipfights.data.invoke
-import net.starshipfights.data.space.randomStarName
+import net.starshipfights.data.space.newStarName
 import net.starshipfights.data.space.toRomanNumerals
 import net.starshipfights.game.*
 import net.starshipfights.game.ai.mean
@@ -216,8 +216,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 		val usedNames = mutableSetOf<String>()
 		
 		while (currentCoroutineContext().isActive) {
-			val name = generateSequence { randomStarName() }.dropWhile { it in usedNames }.first()
-			usedNames += name
+			val name = newStarName(usedNames) ?: break
 			
 			val unnamedCelestialObjects = createCelestialObjects()
 				.takeWhile { it.position.vector.magnitude + it.size + SYSTEM_MARGIN < MAX_SYSTEM_SIZE }
