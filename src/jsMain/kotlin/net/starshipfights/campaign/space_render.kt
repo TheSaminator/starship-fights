@@ -29,13 +29,16 @@ object CampaignResources {
 	
 	private lateinit var starSystem: CustomRenderFactory<StarSystemWithId>
 	
-	private lateinit var warpLane: CustomRenderFactory<WarpLaneData>
+	private lateinit var warpLane: CustomRenderFactory<WarpLaneWithData>
+	private lateinit var warpLanes: CustomRenderFactory<StarClusterView>
 	
 	lateinit var starCluster: CustomRenderFactory<StarClusterView>
 		private set
 	
 	suspend fun load() {
-		warpLane = CustomRenderFactory { (systemA, systemB) ->
+		warpLane = CustomRenderFactory { laneWithData ->
+			val (systemA, systemB) = laneWithData.data
+			
 			val warpLaneMaterial = MeshBasicMaterial(configure { color = Color("#FFFFFF") })
 			
 			val aToBCenter = systemB.position - systemA.position
@@ -58,7 +61,18 @@ object CampaignResources {
 				false
 			)
 			
-			Mesh(warpLaneGeometry, warpLaneMaterial)
+			Mesh(warpLaneGeometry, warpLaneMaterial).apply {
+				userData = WarpLaneRender(laneWithData.lane)
+			}
+		}
+		
+		warpLanes = CustomRenderFactory { cluster ->
+			Group().apply {
+				for (lane in cluster.lanes)
+					add(warpLane.generate(lane.withData(cluster) ?: continue))
+				
+				userData = WARP_LANES_UD
+			}
 		}
 		
 		coroutineScope {
@@ -336,7 +350,7 @@ object CampaignResources {
 						for (systemFleets in systemsFleets)
 							add(systemFleets)
 						
-						userData = "fleet counters"
+						userData = CLUSTER_FLEETS_UD
 					}
 				}
 			}
@@ -382,12 +396,10 @@ object CampaignResources {
 				for ((id, system) in cluster.systems)
 					add(starSystem.generate(StarSystemWithId(id, system)))
 				
-				for (lane in cluster.lanes)
-					add(warpLane.generate(lane.resolve(cluster) ?: continue))
-				
+				add(warpLanes.generate(cluster))
 				add(fleetCountersInCluster.generate(cluster))
 				
-				userData = "star cluster"
+				userData = STAR_CLUSTER_UD
 			}
 		}
 	}
@@ -481,6 +493,27 @@ val Object3D.fleetPresenceRender: FleetPresencePointer?
 	else
 		parent?.fleetPresenceRender
 
+external interface WarpLaneRender {
+	var isWarpLane: Boolean
+	var systemAId: String
+	var systemBId: String
+}
+
+fun WarpLaneRender(lane: WarpLane) = configure<WarpLaneRender> {
+	isWarpLane = true
+	systemAId = lane.systemA.id
+	systemBId = lane.systemB.id
+}
+
+val WarpLaneRender.warpLane: WarpLane
+	get() = WarpLane(Id(systemAId), Id(systemBId))
+
+val Object3D.warpLaneRender: WarpLane?
+	get() = if (userData.isWarpLane == true)
+		userData.unsafeCast<WarpLaneRender>().warpLane
+	else
+		null
+
 val StarClusterBackground.ambientColor: IntColor
 	get() = when (this) {
 		StarClusterBackground.BLUE -> IntColor(34, 51, 85)
@@ -493,10 +526,16 @@ val StarClusterBackground.ambientColor: IntColor
 		StarClusterBackground.RED -> IntColor(85, 0, 0)
 	}
 
+const val STAR_CLUSTER_UD = "star cluster"
 val Object3D.isStarCluster: Boolean
-	get() = userData == "star cluster"
+	get() = userData == STAR_CLUSTER_UD
 
+const val WARP_LANES_UD = "warp lanes"
+val Object3D.isStarClusterWarpLanes: Boolean
+	get() = userData == WARP_LANES_UD
+
+const val CLUSTER_FLEETS_UD = "fleet counters"
 val Object3D.isStarClusterFleets: Boolean
-	get() = userData == "fleet counters"
+	get() = userData == CLUSTER_FLEETS_UD
 
 fun Object3D.isStarSystemFleets(system: Id<StarSystem>) = (parent?.isStarClusterFleets == true) && userData == system.id

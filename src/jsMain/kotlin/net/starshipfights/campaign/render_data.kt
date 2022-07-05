@@ -10,11 +10,30 @@ fun WarpLane.resolve(cluster: StarClusterView): WarpLaneData? =
 		}
 	}
 
+fun WarpLane.withData(cluster: StarClusterView): WarpLaneWithData? =
+	systemA.resolve(cluster)?.let { a ->
+		systemB.resolve(cluster)?.let { b ->
+			WarpLaneWithData(StarSystemWithId(systemA, a), StarSystemWithId(systemB, b))
+		}
+	}
+
 @Serializable
 data class WarpLaneData(
 	val systemA: StarSystem,
 	val systemB: StarSystem,
 )
+
+@Serializable
+data class WarpLaneWithData(
+	val systemA: StarSystemWithId,
+	val systemB: StarSystemWithId,
+) {
+	val lane: WarpLane
+		get() = WarpLane(systemA.id, systemB.id)
+	
+	val data: WarpLaneData
+		get() = WarpLaneData(systemA.starSystem, systemB.starSystem)
+}
 
 fun Id<StarSystem>.resolve(cluster: StarClusterView): StarSystem? = cluster.systems[this]
 
