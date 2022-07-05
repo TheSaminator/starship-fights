@@ -204,10 +204,17 @@ object CampaignResources {
 								}
 							}
 							PlanetType.VEILED -> {
-								val planetTexture = loadTexture("campaign/planet/veiled")
+								val planetTextureAsync = async { loadTexture("campaign/planet/veiled") }
+								val planetEmissiveTextureAsync = async { loadTexture("campaign/planet/veiled-emissive") }
 								
-								val planetMat = MeshBasicMaterial(configure {
+								val planetTexture = planetTextureAsync.await()
+								val planetEmissiveTexture = planetEmissiveTextureAsync.await()
+								
+								val planetMat = MeshPhongMaterial(configure {
+									color = Color("#FFFFFF")
 									map = planetTexture
+									emissive = Color("#FFFFFF")
+									emissiveMap = planetEmissiveTexture
 								})
 								
 								val planetGeom = SphereGeometry(1)
