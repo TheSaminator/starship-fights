@@ -130,7 +130,6 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						required = true
 						checked = currentUser.preferredTheme == PreferredTheme.SYSTEM
 					}
-					+Entities.nbsp
 					+"System Choice"
 				}
 				br
@@ -141,7 +140,6 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						required = true
 						checked = currentUser.preferredTheme == PreferredTheme.LIGHT
 					}
-					+Entities.nbsp
 					+"Light Theme"
 				}
 				br
@@ -152,7 +150,6 @@ suspend fun ApplicationCall.manageUserPage(): HTML.() -> Unit {
 						required = true
 						checked = currentUser.preferredTheme == PreferredTheme.DARK
 					}
-					+Entities.nbsp
 					+"Dark Theme"
 				}
 				h3 {

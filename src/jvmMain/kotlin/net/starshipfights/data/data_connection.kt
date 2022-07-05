@@ -75,7 +75,7 @@ sealed class ConnectionType {
 	
 	@Serializable
 	@SerialName("external")
-	data class External(val url: String) : ConnectionType() {
+	data class External(val url: String = "mongodb://localhost:27017") : ConnectionType() {
 		override fun createUrl() = url
 	}
 }

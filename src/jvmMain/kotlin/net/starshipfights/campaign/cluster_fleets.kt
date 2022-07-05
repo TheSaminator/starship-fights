@@ -1,10 +1,15 @@
 package net.starshipfights.campaign
 
 import net.starshipfights.data.Id
+import net.starshipfights.data.admiralty.AdmiralNameFlavor
+import net.starshipfights.data.admiralty.AdmiralNames
 import net.starshipfights.data.admiralty.newShipName
 import net.starshipfights.data.invoke
+import net.starshipfights.data.space.generateFleetName
 import net.starshipfights.game.*
 import net.starshipfights.game.ai.weightedRandom
+import kotlin.math.roundToInt
+import kotlin.random.Random
 
 val FactionFlavor.shipSource: Faction
 	get() = when (this) {
@@ -36,11 +41,11 @@ val FactionFlavor.shipSource: Faction
 		FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> Faction.VESTIGIUM
 	}
 
-fun generateNPCFleet(owner: FactionFlavor, rank: AdmiralRank): Map<Id<Ship>, Ship> {
+fun generateNPCFleet(owner: FactionFlavor, rank: AdmiralRank, sizeMult: Double): Map<Id<Ship>, Ship> {
 	val battleSize = BattleSize.values().filter { rank.maxShipTier >= it.maxTier }.associateWith { 100.0 / it.numPoints }.weightedRandom()
 	
 	val possibleShips = ShipType.values().filter { it.faction == owner.shipSource && it.weightClass.tier <= battleSize.maxTier }
-	val maxPoints = battleSize.numPoints
+	val maxPoints = (battleSize.numPoints * sizeMult).roundToInt()
 	
 	val chosenShipTypes = buildList {
 		while (true)
@@ -60,4 +65,19 @@ fun generateNPCFleet(owner: FactionFlavor, rank: AdmiralRank): Map<Id<Ship>, Shi
 			)
 		}
 	}.associateBy { it.id }
+}
+
+fun generateFleetPresences(owner: FactionFlavor, maxFleets: Int, sizeMult: Double): Map<Id<FleetPresence>, FleetPresence> = (1..(maxFleets - Random.nextDiminishingInteger(maxFleets))).associate { _ ->
+	val admiralRank = AdmiralRank.values()[Random.nextIrwinHallInteger(AdmiralRank.values().size)]
+	val admiralIsFemale = owner == FactionFlavor.FELINAE_FELICES || Random.nextBoolean()
+	val admiralFleet = generateNPCFleet(owner, admiralRank, sizeMult)
+	
+	Id<FleetPresence>() to FleetPresence(
+		name = owner.generateFleetName(),
+		owner = owner,
+		ships = admiralFleet,
+		admiralName = AdmiralNames.randomName(AdmiralNameFlavor.forFactionFlavor(owner).random(), admiralIsFemale),
+		admiralIsFemale = admiralIsFemale,
+		admiralRank = admiralRank
+	)
 }

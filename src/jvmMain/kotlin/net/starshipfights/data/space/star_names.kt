@@ -4,6 +4,9 @@ import net.starshipfights.data.admiralty.LatinAdjective
 import net.starshipfights.data.admiralty.LatinNoun
 import net.starshipfights.data.admiralty.LatinNounForm
 import net.starshipfights.data.admiralty.describedBy
+import net.starshipfights.game.nextDiminishingInteger
+import net.starshipfights.game.nextIrwinHallInteger
+import kotlin.random.Random
 
 fun newStarName(existingNames: MutableSet<String>) = generateSequence {
 	randomStarName()
@@ -344,12 +347,10 @@ private val letters = 'A'..'Z'
 private fun Int.pow(x: Int) = (1..x).fold(1) { acc, _ -> acc * this }
 private fun generateNDigitNumber(n: Int) = (10.pow(n - 1) until 10.pow(n)).random()
 
-private fun generateConstellationStarName(): String {
-	val prefix = letters.shuffled().take((1..3).random()).joinToString(separator = "")
-	val infix = listOf(" ", "-", "").random()
-	val suffix = generateNDigitNumber((2..4).random())
-	return "$prefix$infix$suffix"
-}
+private fun generateConstellationStarNameLetters() = letters.shuffled().take(1 + Random.nextDiminishingInteger(3)).joinToString(separator = "")
+private fun generateConstellationStarNameNumbers() = generateNDigitNumber(2 + Random.nextIrwinHallInteger(4)).toString()
+
+private fun generateConstellationStarName(): String = "${generateConstellationStarNameLetters()}-${generateConstellationStarNameNumbers()}"
 
 private val constellationNamesWithGenitives = listOf(
 	"Antlia" to "Antliae",

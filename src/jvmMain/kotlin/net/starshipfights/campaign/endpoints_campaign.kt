@@ -8,9 +8,7 @@ import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.html.*
 import net.starshipfights.data.Id
-import net.starshipfights.game.ClientMode
-import net.starshipfights.game.toUrlSlug
-import net.starshipfights.game.view
+import net.starshipfights.game.*
 import net.starshipfights.labs.lab
 import net.starshipfights.labs.labPost
 
@@ -31,7 +29,6 @@ fun Routing.installCampaign() {
 							value = color.name
 							required = true
 						}
-						+Entities.nbsp
 						+color.displayName
 						br
 					}
@@ -46,7 +43,6 @@ fun Routing.installCampaign() {
 							value = size.name
 							required = true
 						}
-						+Entities.nbsp
 						+size.displayName
 						br
 					}
@@ -61,7 +57,6 @@ fun Routing.installCampaign() {
 							value = density.name
 							required = true
 						}
-						+Entities.nbsp
 						+density.displayName
 						br
 					}
@@ -76,7 +71,6 @@ fun Routing.installCampaign() {
 							value = planets.name
 							required = true
 						}
-						+Entities.nbsp
 						+planets.displayName
 						br
 					}
@@ -91,11 +85,47 @@ fun Routing.installCampaign() {
 							value = corruption.name
 							required = true
 						}
-						+Entities.nbsp
 						+corruption.displayName
 						br
 					}
 				}
+				h3 { +"Factional Contention" }
+				for (contention in ClusterContention.values()) {
+					val contentionId = "contention-${contention.toUrlSlug()}"
+					label {
+						htmlFor = contentionId
+						radioInput(name = "contention") {
+							id = contentionId
+							value = contention.name
+							required = true
+						}
+						+contention.displayName
+						br
+					}
+				}
+				h3 { +"Per-Faction Modes" }
+				for (factionFlavor in FactionFlavor.values())
+					p {
+						strong { +factionFlavor.displayName }
+						br
+						+"Uses ${factionFlavor.shipSource.adjective} ships, is loyal to ${factionFlavor.loyalties.first().getDefiniteShortName()}."
+						br
+						for (mode in ClusterFactionMode.values()) {
+							val modeId = "mode-${factionFlavor.toUrlSlug()}-${mode.toUrlSlug()}"
+							label {
+								htmlFor = modeId
+								radioInput(name = "factions[${factionFlavor.toUrlSlug()}]") {
+									id = modeId
+									value = mode.name
+									required = true
+									if (mode == ClusterFactionMode.ALLOW)
+										checked = true
+								}
+								+mode.displayName
+								+Entities.nbsp
+							}
+						}
+					}
 				submitInput {
 					value = "Generate Star Cluster"
 				}
@@ -111,10 +141,14 @@ fun Routing.installCampaign() {
 		val density = ClusterLaneDensity.valueOf(parameters.getOrFail("density"))
 		val planets = ClusterPlanetDensity.valueOf(parameters.getOrFail("planets"))
 		val corruption = ClusterCorruption.valueOf(parameters.getOrFail("corruption"))
+		val contention = ClusterContention.valueOf(parameters.getOrFail("contention"))
+		val factions = ClusterFactions(FactionFlavor.values().mapNotNull { faction ->
+			parameters["factions[${faction.toUrlSlug()}]"]?.let { faction to ClusterFactionMode.valueOf(it) }
+		}.toMap())
 		
 		val cluster = ClusterGenerator(
-			ClusterGenerationSettings(color, size, density, planets, corruption)
-		).generateCluster().testPostProcess()
+			ClusterGenerationSettings(color, size, density, planets, corruption, factions, contention)
+		).generateCluster()
 		
 		val clientMode = ClientMode.CampaignMap(
 			Id(""),

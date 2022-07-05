@@ -1,13 +1,15 @@
 package net.starshipfights.campaign
 
 import kotlinx.serialization.Serializable
+import net.starshipfights.game.FactionFlavor
+import kotlin.jvm.JvmInline
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
 enum class ClusterSize(val maxStars: Int, val maxHyperlaneDistanceFactor: Double) {
-	SMALL(15, 1.5), MEDIUM(25, 2.0), LARGE(35, 2.5);
+	SMALL(20, 1.5), MEDIUM(35, 2.0), LARGE(50, 2.5);
 	
 	val displayName: String
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
@@ -47,11 +49,62 @@ enum class ClusterCorruption(val corruptedStarsPortion: Double) {
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
 }
 
+enum class ClusterFactionMode {
+	ALLOW, REQUIRE, EXCLUDE;
+	
+	val displayName: String
+		get() = name.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+@JvmInline
+@Serializable
+value class ClusterFactions private constructor(private val factions: Map<FactionFlavor, ClusterFactionMode>) {
+	operator fun get(factionFlavor: FactionFlavor) = factions[factionFlavor] ?: ClusterFactionMode.ALLOW
+	
+	operator fun plus(other: ClusterFactions) = ClusterFactions(factions + other.factions)
+	
+	val seedSize: Int
+		get() = factions.count { (_, it) -> it == ClusterFactionMode.REQUIRE }
+	
+	fun asGenerationSequence() = sequence {
+		val required = factions.filterValues { it == ClusterFactionMode.REQUIRE }.keys
+		val included = factions.filterValues { it != ClusterFactionMode.EXCLUDE }.keys
+		
+		// first, start with the required flavors
+		yieldAll(required.shuffled())
+		while (true) {
+			// continue with the included flavors
+			yieldAll(included.shuffled())
+		}
+	}
+	
+	fun getRelatedFaction(faction: FactionFlavor) = factions
+		.filterKeys { it.loyalties == faction.loyalties }
+		.filterValues { it != ClusterFactionMode.EXCLUDE }
+		.keys.random()
+	
+	companion object {
+		val Default: ClusterFactions
+			get() = ClusterFactions(FactionFlavor.values().associateWith { ClusterFactionMode.ALLOW })
+		
+		operator fun invoke(factions: Map<FactionFlavor, ClusterFactionMode>) = Default + ClusterFactions(factions)
+	}
+}
+
+enum class ClusterContention(val controlSpreadChance: Double, val maxFleets: Int, val fleetStrengthMult: Double) {
+	BLOODBATH(0.9, 5, 1.0), CONTESTED(0.65, 3, 0.8), PEACEFUL(0.5, 2, 0.5);
+	
+	val displayName: String
+		get() = name.lowercase().replaceFirstChar { it.uppercase() }
+}
+
 @Serializable
 data class ClusterGenerationSettings(
 	val background: StarClusterBackground,
 	val size: ClusterSize,
 	val laneDensity: ClusterLaneDensity,
 	val planetDensity: ClusterPlanetDensity,
-	val corruption: ClusterCorruption
+	val corruption: ClusterCorruption,
+	val factions: ClusterFactions,
+	val contention: ClusterContention
 )

@@ -46,8 +46,8 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 			
 			StarClusterView(
 				background = settings.background,
-				systems = systems,
-				lanes = warpLanes
+				systems = generateFleets(assignFactions(systems, warpLanes)),
+				lanes = warpLanes,
 			)
 		} ?: generateCluster()
 	}
@@ -345,6 +345,66 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 			is CelestialObject.Star -> obj.copy(type = StarType.X)
 		}
 	}.toSet())
+	
+	private suspend fun assignFactions(starSystems: Map<Id<StarSystem>, StarSystem>, warpLanes: Set<WarpLane>): Map<Id<StarSystem>, StarSystem> {
+		val systemControllers = (starSystems.keys.shuffled() zip settings.factions.asGenerationSequence().take(starSystems.size * 2 / 5).toList()).toMap().toMutableMap()
+		
+		val uncontrolledSystems = (starSystems.keys - systemControllers.keys).toMutableSet()
+		
+		while (uncontrolledSystems.size > starSystems.size / 5) {
+			val controlledSystems = systemControllers.keys.shuffled()
+			
+			var shouldKeepLooping = false
+			for (systemId in controlledSystems) {
+				val borderingSystems = mutableSetOf<Id<StarSystem>>()
+				
+				for (lane in warpLanes) {
+					throttle()
+					
+					if (systemId == lane.systemA)
+						borderingSystems += lane.systemB
+					if (systemId == lane.systemB)
+						borderingSystems += lane.systemA
+				}
+				
+				borderingSystems.retainAll(uncontrolledSystems)
+				
+				for (borderId in borderingSystems) {
+					throttle()
+					
+					uncontrolledSystems -= borderId
+					
+					if (Random.nextDouble() < settings.contention.controlSpreadChance)
+						systemControllers[borderId] = systemControllers.getValue(systemId).let { faction ->
+							if (Random.nextBoolean())
+								faction
+							else
+								settings.factions.getRelatedFaction(faction)
+						}
+					
+					shouldKeepLooping = true
+				}
+			}
+			
+			if (!shouldKeepLooping)
+				break
+		}
+		
+		return starSystems.mapValues { (id, system) ->
+			system.copy(holder = systemControllers[id])
+		}
+	}
+	
+	private suspend fun generateFleets(starSystems: Map<Id<StarSystem>, StarSystem>): Map<Id<StarSystem>, StarSystem> {
+		return starSystems.mapValues { (_, system) ->
+			throttle()
+			system.holder?.let { owner ->
+				system.copy(
+					fleets = generateFleetPresences(owner, settings.contention.maxFleets, settings.contention.fleetStrengthMult)
+				)
+			} ?: system
+		}
+	}
 	
 	companion object {
 		const val SYSTEM_R = 1024.0
