@@ -146,16 +146,13 @@ suspend fun getAdmiralsShips(admiralId: Id<Admiral>): Map<Id<Ship>, Ship> {
 
 fun generateFleet(admiral: Admiral, flavor: FactionFlavor = FactionFlavor.defaultForFaction(admiral.faction)): List<ShipInDrydock> = ShipWeightClass.values()
 	.flatMap { swc ->
-		val shipTypes = ShipType.values().filter { st ->
+		ShipType.values().filter { st ->
 			st.weightClass == swc && st.faction == admiral.faction
-		}.shuffled()
-		
-		if (shipTypes.isEmpty())
-			emptyList()
-		else
-			(0 until ((admiral.rank.maxShipTier.ordinal - swc.tier.ordinal + 1) * 2).coerceAtLeast(0)).map { i ->
-				shipTypes[i % shipTypes.size]
-			}
+		}.shuffled().takeIf { it.isNotEmpty() }?.let { shipTypes ->
+			val wcCount = (admiral.rank.maxShipTier.ordinal - swc.tier.ordinal + 1) * 2
+			
+			shipTypes.repeatForever().take(wcCount).toList()
+		}.orEmpty()
 	}
 	.let { shipTypes ->
 		val now = Instant.now().minusMillis(100L)

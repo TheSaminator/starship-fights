@@ -5,27 +5,26 @@ import net.starshipfights.data.admiralty.AdmiralNameFlavor
 import net.starshipfights.data.admiralty.AdmiralNames
 import net.starshipfights.data.invoke
 import net.starshipfights.data.space.generateFleetName
-import net.starshipfights.game.AdmiralRank
-import net.starshipfights.game.FactionFlavor
+import net.starshipfights.game.*
 import kotlin.random.Random
 
 fun StarClusterView.testPostProcess(): StarClusterView {
-	val flavors = FactionFlavor.values().toList().shuffled()
-	val ownerFlavors = sequence {
-		while (true)
-			for (flavor in flavors)
-				yield(flavor)
-	}.take(systems.size).toList()
+	val ownerFlavors = FactionFlavor.values()
+		.toList()
+		.shuffled()
+		.repeatForever()
+		.take(systems.size)
+		.toList()
 	
 	val ownedSystems = (systems.toList().shuffled() zip ownerFlavors).associate { (systemWithId, flavor) ->
 		val (systemId, system) = systemWithId
 		
-		val numOfFleets = (0..1).random() + (0..1).random() + (0..1).random()
+		val numOfFleets = 3 - Random.nextDiminishingInteger(4)
 		if (numOfFleets == 0)
 			return@associate systemId to system
 		
 		val fleets = (1..numOfFleets).associate { _ ->
-			val admiralRank = AdmiralRank.values().random()
+			val admiralRank = AdmiralRank.values()[Random.nextIrwinHallInteger(AdmiralRank.values().size)]
 			val admiralIsFemale = flavor == FactionFlavor.FELINAE_FELICES || Random.nextBoolean()
 			val admiralFleet = generateNPCFleet(flavor, admiralRank)
 			

@@ -12,6 +12,7 @@ import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.roundToInt
+import kotlin.random.Random
 
 val jsonSerializer = Json {
 	classDiscriminator = "\$ktClass"
@@ -56,4 +57,23 @@ inline fun <T : FlowOrPhrasingContent> T.foreign(language: String, crossinline b
 	lang = language
 	style = "font-style: italic"
 	block()
+}
+
+fun Random.nextIrwinHallInteger(max: Int): Int {
+	require(max > 0) { "Random.nextIrwinHallInteger must take positive max parameter, got $max!" }
+	return (1 until max).sumOf { (0..1).random(this) }
+}
+
+fun Random.nextDiminishingInteger(max: Int, increaseChance: Double = 0.5): Int {
+	require(max > 0) { "Random.nextDiminishingInteger must take positive max parameter, got $max!" }
+	
+	var curr = 0
+	while (curr + 1 < max && nextDouble() < increaseChance)
+		curr++
+	return curr
+}
+
+fun <T> Iterable<T>.repeatForever(): Sequence<T> = sequence {
+	while (true)
+		yieldAll(this@repeatForever)
 }
