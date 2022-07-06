@@ -9,10 +9,8 @@ import io.ktor.util.*
 import kotlinx.coroutines.Job
 import kotlinx.html.*
 import net.starshipfights.auth.getUser
-import net.starshipfights.auth.getUserAndSession
 import net.starshipfights.auth.receiveValidatedParameters
 import net.starshipfights.forbid
-import net.starshipfights.info.csrfToken
 import net.starshipfights.info.page
 import net.starshipfights.info.standardNavBar
 import net.starshipfights.redirect
@@ -21,13 +19,8 @@ private val shutDown = Job()
 
 fun Routing.installAdmin() {
 	get("/admin") {
-		val (sess, user) = call.getUserAndSession()
-		
-		if (!user.isAdmin)
+		if (!call.getUser().isAdmin)
 			forbid()
-		
-		sess ?: redirect("/login")
-		user ?: redirect("/login")
 		
 		call.respondHtml(HttpStatusCode.OK, call.page("Admin Panel", call.standardNavBar()) {
 			section {
@@ -40,22 +33,20 @@ fun Routing.installAdmin() {
 						name = "announcement"
 						required = true
 					}
-					csrfToken(sess.id)
 					submitInput {
 						value = "Announce"
 					}
 				}
 			}
+			section {
+				h2 { +"Server Shutdown" }
+				form(action = "/admin/shutdown", method = FormMethod.post) {
+					submitInput(classes = "evil") {
+						value = "Shutdown the Server"
+					}
+				}
+			}
 		})
-	}
-	
-	get("/admin/shutdown") {
-		if (!call.getUser().isAdmin)
-			forbid()
-		
-		shutDown.complete()
-		
-		call.respond(HttpStatusCode.Gone)
 	}
 	
 	post("/admin/announce") {
@@ -69,6 +60,15 @@ fun Routing.installAdmin() {
 		val announcement = params.getOrFail("announcement")
 		sendAdminAnnouncement(announcement)
 		redirect("/admin")
+	}
+	
+	post("/admin/shutdown") {
+		if (!call.getUser().isAdmin)
+			forbid()
+		
+		shutDown.complete()
+		
+		call.respond(HttpStatusCode.Gone)
 	}
 }
 
