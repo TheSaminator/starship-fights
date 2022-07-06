@@ -123,34 +123,6 @@ fun Routing.installCampaign() {
 						}
 					}
 				}
-				for (factionFlavor in FactionFlavor.values())
-					p {
-						strong { +factionFlavor.displayName }
-						br
-						+"Uses ${factionFlavor.shipSource.adjective} ships, is loyal to ${factionFlavor.loyalties.first().getDefiniteShortName()}."
-						br
-						for (mode in ClusterFactionMode.values()) {
-							val modeId = "mode-${factionFlavor.toUrlSlug()}-${mode.toUrlSlug()}"
-							label {
-								htmlFor = modeId
-								radioInput(name = "factions[${factionFlavor.toUrlSlug()}]") {
-									id = modeId
-									value = mode.name
-									required = true
-									if (mode == ClusterFactionMode.ALLOW)
-										checked = true
-									classes = setOf(
-										"faction-choice",
-										"faction-loyalty-${factionFlavor.loyalties.first().toUrlSlug()}",
-										"faction-shipset-${factionFlavor.shipSource.toUrlSlug()}",
-										"faction-mode-${mode.toUrlSlug()}",
-									)
-								}
-								+mode.displayName
-								+Entities.nbsp
-							}
-						}
-					}
 				p {
 					strong { +"Set All by Faction Loyalty" }
 					val loyalties = FactionFlavor.values().map { it.loyalties.first() }.distinct()
@@ -183,6 +155,34 @@ fun Routing.installCampaign() {
 						}
 					}
 				}
+				for (factionFlavor in FactionFlavor.values())
+					p {
+						strong { +factionFlavor.displayName }
+						br
+						+"Uses ${factionFlavor.shipSource.adjective} ships, is loyal to ${factionFlavor.loyalties.first().getDefiniteShortName()}."
+						br
+						for (mode in ClusterFactionMode.values()) {
+							val modeId = "mode-${factionFlavor.toUrlSlug()}-${mode.toUrlSlug()}"
+							label {
+								htmlFor = modeId
+								radioInput(name = "factions[${factionFlavor.toUrlSlug()}]") {
+									id = modeId
+									value = mode.name
+									required = true
+									if (mode == ClusterFactionMode.ALLOW)
+										checked = true
+									classes = setOf(
+										"faction-choice",
+										"faction-loyalty-${factionFlavor.loyalties.first().toUrlSlug()}",
+										"faction-shipset-${factionFlavor.shipSource.toUrlSlug()}",
+										"faction-mode-${mode.toUrlSlug()}",
+									)
+								}
+								+mode.displayName
+								+Entities.nbsp
+							}
+						}
+					}
 				submitInput {
 					value = "Generate Star Cluster"
 				}
