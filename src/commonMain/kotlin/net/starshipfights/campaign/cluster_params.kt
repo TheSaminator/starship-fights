@@ -63,9 +63,6 @@ value class ClusterFactions private constructor(private val factions: Map<Factio
 	
 	operator fun plus(other: ClusterFactions) = ClusterFactions(factions + other.factions)
 	
-	val seedSize: Int
-		get() = factions.count { (_, it) -> it == ClusterFactionMode.REQUIRE }
-	
 	fun asGenerationSequence() = sequence {
 		val required = factions.filterValues { it == ClusterFactionMode.REQUIRE }.keys
 		val included = factions.filterValues { it != ClusterFactionMode.EXCLUDE }.keys
