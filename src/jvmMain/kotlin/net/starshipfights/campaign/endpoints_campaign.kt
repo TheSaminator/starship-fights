@@ -16,11 +16,17 @@ import net.starshipfights.labs.labUrl
 import net.starshipfights.redirect
 
 fun Routing.installCampaign() {
-	lab("cluster", "Star Clusters") {
+	lab("cluster", "Star Clusters") { errorMessage ->
 		section {
 			h1 { +"Star Clusters" }
 			p { +"This is only a test and may not be indicative of the finished star-cluster feature for Starship Fights" }
 			form(action = "/labs/cluster", method = FormMethod.post) {
+				errorMessage?.let { errorMsg ->
+					p {
+						style = "color:#d22"
+						+errorMsg
+					}
+				}
 				h2 { +"Generation Parameters" }
 				h3 { +"Background Color" }
 				for (color in StarClusterBackground.values()) {

@@ -18,7 +18,7 @@ private val labsSidebar: Sidebar
 
 fun labUrl(slug: String) = "/labs/$slug"
 
-fun Routing.lab(slug: String, title: String, pageBody: SECTIONS.() -> Unit) {
+fun Routing.lab(slug: String, title: String, pageBody: SECTIONS.(errorMessage: String?) -> Unit) {
 	labs[slug] = title
 	
 	get(labUrl(slug)) {
@@ -27,8 +27,7 @@ fun Routing.lab(slug: String, title: String, pageBody: SECTIONS.() -> Unit) {
 				title,
 				call.standardNavBar(),
 				labsSidebar,
-				pageBody
-			)
+			) { pageBody(call.request.queryParameters["error"]) }
 		)
 	}
 }
