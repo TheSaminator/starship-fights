@@ -88,7 +88,7 @@ value class ClusterFactions private constructor(private val factions: Map<Factio
 		val Default: ClusterFactions
 			get() = ClusterFactions(FactionFlavor.values().associateWith { ClusterFactionMode.ALLOW })
 		
-		operator fun invoke(factions: Map<FactionFlavor, ClusterFactionMode>) = Default + ClusterFactions(factions)
+		fun of(factions: Map<FactionFlavor, ClusterFactionMode>) = Default + ClusterFactions(factions)
 	}
 }
 

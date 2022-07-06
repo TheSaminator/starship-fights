@@ -203,7 +203,7 @@ fun Routing.installCampaign() {
 		val corruption = ClusterCorruption.values().valueOfOrRedirect(parameters.getOrFail("corruption")) { "Invalid value chosen for eldritch corruption" }
 		val contention = ClusterContention.values().valueOfOrRedirect(parameters.getOrFail("contention")) { "Invalid value chosen for factional contention" }
 		val factions = try {
-			ClusterFactions(FactionFlavor.values().mapNotNull { faction ->
+			ClusterFactions.of(FactionFlavor.values().mapNotNull { faction ->
 				parameters["factions[${faction.toUrlSlug()}]"]
 					?.let { ClusterFactionMode.values().valueOfOrNull(it) }
 					?.let { faction to it }
