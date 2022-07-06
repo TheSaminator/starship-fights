@@ -7,10 +7,13 @@ import io.ktor.request.*
 import io.ktor.routing.*
 import io.ktor.util.*
 import kotlinx.html.*
+import net.starshipfights.auth.withErrorMessage
 import net.starshipfights.data.Id
 import net.starshipfights.game.*
 import net.starshipfights.labs.lab
 import net.starshipfights.labs.labPost
+import net.starshipfights.labs.labUrl
+import net.starshipfights.redirect
 
 fun Routing.installCampaign() {
 	lab("cluster", "Star Clusters") {
@@ -187,15 +190,21 @@ fun Routing.installCampaign() {
 	labPost("cluster") {
 		val parameters = call.receiveParameters()
 		
-		val color = StarClusterBackground.valueOf(parameters.getOrFail("color"))
-		val size = ClusterSize.valueOf(parameters.getOrFail("size"))
-		val density = ClusterLaneDensity.valueOf(parameters.getOrFail("density"))
-		val planets = ClusterPlanetDensity.valueOf(parameters.getOrFail("planets"))
-		val corruption = ClusterCorruption.valueOf(parameters.getOrFail("corruption"))
-		val contention = ClusterContention.valueOf(parameters.getOrFail("contention"))
-		val factions = ClusterFactions(FactionFlavor.values().mapNotNull { faction ->
-			parameters["factions[${faction.toUrlSlug()}]"]?.let { faction to ClusterFactionMode.valueOf(it) }
-		}.toMap())
+		val color = StarClusterBackground.values().valueOfOrRedirect(parameters.getOrFail("color")) { "Invalid value chosen for background color" }
+		val size = ClusterSize.values().valueOfOrRedirect(parameters.getOrFail("size")) { "Invalid value chosen for cluster size" }
+		val density = ClusterLaneDensity.values().valueOfOrRedirect(parameters.getOrFail("density")) { "Invalid value chosen for warp lane density" }
+		val planets = ClusterPlanetDensity.values().valueOfOrRedirect(parameters.getOrFail("planets")) { "Invalid value chosen for planet density" }
+		val corruption = ClusterCorruption.values().valueOfOrRedirect(parameters.getOrFail("corruption")) { "Invalid value chosen for eldritch corruption" }
+		val contention = ClusterContention.values().valueOfOrRedirect(parameters.getOrFail("contention")) { "Invalid value chosen for factional contention" }
+		val factions = try {
+			ClusterFactions(FactionFlavor.values().mapNotNull { faction ->
+				parameters["factions[${faction.toUrlSlug()}]"]
+					?.let { ClusterFactionMode.values().valueOfOrNull(it) }
+					?.let { faction to it }
+			}.toMap())
+		} catch (ex: IllegalArgumentException) {
+			redirect(labUrl("cluster") + withErrorMessage("Invalid values chosen for faction modes"))
+		}
 		
 		val cluster = ClusterGenerator(
 			ClusterGenerationSettings(color, size, density, planets, corruption, factions, contention)
@@ -211,3 +220,7 @@ fun Routing.installCampaign() {
 		call.respondHtml(HttpStatusCode.OK, clientMode.view())
 	}
 }
+
+private fun <T : Enum<T>> Array<T>.valueOfOrNull(param: String?) = singleOrNull { it.name == param }
+
+private fun <T : Enum<T>> Array<T>.valueOfOrRedirect(param: String?, message: () -> String) = valueOfOrNull(param) ?: redirect(labUrl("cluster") + withErrorMessage(message()))

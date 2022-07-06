@@ -59,6 +59,10 @@ enum class ClusterFactionMode {
 @JvmInline
 @Serializable
 value class ClusterFactions private constructor(private val factions: Map<FactionFlavor, ClusterFactionMode>) {
+	init {
+		require(factions.values.any { it != ClusterFactionMode.EXCLUDE }) { "Excluding all factions is a bad idea!" }
+	}
+	
 	operator fun get(factionFlavor: FactionFlavor) = factions[factionFlavor] ?: ClusterFactionMode.ALLOW
 	
 	operator fun plus(other: ClusterFactions) = ClusterFactions(factions + other.factions)

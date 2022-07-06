@@ -12,14 +12,16 @@ private val labs = mutableMapOf<String, String>()
 private val labsSidebar: Sidebar
 	get() = PageNavSidebar(
 		listOf(NavHead("Other Labs")) + labs.map { (slug, title) ->
-			NavLink("/labs/$slug", title)
+			NavLink(labUrl(slug), title)
 		}
 	)
+
+fun labUrl(slug: String) = "/labs/$slug"
 
 fun Routing.lab(slug: String, title: String, pageBody: SECTIONS.() -> Unit) {
 	labs[slug] = title
 	
-	get("/labs/$slug") {
+	get(labUrl(slug)) {
 		call.respondHtml(
 			block = call.page(
 				title,
@@ -32,7 +34,7 @@ fun Routing.lab(slug: String, title: String, pageBody: SECTIONS.() -> Unit) {
 }
 
 fun Routing.labPost(slug: String, action: PipelineInterceptor<Unit, ApplicationCall>) {
-	post("/labs/$slug", action)
+	post(labUrl(slug), action)
 }
 
 fun Routing.installLabs() {
@@ -52,7 +54,7 @@ fun Routing.installLabs() {
 						ul {
 							for ((slug, title) in labs) {
 								li {
-									a(href = "/labs/$slug") { +title }
+									a(href = labUrl(slug)) { +title }
 								}
 							}
 						}
