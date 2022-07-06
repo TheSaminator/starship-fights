@@ -375,7 +375,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 					
 					uncontrolledSystems -= borderId
 					
-					if (Random.nextDouble() < settings.contention.controlSpreadChance / degree)
+					if (Random.nextDouble() < settings.contention.numLanesSpreadControl / degree)
 						systemControllers[borderId] = systemControllers.getValue(systemId).let { faction ->
 							if (Random.nextBoolean())
 								faction

@@ -32,7 +32,7 @@
 		}
 
 		const canvasLoads = [];
-		for (let canvas of canvases) {
+		for (const canvas of canvases) {
 			const modelName = canvas.getAttribute("data-model");
 			if (modelName == null) continue;
 
@@ -106,7 +106,7 @@
 	window.addEventListener("load", function () {
 		// Localize dates and times
 		const moments = document.getElementsByClassName("moment");
-		for (let moment of moments) {
+		for (const moment of moments) {
 			let date = new Date(Number(moment.innerHTML.trim()));
 			moment.innerHTML = date.toLocaleString();
 			moment.style.display = "inline";
@@ -147,7 +147,7 @@
 		const nameBox = document.getElementById("name");
 		const isFemaleButton = document.getElementById("sex-female");
 		const generators = document.getElementsByClassName("generate-admiral-name");
-		for (let generator of generators) {
+		for (const generator of generators) {
 			const flavor = generator.getAttribute("data-flavor");
 			generator.onclick = (e) => {
 				e.preventDefault();
@@ -161,7 +161,7 @@
 	window.addEventListener("load", function () {
 		// Indicate maximum and used length of <textarea>s
 		const textareas = document.getElementsByTagName("textarea");
-		for (let textarea of textareas) {
+		for (const textarea of textareas) {
 			if (!textarea.hasAttribute("maxLength")) continue;
 
 			const maxLengthIndicator = document.createElement("p");
@@ -190,7 +190,7 @@
 	window.addEventListener("load", function () {
 		// Allow POSTing with <a>s
 		const anchors = document.getElementsByTagName("a");
-		for (let anchor of anchors) {
+		for (const anchor of anchors) {
 			const method = anchor.getAttribute("data-method");
 			if (method == null) continue;
 
@@ -222,11 +222,44 @@
 		if (!window.sfThemeChoice) return;
 
 		const themeChoices = document.getElementsByName("theme");
-		for (let themeChoice of themeChoices) {
+		for (const themeChoice of themeChoices) {
 			const theme = themeChoice.value;
 			themeChoice.addEventListener("click", () => {
 				document.documentElement.setAttribute("data-theme", theme);
 			});
+		}
+	});
+
+	window.addEventListener("load", function () {
+		// Allow bulk-setting of factions
+		if (!window.sfClusterGenTest) return;
+
+		const setAllButtons = document.getElementsByClassName("set-all");
+		for (const setAllButton of setAllButtons) {
+			setAllButton.onclick = function (e) {
+				e.preventDefault();
+
+				const enableClass = setAllButton.getAttribute("data-enable-class");
+				const factionChoices = document.getElementsByClassName("faction-choice");
+				for (const factionChoice of factionChoices) {
+					factionChoice.checked = factionChoice.classList.contains(enableClass);
+				}
+			};
+		}
+
+		const setSomeButtons = document.getElementsByClassName("set-all-by-faction");
+		for (const setSomeButton of setSomeButtons) {
+			setSomeButton.onclick = function (e) {
+				e.preventDefault();
+
+				const filterClass = setSomeButton.getAttribute("data-filter-class");
+				const chosenClass = setSomeButton.getAttribute("data-enable-class");
+				const factionChoices = document.getElementsByClassName("faction-choice");
+				for (const factionChoice of factionChoices) {
+					if (factionChoice.classList.contains(filterClass))
+						factionChoice.checked = factionChoice.classList.contains(chosenClass);
+				}
+			};
 		}
 	});
 })();

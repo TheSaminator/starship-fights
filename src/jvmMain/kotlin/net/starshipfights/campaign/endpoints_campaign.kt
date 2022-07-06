@@ -104,6 +104,16 @@ fun Routing.installCampaign() {
 					}
 				}
 				h3 { +"Per-Faction Modes" }
+				p {
+					strong { +"Set All" }
+					for (mode in ClusterFactionMode.values()) {
+						+Entities.nbsp
+						a(href = "#", classes = "set-all") {
+							attributes["data-enable-class"] = "faction-mode-${mode.toUrlSlug()}"
+							+mode.displayName
+						}
+					}
+				}
 				for (factionFlavor in FactionFlavor.values())
 					p {
 						strong { +factionFlavor.displayName }
@@ -120,14 +130,55 @@ fun Routing.installCampaign() {
 									required = true
 									if (mode == ClusterFactionMode.ALLOW)
 										checked = true
+									classes = setOf(
+										"faction-choice",
+										"faction-loyalty-${factionFlavor.loyalties.first().toUrlSlug()}",
+										"faction-shipset-${factionFlavor.shipSource.toUrlSlug()}",
+										"faction-mode-${mode.toUrlSlug()}",
+									)
 								}
 								+mode.displayName
 								+Entities.nbsp
 							}
 						}
 					}
+				p {
+					strong { +"Set All by Faction Loyalty" }
+					val loyalties = FactionFlavor.values().map { it.loyalties.first() }.distinct()
+					for (loyalty in loyalties) {
+						br
+						+"${loyalty.shortName}:"
+						for (mode in ClusterFactionMode.values()) {
+							+Entities.nbsp
+							a(href = "#", classes = "set-all-by-faction") {
+								attributes["data-filter-class"] = "faction-loyalty-${loyalty.toUrlSlug()}"
+								attributes["data-enable-class"] = "faction-mode-${mode.toUrlSlug()}"
+								+mode.displayName
+							}
+						}
+					}
+				}
+				p {
+					strong { +"Set All by Shipset" }
+					val shipSets = FactionFlavor.values().map { it.shipSource }.distinct()
+					for (shipSet in shipSets) {
+						br
+						+"${shipSet.shortName}:"
+						for (mode in ClusterFactionMode.values()) {
+							+Entities.nbsp
+							a(href = "#", classes = "set-all-by-faction") {
+								attributes["data-filter-class"] = "faction-shipset-${shipSet.toUrlSlug()}"
+								attributes["data-enable-class"] = "faction-mode-${mode.toUrlSlug()}"
+								+mode.displayName
+							}
+						}
+					}
+				}
 				submitInput {
 					value = "Generate Star Cluster"
+				}
+				script {
+					unsafe { +"window.sfClusterGenTest = true;" }
 				}
 			}
 		}

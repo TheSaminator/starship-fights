@@ -88,8 +88,8 @@ value class ClusterFactions private constructor(private val factions: Map<Factio
 	}
 }
 
-enum class ClusterContention(val controlSpreadChance: Double, val maxFleets: Int, val fleetStrengthMult: Double) {
-	BLOODBATH(0.9, 5, 1.0), CONTESTED(0.65, 3, 0.8), PEACEFUL(0.5, 2, 0.5);
+enum class ClusterContention(val numLanesSpreadControl: Double, val maxFleets: Int, val fleetStrengthMult: Double) {
+	BLOODBATH(3.0, 5, 1.0), CONTESTED(1.75, 3, 0.8), PEACEFUL(1.25, 2, 0.5);
 	
 	val displayName: String
 		get() = name.lowercase().replaceFirstChar { it.uppercase() }
