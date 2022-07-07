@@ -62,6 +62,7 @@ enum class AdmiralNameFlavor {
 			
 			FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
 			FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
+			FactionFlavor.NEW_AUSTIN_VESTIGIUM -> setOf(AMERICAN, HISPANIC_AMERICAN)
 		}
 	}
 }

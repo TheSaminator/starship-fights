@@ -35,6 +35,38 @@ val FactionFlavor.loyalties: List<Faction>
 		
 		FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> listOf(Faction.VESTIGIUM)
 		FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> listOf(Faction.VESTIGIUM)
+		FactionFlavor.NEW_AUSTIN_VESTIGIUM -> listOf(Faction.VESTIGIUM)
+	}
+
+val FactionFlavor.shipSource: Faction
+	get() = when (this) {
+		FactionFlavor.MECHYRDIA -> Faction.MECHYRDIA
+		FactionFlavor.TYLA -> Faction.MECHYRDIA
+		FactionFlavor.OLYMPIA -> Faction.MECHYRDIA
+		FactionFlavor.TEXANDRIA -> Faction.MECHYRDIA
+		
+		FactionFlavor.NDRC -> Faction.NDRC
+		FactionFlavor.CCC -> Faction.NDRC
+		FactionFlavor.MJOLNIR_ENERGY -> Faction.NDRC
+		
+		FactionFlavor.MASRA_DRAETSEN -> Faction.MASRA_DRAETSEN
+		FactionFlavor.AEDON_CULTISTS -> Faction.MASRA_DRAETSEN
+		FactionFlavor.FERTHLON_EXILES -> Faction.MASRA_DRAETSEN
+		
+		FactionFlavor.RES_NOSTRA -> Faction.FELINAE_FELICES
+		FactionFlavor.CORSAIRS -> Faction.FELINAE_FELICES
+		FactionFlavor.FELINAE_FELICES -> Faction.FELINAE_FELICES
+		
+		FactionFlavor.ISARNAREYKK -> Faction.ISARNAREYKK
+		FactionFlavor.SWARTAREYKK -> Faction.ISARNAREYKK
+		FactionFlavor.THEUDAREYKK -> Faction.ISARNAREYKK
+		FactionFlavor.STAHLAREYKK -> Faction.ISARNAREYKK
+		FactionFlavor.LYUDAREYKK -> Faction.ISARNAREYKK
+		FactionFlavor.NEUIA_FULKREYKK -> Faction.ISARNAREYKK
+		
+		FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> Faction.VESTIGIUM
+		FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> Faction.VESTIGIUM
+		FactionFlavor.NEW_AUSTIN_VESTIGIUM -> Faction.VESTIGIUM
 	}
 
 @Serializable

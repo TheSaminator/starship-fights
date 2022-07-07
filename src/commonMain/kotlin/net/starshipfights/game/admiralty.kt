@@ -139,6 +139,7 @@ fun AdmiralRank.getDisplayName(factionFlavor: FactionFlavor) = when (factionFlav
 	FactionFlavor.NEUIA_FULKREYKK -> getDisplayName(Faction.ISARNAREYKK)
 	FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> getDisplayName(Faction.VESTIGIUM)
 	FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> getDisplayName(Faction.VESTIGIUM)
+	FactionFlavor.NEW_AUSTIN_VESTIGIUM -> getDisplayName(Faction.VESTIGIUM)
 }
 
 @Serializable

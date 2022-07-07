@@ -74,6 +74,7 @@ enum class FactionFlavor(val displayName: String, val colorReplacement: IntColor
 	
 	CORVUS_CLUSTER_VESTIGIUM("Vestigium Sect in the Corvus Cluster", IntColor(108, 96, 153)),
 	COLEMAN_SF_BASE_VESTIGIUM("Vestigium Sect at Coleman Space Force Base", IntColor(153, 102, 102)),
+	NEW_AUSTIN_VESTIGIUM("Vestigium Sect at New Austin Colony", IntColor(220, 192, 111)),
 	;
 	
 	companion object {
@@ -92,7 +93,7 @@ enum class FactionFlavor(val displayName: String, val colorReplacement: IntColor
 			Faction.MASRA_DRAETSEN -> setOf(MASRA_DRAETSEN, AEDON_CULTISTS, RES_NOSTRA, CORSAIRS, FERTHLON_EXILES)
 			Faction.FELINAE_FELICES -> setOf(FELINAE_FELICES, RES_NOSTRA, CORSAIRS)
 			Faction.ISARNAREYKK -> setOf(ISARNAREYKK, SWARTAREYKK, THEUDAREYKK, STAHLAREYKK, LYUDAREYKK, NEUIA_FULKREYKK)
-			Faction.VESTIGIUM -> setOf(CORVUS_CLUSTER_VESTIGIUM, COLEMAN_SF_BASE_VESTIGIUM)
+			Faction.VESTIGIUM -> setOf(CORVUS_CLUSTER_VESTIGIUM, COLEMAN_SF_BASE_VESTIGIUM, NEW_AUSTIN_VESTIGIUM)
 		}
 	}
 }

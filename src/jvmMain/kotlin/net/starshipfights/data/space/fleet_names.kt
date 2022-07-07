@@ -36,6 +36,7 @@ fun FactionFlavor.generateFleetName(): String = when (this) {
 	FactionFlavor.STAHLAREYKK -> "${rangedOrdinal(1999, 200)} Fulksflott"
 	FactionFlavor.LYUDAREYKK -> "${rangedOrdinal(1999, 200)} Vaerflott"
 	FactionFlavor.NEUIA_FULKREYKK -> "${rangedOrdinal(499, 20)} Fulkreyksk Kriygsflott"
-	FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> "${rangedOrdinal(499, 20)} Expeditionary Fleet"
-	FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> "${rangedOrdinal(499, 20)} Exploratory Fleet"
+	FactionFlavor.CORVUS_CLUSTER_VESTIGIUM -> "${rangedOrdinal(499, 20)} Extermination Fleet"
+	FactionFlavor.COLEMAN_SF_BASE_VESTIGIUM -> "${rangedOrdinal(499, 20)} Expeditionary Fleet"
+	FactionFlavor.NEW_AUSTIN_VESTIGIUM -> "${rangedOrdinal(499, 20)} Exploratory Fleet"
 }
