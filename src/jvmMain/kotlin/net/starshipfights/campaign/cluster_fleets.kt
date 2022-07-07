@@ -44,10 +44,12 @@ fun generateFleetPresences(owner: FactionFlavor, maxFleets: Int, sizeMult: Doubl
 	
 	Id<FleetPresence>() to FleetPresence(
 		name = owner.generateFleetName(),
-		owner = owner,
 		ships = admiralFleet,
-		admiralName = AdmiralNames.randomName(AdmiralNameFlavor.forFactionFlavor(owner).random(), admiralIsFemale),
-		admiralIsFemale = admiralIsFemale,
-		admiralRank = admiralRank
+		admiral = FleetPresenceAdmiral.NPC(
+			name = AdmiralNames.randomName(AdmiralNameFlavor.forFactionFlavor(owner).random(), admiralIsFemale),
+			isFemale = admiralIsFemale,
+			faction = owner,
+			rank = admiralRank
+		)
 	)
 }

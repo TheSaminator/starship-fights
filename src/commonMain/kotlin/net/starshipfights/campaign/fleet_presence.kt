@@ -72,16 +72,50 @@ val FactionFlavor.shipSource: Faction
 @Serializable
 data class FleetPresence(
 	val name: String,
-	val owner: FactionFlavor,
 	val ships: Map<Id<Ship>, Ship>,
 	
-	val admiralName: String,
-	val admiralIsFemale: Boolean,
-	val admiralRank: AdmiralRank,
+	val admiral: FleetPresenceAdmiral
 ) {
+	val owner: FactionFlavor
+		get() = admiral.faction
+	
 	val pointValue: Int
 		get() = ships.values.sumOf { it.pointCost }
 	
 	val admiralFullName: String
-		get() = "${admiralRank.getDisplayName(owner)} $admiralName"
+		get() = admiral.fullName
+}
+
+@Serializable
+sealed class FleetPresenceAdmiral {
+	abstract val name: String
+	abstract val isFemale: Boolean
+	abstract val faction: FactionFlavor
+	abstract val rank: AdmiralRank
+	
+	val fullName: String
+		get() = "${rank.getDisplayName(faction)} $name"
+	
+	@Serializable
+	data class NPC(
+		override val name: String,
+		override val isFemale: Boolean,
+		override val faction: FactionFlavor,
+		override val rank: AdmiralRank,
+	) : FleetPresenceAdmiral()
+	
+	@Serializable
+	data class Player(val admiral: CampaignAdmiral) : FleetPresenceAdmiral() {
+		override val name: String
+			get() = admiral.admiral.name
+		
+		override val isFemale: Boolean
+			get() = admiral.admiral.isFemale
+		
+		override val faction: FactionFlavor
+			get() = FactionFlavor.defaultForFaction(admiral.admiral.faction)
+		
+		override val rank: AdmiralRank
+			get() = admiral.admiral.rank
+	}
 }

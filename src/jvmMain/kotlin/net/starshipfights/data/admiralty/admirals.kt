@@ -32,6 +32,8 @@ data class Admiral(
 	val money: Int,
 	
 	val inCluster: Id<StarCluster>? = null,
+	val invitedToClusters: Set<Id<StarCluster>> = emptySet(),
+	val requestedClusters: Set<Id<StarCluster>> = emptySet(),
 ) : DataDocument<Admiral> {
 	val rank: AdmiralRank
 		get() = AdmiralRank.fromAcumen(acumen)
@@ -42,6 +44,8 @@ data class Admiral(
 	companion object Table : DocumentTable<Admiral> by DocumentTable.create({
 		index(Admiral::owningUser)
 		index(Admiral::inCluster)
+		index(Admiral::invitedToClusters)
+		index(Admiral::requestedClusters)
 	})
 }
 
@@ -122,17 +126,19 @@ suspend fun getAllInGameAdmirals(user: User) = Admiral.filter(Admiral::owningUse
 	)
 }.toList()
 
+suspend fun getInGameAdmiral(admiral: Admiral) = User.get(admiral.owningUser)?.let { user ->
+	InGameAdmiral(
+		admiral.id.reinterpret(),
+		InGameUser(user.id.reinterpret(), user.profileName),
+		admiral.name,
+		admiral.isFemale,
+		admiral.faction,
+		admiral.rank
+	)
+}
+
 suspend fun getInGameAdmiral(admiralId: Id<InGameAdmiral>) = Admiral.get(admiralId.reinterpret())?.let { admiral ->
-	User.get(admiral.owningUser)?.let { user ->
-		InGameAdmiral(
-			admiralId,
-			InGameUser(user.id.reinterpret(), user.profileName),
-			admiral.name,
-			admiral.isFemale,
-			admiral.faction,
-			admiral.rank
-		)
-	}
+	getInGameAdmiral(admiral)
 }
 
 suspend fun getAdmiralsShips(admiralId: Id<Admiral>): Map<Id<Ship>, Ship> {

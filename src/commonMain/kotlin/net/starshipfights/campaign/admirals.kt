@@ -6,15 +6,13 @@ import net.starshipfights.game.InGameAdmiral
 enum class CampaignAdmiralStatus {
 	HOST,
 	MEMBER,
-	INVITED,
-	REQUESTED;
+	INVITED;
 	
 	val displayName: String
 		get() = when (this) {
 			HOST -> "Campaign Host"
 			MEMBER -> "Campaign Player"
 			INVITED -> "Invited to Campaign"
-			REQUESTED -> "Requesting to Join"
 		}
 }
 

@@ -15,7 +15,7 @@ import net.starshipfights.game.*
 
 var mySide: CampaignAdmiral? = null
 
-suspend fun campaignMain(playingAs: Id<InGameAdmiral>, admirals: Map<Id<InGameAdmiral>, CampaignAdmiral>, clusterToken: Id<StarClusterView>, clusterView: StarClusterView) {
+suspend fun campaignMain(playingAs: Id<InGameAdmiral>?, admirals: Map<Id<InGameAdmiral>, CampaignAdmiral>, clusterToken: Id<StarClusterView>, clusterView: StarClusterView) {
 	Popup.LoadingScreen("Loading resources...") {
 		CampaignResources.load()
 	}.display()

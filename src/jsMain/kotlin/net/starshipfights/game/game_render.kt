@@ -4,7 +4,7 @@ import externals.threejs.*
 import net.starshipfights.data.Id
 
 object GameRender {
-	private val shipMeshCache = mutableMapOf<Id<ShipInstance>, Mesh>()
+	private val shipMeshCache = mutableMapOf<Id<ShipInstance>, Object3D>()
 	
 	fun renderGameState(scene: Scene, state: GameState) {
 		scene.background = RenderResources.spaceboxes.getValue(state.battleInfo.bg)
@@ -22,7 +22,7 @@ object GameRender {
 				ShipRenderMode.FULL -> shipGroup.add(shipMeshCache[ship.id]?.also { render ->
 					RenderScaling.toWorldRotation(ship.position.facing, render)
 					render.position.copy(RenderScaling.toWorldPosition(ship.position.location))
-				} ?: RenderResources.shipMesh.generate(ship))
+				} ?: RenderResources.shipMesh.generate(ship).also { shipMeshCache[ship.id] = it })
 			}
 		}
 	}

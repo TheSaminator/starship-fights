@@ -3,6 +3,7 @@ package net.starshipfights.data.space
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -11,15 +12,19 @@ import net.starshipfights.data.DataDocument
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
 import net.starshipfights.data.admiralty.Admiral
+import net.starshipfights.data.admiralty.ShipInDrydock
+import net.starshipfights.data.admiralty.getInGameAdmiral
 import net.starshipfights.data.invoke
 import net.starshipfights.game.FactionFlavor
 import net.starshipfights.game.Position
 import net.starshipfights.game.Ship
 import org.litote.kmongo.eq
+import org.litote.kmongo.setValue
 
 @Serializable
 data class StarCluster(
 	override val id: Id<StarCluster>,
+	val host: Id<Admiral>,
 	
 	val background: StarClusterBackground,
 	val lanes: Set<WarpLane>
@@ -60,11 +65,78 @@ data class ClusterFleetPresence(
 	override val id: Id<ClusterFleetPresence>,
 	val starSystemId: Id<ClusterStarSystem>,
 	
-	val fleetPresence: FleetPresence
+	val fleetPresence: FleetPresenceData
 ) : DataDocument<ClusterFleetPresence> {
 	companion object Table : DocumentTable<ClusterFleetPresence> by DocumentTable.create({
 		index(ClusterFleetPresence::starSystemId)
 	})
+}
+
+@Serializable
+sealed class FleetPresenceData {
+	@Serializable
+	data class NPC(
+		val name: String,
+		val ships: Map<Id<Ship>, Ship>,
+		val admiral: FleetPresenceAdmiral.NPC
+	) : FleetPresenceData()
+	
+	@Serializable
+	data class Player(
+		val admiralId: Id<Admiral>
+	) : FleetPresenceData()
+}
+
+suspend fun getCampaignStatus(admiral: Admiral, clusterId: Id<StarCluster>): CampaignAdmiralStatus? {
+	val cluster = StarCluster.get(clusterId) ?: return null
+	
+	admiral.inCluster?.let { inCluster ->
+		if (inCluster == clusterId) {
+			return if (cluster.host == admiral.id)
+				CampaignAdmiralStatus.HOST
+			else
+				CampaignAdmiralStatus.MEMBER
+		} else if (cluster.host == admiral.id) {
+			Admiral.set(admiral.id, setValue(Admiral::inCluster, clusterId))
+			return CampaignAdmiralStatus.HOST
+		}
+	}
+	
+	return if (clusterId in admiral.invitedToClusters)
+		CampaignAdmiralStatus.INVITED
+	else null
+}
+
+suspend fun FleetPresenceData.resolve(inCluster: Id<StarCluster>): FleetPresence? {
+	return when (this) {
+		is FleetPresenceData.NPC -> FleetPresence(
+			name = name,
+			ships = ships,
+			admiral = admiral
+		)
+		is FleetPresenceData.Player -> {
+			val (admiral, ships) = coroutineScope {
+				val admiralAsync = async { Admiral.get(admiralId) }
+				val shipsAsync = async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList() }
+				
+				admiralAsync.await() to shipsAsync.await()
+			}
+			
+			admiral ?: return null
+			val inGameAdmiral = getInGameAdmiral(admiral) ?: return null
+			val campaignStatus = getCampaignStatus(admiral, inCluster) ?: return null
+			
+			FleetPresence(
+				name = "Fleet of ${admiral.fullName}",
+				ships = ships.associate { inDrydock ->
+					inDrydock.id.reinterpret<Ship>() to inDrydock.shipData
+				},
+				admiral = FleetPresenceAdmiral.Player(
+					CampaignAdmiral(inGameAdmiral, campaignStatus)
+				)
+			)
+		}
+	}
 }
 
 suspend fun deleteCluster(clusterId: Id<StarCluster>) {
@@ -86,9 +158,10 @@ suspend fun deleteCluster(clusterId: Id<StarCluster>) {
 	}
 }
 
-suspend fun createCluster(clusterView: StarClusterView): Id<StarCluster> {
+suspend fun createCluster(clusterView: StarClusterView, forAdmiral: Id<Admiral>): Id<StarCluster> {
 	val cluster = StarCluster(
 		id = Id(),
+		host = forAdmiral,
 		background = clusterView.background,
 		lanes = clusterView.lanes
 	)
@@ -124,7 +197,16 @@ suspend fun createCluster(clusterView: StarClusterView): Id<StarCluster> {
 							ClusterFleetPresence(
 								id = fleetId.reinterpret(),
 								starSystemId = clusterSystem.id,
-								fleetPresence = fleet
+								fleetPresence = when (val admiral = fleet.admiral) {
+									is FleetPresenceAdmiral.NPC -> FleetPresenceData.NPC(
+										name = fleet.name,
+										ships = fleet.ships,
+										admiral = admiral
+									)
+									is FleetPresenceAdmiral.Player -> FleetPresenceData.Player(
+										admiral.admiral.admiral.id.reinterpret()
+									)
+								}
 							)
 						}
 					)
@@ -150,11 +232,11 @@ suspend fun viewCluster(clusterId: Id<StarCluster>): StarClusterView? {
 						}
 					}
 					val fleetsAsync = async {
-						val fleets = ClusterFleetPresence.filter(ClusterFleetPresence::starSystemId eq cSystem.id).toList()
-						
-						fleets.associate { cFleet ->
-							cFleet.id.reinterpret<FleetPresence>() to cFleet.fleetPresence
-						}
+						ClusterFleetPresence.filter(ClusterFleetPresence::starSystemId eq cSystem.id).map { fleet ->
+							async {
+								fleet.fleetPresence.resolve(clusterId)?.let { fleet.id.reinterpret<FleetPresence>() to it }
+							}
+						}.mapNotNull { it.await() }.toList().toMap()
 					}
 					
 					cSystem.id.reinterpret<StarSystem>() to StarSystem(
@@ -166,7 +248,7 @@ suspend fun viewCluster(clusterId: Id<StarCluster>): StarClusterView? {
 						bodiesAsync.await()
 					)
 				}
-			}.toList().associate { it.await() }
+			}.map { it.await() }.toList().toMap()
 		}
 		
 		val cluster = clusterAsync.await() ?: return@coroutineScope null
@@ -178,16 +260,4 @@ suspend fun viewCluster(clusterId: Id<StarCluster>): StarClusterView? {
 			lanes = cluster.lanes
 		)
 	}
-}
-
-suspend fun deployableFleet(systemId: Id<ClusterStarSystem>, admiral: Admiral): Map<Id<Ship>, Ship> {
-	return ClusterFleetPresence.filter(ClusterFleetPresence::starSystemId eq systemId)
-		.toList()
-		.filter { admiral.faction in it.fleetPresence.owner.loyalties }
-		.flatMap {
-			it.fleetPresence.ships.toList().filter { (_, ship) ->
-				ship.shipType.weightClass.tier <= admiral.rank.maxShipTier
-			}
-		}
-		.toMap()
 }

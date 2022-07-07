@@ -9,7 +9,7 @@ import net.starshipfights.data.Id
 sealed class ClientMode {
 	@Serializable
 	data class CampaignMap(
-		val playingAs: Id<InGameAdmiral>,
+		val playingAs: Id<InGameAdmiral>?,
 		val admirals: Map<Id<InGameAdmiral>, CampaignAdmiral>,
 		val clusterToken: Id<StarClusterView>,
 		val clusterView: StarClusterView
