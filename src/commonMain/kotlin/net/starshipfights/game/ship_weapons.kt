@@ -488,6 +488,9 @@ fun ShipInstance.calculateBombing(otherShips: Map<Id<ShipInstance>, ShipInstance
 }
 
 fun ShipInstance.afterBombed(otherShips: Map<Id<ShipInstance>, ShipInstance>, strikeWingDamage: MutableMap<ShipHangarWing, Double>): ImpactResult {
+	if (bomberWings.isEmpty())
+		return ImpactResult.Intact(this)
+	
 	val calculatedBombing = calculateBombing(otherShips)
 	
 	val maxBomberWingOutput = exp(calculatedBombing)
