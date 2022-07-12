@@ -314,7 +314,7 @@ interface AuthProvider {
 					
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = Instant.now().minusMillis(100)
+							val newTime = Instant.now()
 							UserSession.update(UserSession::id eq sess.id, setValue(UserSession::expiration, newTime))
 						}
 					}
@@ -329,7 +329,7 @@ interface AuthProvider {
 					val id = Id<UserSession>(call.parameters.getOrFail("id"))
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = Instant.now().minusMillis(100)
+							val newTime = Instant.now()
 							UserSession.update(and(UserSession::id eq id, UserSession::user eq sess.user), setValue(UserSession::expiration, newTime))
 						}
 					}
@@ -342,7 +342,7 @@ interface AuthProvider {
 					
 					call.getUserSession()?.let { sess ->
 						launch {
-							val newTime = Instant.now().minusMillis(100)
+							val newTime = Instant.now()
 							UserSession.update(and(UserSession::user eq sess.user, UserSession::id ne sess.id), setValue(UserSession::expiration, newTime))
 						}
 					}

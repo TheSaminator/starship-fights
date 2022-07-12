@@ -2,7 +2,6 @@ package net.starshipfights.info
 
 import kotlinx.html.*
 import net.starshipfights.data.auth.User
-import net.starshipfights.data.auth.UserStatus
 import net.starshipfights.data.auth.getTrophies
 import net.starshipfights.data.auth.renderTrophy
 import net.starshipfights.game.ShipType
@@ -66,12 +65,7 @@ data class UserProfileSidebar(val user: User, val isCurrentUser: Boolean, val ha
 		if (user.showUserStatus) {
 			p {
 				style = "text-align:center"
-				+when (user.status) {
-					UserStatus.IN_BATTLE -> "In Battle"
-					UserStatus.READY_FOR_BATTLE -> "In Battle"
-					UserStatus.IN_MATCHMAKING -> "In Matchmaking"
-					UserStatus.AVAILABLE -> if (hasOpenSessions) "Online" else "Offline"
-				}
+				+if (hasOpenSessions) "Online" else "Offline"
 			}
 			p {
 				style = "text-align:center"

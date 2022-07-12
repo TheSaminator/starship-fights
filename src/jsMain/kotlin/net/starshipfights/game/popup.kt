@@ -60,6 +60,7 @@ sealed class Popup<out T> {
 		}
 	}
 	
+	// Game matchmaking popups
 	class ChooseAdmiralScreen(private val admirals: List<InGameAdmiral>) : Popup<InGameAdmiral>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (InGameAdmiral) -> Unit) {
 			if (admirals.isEmpty()) {
@@ -595,6 +596,34 @@ sealed class Popup<out T> {
 		}
 	}
 	
+	// Battle popups
+	class GameOver(private val winner: GlobalSide?, private val outcome: String, private val subplotStatuses: Map<SubplotKey, SubplotOutcome>, private val finalState: GameState) : Popup<Nothing>() {
+		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Nothing) -> Unit) {
+			p {
+				style = "text-align:center"
+				
+				strong(classes = "heading") {
+					+"${victoryTitle(mySide, winner, subplotStatuses)}!"
+				}
+			}
+			p {
+				style = "text-align:center"
+				
+				+outcome
+			}
+			p {
+				style = "text-align:center"
+				
+				val admiralId = finalState.admiralInfo(mySide).id
+				
+				a(href = "/admiral/${admiralId}") {
+					+"Exit Battle"
+				}
+			}
+		}
+	}
+	
+	// Utility popups
 	class LoadingScreen<T>(private val loadingText: String, private val loadAction: suspend () -> T) : Popup<T>() {
 		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (T) -> Unit) {
 			p {
@@ -641,32 +670,6 @@ sealed class Popup<out T> {
 				style = "text-align:center"
 				
 				+errorMessage
-			}
-		}
-	}
-	
-	class GameOver(private val winner: GlobalSide?, private val outcome: String, private val subplotStatuses: Map<SubplotKey, SubplotOutcome>, private val finalState: GameState) : Popup<Nothing>() {
-		override fun TagConsumer<*>.render(context: CoroutineContext, callback: (Nothing) -> Unit) {
-			p {
-				style = "text-align:center"
-				
-				strong(classes = "heading") {
-					+"${victoryTitle(mySide, winner, subplotStatuses)}!"
-				}
-			}
-			p {
-				style = "text-align:center"
-				
-				+outcome
-			}
-			p {
-				style = "text-align:center"
-				
-				val admiralId = finalState.admiralInfo(mySide).id
-				
-				a(href = "/admiral/${admiralId}") {
-					+"Exit Battle"
-				}
 			}
 		}
 	}

@@ -17,7 +17,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 	var throttle: suspend () -> Unit = ::`yield`
 	
 	suspend fun generateCluster(): StarClusterView {
-		return withTimeoutOrNull(10_000L) {
+		return coroutineScope {
 			val positionsAsync = async {
 				val rp = fixPositions(generatePositions().take(settings.size.maxStars).toList())
 				val p = indexPositions(rp)
@@ -49,7 +49,7 @@ class ClusterGenerator(val settings: ClusterGenerationSettings) {
 				systems = generateFleets(assignFactions(systems, warpLanes)),
 				lanes = warpLanes,
 			)
-		} ?: generateCluster()
+		}
 	}
 	
 	private fun generatePositions() = flow {

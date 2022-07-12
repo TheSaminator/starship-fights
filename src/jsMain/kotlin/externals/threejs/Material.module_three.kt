@@ -126,7 +126,7 @@ external interface MaterialParameters {
 	var stencilZPass: StencilOp?
 		get() = definedExternally
 		set(value) = definedExternally
-	var userData: Any?
+	var userData: dynamic
 		get() = definedExternally
 		set(value) = definedExternally
 }
@@ -177,7 +177,7 @@ external open class Material : EventTarget {
 	open var uuid: String
 	open var vertexColors: Boolean
 	open var visible: Boolean
-	open var userData: Any
+	open var userData: dynamic
 	open var version: Number
 	open fun clone(): Material /* this */
 	open fun copy(material: Material): Material /* this */

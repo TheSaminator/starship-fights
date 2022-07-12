@@ -1,6 +1,7 @@
 package net.starshipfights.campaign
 
 import kotlinx.serialization.Serializable
+import net.starshipfights.game.Faction
 import net.starshipfights.game.FactionFlavor
 import kotlin.jvm.JvmInline
 import kotlin.math.ceil
@@ -60,16 +61,27 @@ enum class ClusterFactionMode {
 @Serializable
 value class ClusterFactions private constructor(private val factions: Map<FactionFlavor, ClusterFactionMode>) {
 	init {
-		require(factions.values.any { it != ClusterFactionMode.EXCLUDE }) { "Excluding all factions is a bad idea!" }
+		require(FactionFlavor.values().any { factions[it] != ClusterFactionMode.EXCLUDE }) { "Must not exclude all factions when creating star cluster" }
+	}
+	
+	fun getModesForFaction(faction: Faction) = faction.allegiences.map { this[it] }.toSet()
+	
+	fun canFitInto(size: ClusterSize) = factions.count { (_, mode) -> mode == ClusterFactionMode.REQUIRE } < size.maxStars * 2 / 5
+	
+	fun <T : Comparable<T>> forceFitInto(size: ClusterSize, precedence: (FactionFlavor) -> T): ClusterFactions {
+		val canDemote = factions.filterValues { it == ClusterFactionMode.REQUIRE }.keys.sortedBy(precedence)
+		val mustDemote = (canDemote.size - size.maxStars * 2 / 5).coerceAtLeast(0)
+		return this + canDemote.take(mustDemote).associateWith { ClusterFactionMode.ALLOW }
 	}
 	
 	operator fun get(factionFlavor: FactionFlavor) = factions[factionFlavor] ?: ClusterFactionMode.ALLOW
 	
 	operator fun plus(other: ClusterFactions) = ClusterFactions(factions + other.factions)
+	private operator fun plus(otherFactions: Map<FactionFlavor, ClusterFactionMode>) = ClusterFactions(factions + otherFactions)
 	
 	fun asGenerationSequence() = sequence {
-		val required = factions.filterValues { it == ClusterFactionMode.REQUIRE }.keys
-		val included = factions.filterValues { it != ClusterFactionMode.EXCLUDE }.keys
+		val required = FactionFlavor.values().filter { this@ClusterFactions[it] == ClusterFactionMode.REQUIRE }.toSet()
+		val included = FactionFlavor.values().filter { this@ClusterFactions[it] != ClusterFactionMode.EXCLUDE }.toSet()
 		
 		// first, start with the required flavors
 		yieldAll(required.shuffled())
@@ -88,7 +100,7 @@ value class ClusterFactions private constructor(private val factions: Map<Factio
 		val Default: ClusterFactions
 			get() = ClusterFactions(FactionFlavor.values().associateWith { ClusterFactionMode.ALLOW })
 		
-		fun of(factions: Map<FactionFlavor, ClusterFactionMode>) = Default + ClusterFactions(factions)
+		fun of(factions: Map<FactionFlavor, ClusterFactionMode>) = Default + factions
 	}
 }
 

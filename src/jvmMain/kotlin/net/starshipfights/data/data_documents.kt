@@ -41,8 +41,10 @@ object DocumentIdController : IdController {
 interface DocumentTable<T : DataDocument<T>> {
 	fun initialize()
 	
-	suspend fun index(property: KProperty1<T, *>)
-	suspend fun unique(property: KProperty1<T, *>)
+	suspend fun index(vararg properties: KProperty1<T, *>)
+	suspend fun unique(vararg properties: KProperty1<T, *>)
+	suspend fun indexIf(condition: Bson, vararg properties: KProperty1<T, *>)
+	suspend fun uniqueIf(condition: Bson, vararg properties: KProperty1<T, *>)
 	
 	suspend fun put(doc: T)
 	suspend fun put(docs: Iterable<T>)
@@ -87,12 +89,20 @@ private class DocumentTableImpl<T : DataDocument<T>>(val kclass: KClass<T>, priv
 		initFunc(this)
 	}
 	
-	override suspend fun index(property: KProperty1<T, *>) {
-		collection().ensureIndex(property)
+	override suspend fun index(vararg properties: KProperty1<T, *>) {
+		collection().ensureIndex(*properties)
 	}
 	
-	override suspend fun unique(property: KProperty1<T, *>) {
-		collection().ensureUniqueIndex(property, indexOptions = IndexOptions().partialFilterExpression(property.exists()))
+	override suspend fun unique(vararg properties: KProperty1<T, *>) {
+		collection().ensureUniqueIndex(*properties)
+	}
+	
+	override suspend fun indexIf(condition: Bson, vararg properties: KProperty1<T, *>) {
+		collection().ensureIndex(*properties, indexOptions = IndexOptions().partialFilterExpression(condition))
+	}
+	
+	override suspend fun uniqueIf(condition: Bson, vararg properties: KProperty1<T, *>) {
+		collection().ensureUniqueIndex(*properties, indexOptions = IndexOptions().partialFilterExpression(condition))
 	}
 	
 	override suspend fun put(doc: T) {

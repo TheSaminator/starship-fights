@@ -1,10 +1,17 @@
 package net.starshipfights.data.admiralty
 
+import com.github.jershell.kbson.NonEncodeNull
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import net.starshipfights.campaign.CampaignMenuAdmiral
+import net.starshipfights.campaign.CampaignMenuAdmiralStatus
+import net.starshipfights.campaign.StarClusterMenuData
 import net.starshipfights.data.DataDocument
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
@@ -31,9 +38,11 @@ data class Admiral(
 	val acumen: Int,
 	val money: Int,
 	
+	val isOnline: Boolean = false,
+	
+	@NonEncodeNull
 	val inCluster: Id<StarCluster>? = null,
 	val invitedToClusters: Set<Id<StarCluster>> = emptySet(),
-	val requestedClusters: Set<Id<StarCluster>> = emptySet(),
 ) : DataDocument<Admiral> {
 	val rank: AdmiralRank
 		get() = AdmiralRank.fromAcumen(acumen)
@@ -45,8 +54,20 @@ data class Admiral(
 		index(Admiral::owningUser)
 		index(Admiral::inCluster)
 		index(Admiral::invitedToClusters)
-		index(Admiral::requestedClusters)
+		uniqueIf(Admiral::inCluster.exists(), Admiral::owningUser, Admiral::inCluster)
 	})
+}
+
+suspend fun lockAdmiral(admiralId: Id<Admiral>): Boolean {
+	val admiral = Admiral.get(admiralId) ?: return false
+	if (admiral.isOnline) return false
+	
+	Admiral.set(admiralId, setValue(Admiral::isOnline, true))
+	return true
+}
+
+suspend fun unlockAdmiral(admiralId: Id<Admiral>) {
+	Admiral.set(admiralId, setValue(Admiral::isOnline, false))
 }
 
 fun generateAIName(faction: Faction, isFemale: Boolean) = AdmiralNames.randomName(AdmiralNameFlavor.forFaction(faction).random(), isFemale)
@@ -115,7 +136,7 @@ data class ShipMemorial(
 	})
 }
 
-suspend fun getAllInGameAdmirals(user: User) = Admiral.filter(Admiral::owningUser eq user.id).map { admiral ->
+suspend fun getAllInGameAdmiralsForBattle(user: User) = Admiral.filter(and(Admiral::owningUser eq user.id, Admiral::inCluster eq null, Admiral::isOnline eq false)).map { admiral ->
 	InGameAdmiral(
 		admiral.id.reinterpret(),
 		InGameUser(user.id.reinterpret(), user.profileName),
@@ -141,6 +162,83 @@ suspend fun getInGameAdmiral(admiralId: Id<InGameAdmiral>) = Admiral.get(admiral
 	getInGameAdmiral(admiral)
 }
 
+suspend fun getInGameAdmiralsInCluster(clusterId: Id<StarCluster>) = coroutineScope {
+	Admiral.filter(Admiral::inCluster eq clusterId).map { admiral ->
+		async {
+			User.get(admiral.owningUser)?.let { user ->
+				InGameAdmiral(
+					admiral.id.reinterpret(),
+					InGameUser(user.id.reinterpret(), user.profileName),
+					admiral.name,
+					admiral.isFemale,
+					admiral.faction,
+					admiral.rank
+				)
+			}
+		}
+	}.mapNotNull { it.await() }.toList()
+}
+
+suspend fun getInGameAdmiralsInvitedToCluster(clusterId: Id<StarCluster>) = coroutineScope {
+	Admiral.filter(Admiral::invitedToClusters contains clusterId).map { admiral ->
+		async {
+			User.get(admiral.owningUser)?.let { user ->
+				InGameAdmiral(
+					admiral.id.reinterpret(),
+					InGameUser(user.id.reinterpret(), user.profileName),
+					admiral.name,
+					admiral.isFemale,
+					admiral.faction,
+					admiral.rank
+				)
+			}
+		}
+	}.mapNotNull { it.await() }.toList()
+}
+
+suspend fun getAllInGameAdmiralsForCampaignInvite(user: User) = Admiral.filter(and(Admiral::owningUser eq user.id, Admiral::inCluster eq null)).map { admiral ->
+	InGameAdmiral(
+		admiral.id.reinterpret(),
+		InGameUser(user.id.reinterpret(), user.profileName),
+		admiral.name,
+		admiral.isFemale,
+		admiral.faction,
+		admiral.rank
+	)
+}.toList()
+
+suspend fun getClusterMenuData(clusterId: Id<StarCluster>) = StarCluster.get(clusterId)?.let { cluster ->
+	StarClusterMenuData(
+		cluster.id.reinterpret(),
+		getInGameAdmiralsInCluster(cluster.id),
+		cluster.host.reinterpret(),
+		getInGameAdmiralsInvitedToCluster(cluster.id)
+	)
+}
+
+suspend fun getCampaignMenuAdmirals(user: User) = Admiral.filter(and(Admiral::owningUser eq user.id, Admiral::isOnline eq false)).map { admiral ->
+	CampaignMenuAdmiral(
+		InGameAdmiral(
+			admiral.id.reinterpret(),
+			InGameUser(user.id.reinterpret(), user.profileName),
+			admiral.name,
+			admiral.isFemale,
+			admiral.faction,
+			admiral.rank
+		),
+		admiral.inCluster?.let { getClusterMenuData(it) }?.let { clusterMenuData ->
+			CampaignMenuAdmiralStatus.InCluster(clusterMenuData)
+		} ?: CampaignMenuAdmiralStatus.NotInCluster(
+			coroutineScope {
+				admiral.invitedToClusters
+					.map { async { getClusterMenuData(it) } }
+					.mapNotNull { it.await() }
+					.toSet()
+			}
+		)
+	)
+}.toList()
+
 suspend fun getAdmiralsShips(admiralId: Id<Admiral>): Map<Id<Ship>, Ship> {
 	val now = Instant.now()
 	
@@ -161,7 +259,7 @@ fun generateFleet(admiral: Admiral, flavor: FactionFlavor = FactionFlavor.defaul
 		}.orEmpty()
 	}
 	.let { shipTypes ->
-		val now = Instant.now().minusMillis(100L)
+		val now = Instant.now()
 		
 		val shipNames = mutableSetOf<String>()
 		shipTypes.mapNotNull { st ->

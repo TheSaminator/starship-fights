@@ -11,10 +11,7 @@ import kotlinx.coroutines.sync.withLock
 import net.starshipfights.admin.announcements
 import net.starshipfights.data.DocumentTable
 import net.starshipfights.data.Id
-import net.starshipfights.data.admiralty.Admiral
-import net.starshipfights.data.admiralty.BattleRecord
-import net.starshipfights.data.admiralty.ShipInDrydock
-import net.starshipfights.data.admiralty.ShipMemorial
+import net.starshipfights.data.admiralty.*
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.createToken
 import net.starshipfights.game.ai.AISession
@@ -46,6 +43,9 @@ object GameManager {
 			val endedAt = Instant.now()
 			
 			on1v1GameEnd(session.state.value, end, startedAt, endedAt)
+			
+			unlockAdmiral(hostInfo.id.reinterpret())
+			unlockAdmiral(guestInfo.id.reinterpret())
 		}
 		
 		val hostId = createToken()
@@ -100,6 +100,9 @@ object GameManager {
 			aiJob.cancel()
 			
 			on2v1GameEnd(session.state.value, end, startedAt, endedAt)
+			
+			unlockAdmiral(hostInfo.id.reinterpret())
+			unlockAdmiral(guestInfo.id.reinterpret())
 		}
 		
 		val hostId = createToken()

@@ -240,8 +240,8 @@ enum class GlobalSide {
 @Serializable
 data class GlobalShipController(val side: GlobalSide, val disambiguation: String) {
 	companion object {
-		val Player1Disambiguation = "PLAYER 1"
-		val Player2Disambiguation = "PLAYER 2"
+		const val Player1Disambiguation = "PLAYER 1"
+		const val Player2Disambiguation = "PLAYER 2"
 	}
 }
 

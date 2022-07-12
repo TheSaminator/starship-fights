@@ -8,6 +8,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedSendChannelException
 import kotlinx.coroutines.launch
 import net.starshipfights.data.admiralty.getInGameAdmiral
+import net.starshipfights.data.admiralty.lockAdmiral
+import net.starshipfights.data.admiralty.unlockAdmiral
 import net.starshipfights.data.auth.User
 
 private val open1v1Sessions = ConcurrentCurator(mutableListOf<Host1v1Invitation>())
@@ -36,15 +38,18 @@ class Join2v1Invitation(val joinRequest: JoinRequest, val responseHandler: Compl
 	val gameIdHandler = CompletableDeferred<String>()
 }
 
-suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boolean {
-	val playerLogin = receiveObject(PlayerLogin.serializer()) { closeAndReturn { return false } }
+suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User) {
+	val playerLogin = receiveObject(PlayerLogin.serializer()) { closeAndReturn { return } }
 	val admiralId = playerLogin.admiral
-	val inGameAdmiral = getInGameAdmiral(admiralId) ?: closeAndReturn("That admiral does not exist") { return false }
-	if (inGameAdmiral.user.id != user.id) closeAndReturn("You do not own that admiral") { return false }
+	val inGameAdmiral = getInGameAdmiral(admiralId) ?: closeAndReturn("That admiral does not exist") { return }
+	if (inGameAdmiral.user.id != user.id.reinterpret<InGameUser>()) closeAndReturn("You do not own that admiral") { return }
+	
+	if (!lockAdmiral(admiralId.reinterpret()))
+		closeAndReturn("That admiral is not available") { return }
 	
 	when (val loginMode = playerLogin.login) {
 		is LoginMode.Train -> {
-			closeAndReturn("Invalid input: LoginMode.Train should redirect you directly to training endpoint") { return false }
+			closeAndReturn("Invalid input: LoginMode.Train should redirect you directly to training endpoint") { return unlockAdmiral(admiralId.reinterpret()) }
 		}
 		is LoginMode.Host1v1 -> {
 			val battleInfo = loginMode.battleInfo
@@ -57,6 +62,8 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				
 				@OptIn(DelicateCoroutinesApi::class)
 				GlobalScope.launch {
+					unlockAdmiral(admiralId.reinterpret())
+					
 					open1v1Sessions.use {
 						it.remove(hostInvitation)
 					}
@@ -68,7 +75,7 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				val joinResponse = receiveObject(JoinResponse.serializer()) {
 					closeAndReturn {
 						joinInvitation.responseHandler.complete(JoinResponse(false))
-						return false
+						return unlockAdmiral(admiralId.reinterpret())
 					}
 				}
 				
@@ -107,13 +114,18 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				val joinListing = JoinListing(openGames.mapValues { (_, invitation) -> invitation.joinable })
 				sendObject(JoinListing.serializer(), joinListing)
 				
-				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return false } }
+				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return unlockAdmiral(admiralId.reinterpret()) } }
 				val hostInvitation = openGames.getValue(joinSelection.selectedId)
 				
 				val joinResponseHandler = CompletableDeferred<JoinResponse>()
 				val joinInvitation = Join1v1Invitation(joinRequest, joinResponseHandler)
 				closeReason.invokeOnCompletion {
 					joinResponseHandler.cancel()
+					
+					@OptIn(DelicateCoroutinesApi::class)
+					GlobalScope.launch {
+						unlockAdmiral(admiralId.reinterpret())
+					}
 				}
 				
 				try {
@@ -144,6 +156,8 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				
 				@OptIn(DelicateCoroutinesApi::class)
 				GlobalScope.launch {
+					unlockAdmiral(admiralId.reinterpret())
+					
 					open2v1Sessions.use {
 						it.remove(hostInvitation)
 					}
@@ -155,7 +169,7 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				val joinResponse = receiveObject(JoinResponse.serializer()) {
 					closeAndReturn {
 						joinInvitation.responseHandler.complete(JoinResponse(false))
-						return false
+						return unlockAdmiral(admiralId.reinterpret())
 					}
 				}
 				
@@ -197,13 +211,18 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 				val joinListing = JoinListing(openGames.mapValues { (_, invitation) -> invitation.joinable })
 				sendObject(JoinListing.serializer(), joinListing)
 				
-				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return false } }
+				val joinSelection = receiveObject(JoinSelection.serializer()) { closeAndReturn { return unlockAdmiral(admiralId.reinterpret()) } }
 				val hostInvitation = openGames.getValue(joinSelection.selectedId)
 				
 				val joinResponseHandler = CompletableDeferred<JoinResponse>()
 				val joinInvitation = Join2v1Invitation(joinRequest, joinResponseHandler)
 				closeReason.invokeOnCompletion {
 					joinResponseHandler.cancel()
+					
+					@OptIn(DelicateCoroutinesApi::class)
+					GlobalScope.launch {
+						unlockAdmiral(admiralId.reinterpret())
+					}
 				}
 				
 				try {
@@ -224,6 +243,4 @@ suspend fun DefaultWebSocketServerSession.matchmakingEndpoint(user: User): Boole
 			}
 		}
 	}
-	
-	return true
 }

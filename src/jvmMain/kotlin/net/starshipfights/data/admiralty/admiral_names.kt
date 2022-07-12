@@ -6,7 +6,7 @@ import kotlin.random.Random
 
 enum class AdmiralNameFlavor {
 	MECHYRDIA, TYLA, CALIBOR, OLYMPIA, // Mechyrdia-aligned
-	DUTCH, // NdRC-aliged
+	DUTCH, NORSE, // NdRC-aliged
 	NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI, // Masra Draetsen-aligned
 	FULKREYKK, // Isarnareykk-aligned
 	AMERICAN, HISPANIC_AMERICAN; // Vestigium-aligned
@@ -18,6 +18,7 @@ enum class AdmiralNameFlavor {
 			CALIBOR -> "Caliborese"
 			OLYMPIA -> "Olympian"
 			DUTCH -> "Dutch"
+			NORSE -> "Norse"
 			NORTHERN_DIADOCHI -> "Northern Diadochi"
 			SOUTHERN_DIADOCHI -> "Southern Diadochi"
 			FULKREYKK -> "Thedish"
@@ -39,11 +40,11 @@ enum class AdmiralNameFlavor {
 			FactionFlavor.MECHYRDIA -> setOf(MECHYRDIA, TYLA, DUTCH)
 			FactionFlavor.TYLA -> setOf(TYLA)
 			FactionFlavor.OLYMPIA -> setOf(OLYMPIA)
-			FactionFlavor.TEXANDRIA -> setOf(MECHYRDIA, TYLA, DUTCH)
+			FactionFlavor.TEXANDRIA -> setOf(DUTCH, NORSE)
 			
 			FactionFlavor.NDRC -> setOf(DUTCH)
-			FactionFlavor.CCC -> setOf(MECHYRDIA, TYLA, DUTCH)
-			FactionFlavor.MJOLNIR_ENERGY -> setOf(MECHYRDIA, TYLA, DUTCH)
+			FactionFlavor.CCC -> setOf(MECHYRDIA, TYLA, DUTCH, NORSE)
+			FactionFlavor.MJOLNIR_ENERGY -> setOf(DUTCH, NORSE)
 			
 			FactionFlavor.MASRA_DRAETSEN -> setOf(CALIBOR, NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI)
 			FactionFlavor.AEDON_CULTISTS -> setOf(NORTHERN_DIADOCHI, SOUTHERN_DIADOCHI)
@@ -544,6 +545,61 @@ object AdmiralNames {
 	
 	private fun randomDutchName(isFemale: Boolean) = (if (isFemale) dutchFemaleNames else dutchMaleNames).random() + " van " + dutchMerchantHouses.random()
 	
+	private val norseMaleNames = listOf(
+		"Arni" to "Arna",
+		"Biǫrn" to "Biarnar",
+		"Bragi" to "Braga",
+		"Egill" to "Egils",
+		"Eileifr" to "Eileifs",
+		"Eiríkr" to "Eiríks",
+		"Finnr" to "Finns",
+		"Fridthiófr" to "Fridthiófs",
+		"Fródi" to "Fróda",
+		"Geirr" to "Geirs",
+		"Gudbrandr" to "Gudbrands",
+		"Haraldr" to "Haralds",
+		"Hrólfr" to "Hrólfs",
+		"Hákon" to "Hákonar",
+		"Iátvardr" to "Iátvardar",
+		"Knútr" to "Knúts",
+		"Magnús" to "Magnúss",
+		"Ríkvidr" to "Ríkvidar",
+		"Sigurdr" to "Sigurdar",
+		"Sindri" to "Sindra",
+		"Sveinn" to "Sveins",
+		"Vidbiǫrn" to "Vidbiarnar",
+		"Óláfr" to "Óláfs",
+		"Thorsteinn" to "Thorsteins",
+		"Thórir" to "Thóris",
+	)
+	
+	private val norseFemaleNames = listOf(
+		"Borghildr" to "Borghildar",
+		"Dagný" to "Dagnýiar",
+		"Grimhildr" to "Grimhildar",
+		"Gunnr" to "Gunnar",
+		"Gudrún" to "Gudrúnar",
+		"Helga" to "Helgu",
+		"Hreidunn" to "Hreidunnar",
+		"Inga" to "Ingu",
+		"Iórunn" to "Iórunnar",
+		"Ragnfridr" to "Ragnfridra",
+		"Ragnhildr" to "Ragnhildar",
+		"Signý" to "Signýiar",
+		"Áslaug" to "Áslaugar",
+		"Ástrídr" to "Ástrídra",
+	)
+	
+	private fun norseFirstName(isFemale: Boolean) = (if (isFemale) norseFemaleNames else norseMaleNames).random().first
+	
+	private fun norseLastName(isFemale: Boolean) = if (isFemale)
+		(norseMaleNames + norseFemaleNames).random().second + "dóttir"
+	else if (Random.nextDouble() < 0.01)
+		"Hǫldahamarr"
+	else norseMaleNames.random().second + "sonr"
+	
+	private fun randomNorseName(isFemale: Boolean) = "${norseFirstName(isFemale)} ${norseLastName(isFemale)}"
+	
 	private val diadochiMaleNames = listOf(
 		"Oqatai",
 		"Amogus",
@@ -895,6 +951,7 @@ object AdmiralNames {
 		AdmiralNameFlavor.CALIBOR -> randomCaliboreseName(isFemale)
 		AdmiralNameFlavor.OLYMPIA -> randomLatinName(isFemale)
 		AdmiralNameFlavor.DUTCH -> randomDutchName(isFemale)
+		AdmiralNameFlavor.NORSE -> randomNorseName(isFemale)
 		AdmiralNameFlavor.NORTHERN_DIADOCHI -> randomNorthernDiadochiName(isFemale)
 		AdmiralNameFlavor.SOUTHERN_DIADOCHI -> randomSouthernDiadochiName(isFemale)
 		AdmiralNameFlavor.FULKREYKK -> randomThedishName(isFemale)

@@ -256,8 +256,9 @@
 				const chosenClass = setSomeButton.getAttribute("data-enable-class");
 				const factionChoices = document.getElementsByClassName("faction-choice");
 				for (const factionChoice of factionChoices) {
-					if (factionChoice.classList.contains(filterClass))
+					if (factionChoice.classList.contains(filterClass)) {
 						factionChoice.checked = factionChoice.classList.contains(chosenClass);
+					}
 				}
 			};
 		}
