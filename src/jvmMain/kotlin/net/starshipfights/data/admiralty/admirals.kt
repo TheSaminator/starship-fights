@@ -247,7 +247,10 @@ fun generateFleet(admiral: Admiral, flavor: FactionFlavor = FactionFlavor.defaul
 		}.shuffled().takeIf { it.isNotEmpty() }?.let { shipTypes ->
 			val wcCount = (admiral.rank.maxShipTier.ordinal - swc.tier.ordinal + 1) * 2
 			
-			shipTypes.repeatForever().take(wcCount).toList()
+			if (wcCount > 0)
+				shipTypes.repeatForever().take(wcCount).toList()
+			else
+				emptyList()
 		}.orEmpty()
 	}
 	.let { shipTypes ->
