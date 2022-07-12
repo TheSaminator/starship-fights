@@ -507,13 +507,12 @@ object GameUI {
 					position.y = 7.5
 				})
 		}
+		
+		fitLabels()
 	}
 	
-	private var labelsFit = false
-	fun fitLabels() {
-		if (labelsFit) return
+	private fun fitLabels() {
 		textFit(document.getElementsByClassName("ship-label"))
-		labelsFit = true
 	}
 	
 	private fun DIV.drawShipLabel(state: GameState, abilities: List<PlayerAbilityType>, shipId: Id<ShipInstance>, ship: ShipInstance) {
