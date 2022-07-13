@@ -505,6 +505,8 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 							val opponent = recordOpponents[ship.destroyedIn]
 							if (opponent == null)
 								i { +"(Deleted Admiral)" }
+							else if (records.singleOrNull { it.id == ship.destroyedIn }?.was2v2 == true)
+								i { +"(Non-Player Admiral)" }
 							else
 								a(href = "/admiral/${opponent.id}") {
 									+opponent.fullName
