@@ -158,11 +158,11 @@ object GameUI {
 		}
 	
 	fun renderGameUI(controls: BattleCameraControls) {
-		fitLabels()
-		
 		shipsOverlayCamera.position.copy(controls.camera.getWorldPosition(shipsOverlayCamera.position))
 		shipsOverlayCamera.quaternion.copy(controls.camera.getWorldQuaternion(shipsOverlayCamera.quaternion))
 		shipsOverlayRenderer.render(shipsOverlayScene, shipsOverlayCamera)
+		
+		fitLabels()
 	}
 	
 	fun updateGameUI(state: GameState) {
