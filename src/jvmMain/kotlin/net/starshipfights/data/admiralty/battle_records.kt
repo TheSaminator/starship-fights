@@ -31,13 +31,6 @@ data class BattleRecord(
 ) : DataDocument<BattleRecord> {
 	fun getSide(admiral: Id<Admiral>) = participants.singleOrNull { it.admiral == admiral }?.side?.side
 	
-	fun wasWinner(side: GlobalSide) = if (winner == null)
-		null
-	else
-		winner == side
-	
-	fun didAdmiralWin(admiral: Id<Admiral>) = getSide(admiral)?.let { wasWinner(it) }
-	
 	companion object Table : DocumentTable<BattleRecord> by DocumentTable.create({
 		index(BattleRecord::participants / BattleParticipant::user)
 		index(BattleRecord::participants / BattleParticipant::admiral)
