@@ -158,6 +158,8 @@ object GameUI {
 		}
 	
 	fun renderGameUI(controls: BattleCameraControls) {
+		fitLabels()
+		
 		shipsOverlayCamera.position.copy(controls.camera.getWorldPosition(shipsOverlayCamera.position))
 		shipsOverlayCamera.quaternion.copy(controls.camera.getWorldQuaternion(shipsOverlayCamera.quaternion))
 		shipsOverlayRenderer.render(shipsOverlayScene, shipsOverlayCamera)
@@ -508,11 +510,14 @@ object GameUI {
 				})
 		}
 		
-		fitLabels()
+		hasFitLabels = false
 	}
 	
+	var hasFitLabels = false
 	private fun fitLabels() {
+		if (hasFitLabels) return
 		textFit(document.getElementsByClassName("ship-label"))
+		hasFitLabels = true
 	}
 	
 	private fun DIV.drawShipLabel(state: GameState, abilities: List<PlayerAbilityType>, shipId: Id<ShipInstance>, ship: ShipInstance) {
