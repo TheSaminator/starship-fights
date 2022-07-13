@@ -33,7 +33,7 @@ data class BattleRecord(
 	
 	val winner: GlobalSide?,
 	val winMessage: String,
-	val was2v2: Boolean = false,
+	val was2v1: Boolean = false,
 ) : DataDocument<BattleRecord> {
 	fun getSide(admiral: Id<Admiral>) = when (admiral) {
 		hostAdmiral -> GlobalSide.HOST
@@ -49,7 +49,7 @@ data class BattleRecord(
 	
 	fun wasWinner(side: GlobalSide) = if (winner == null)
 		null
-	else if (was2v2)
+	else if (was2v1)
 		winner == GlobalSide.HOST
 	else
 		winner == side

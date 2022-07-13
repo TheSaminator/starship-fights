@@ -450,7 +450,8 @@ private suspend fun on2v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEn
 		guestEndingMessage = victoryTitle(GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation), gameEnd.winner, gameEnd.subplotOutcomes),
 		
 		winner = gameEnd.winner,
-		winMessage = gameEnd.message
+		winMessage = gameEnd.message,
+		was2v1 = true,
 	)
 	
 	val destructions = shipWrecks.filterValues { !it.isEscape }
