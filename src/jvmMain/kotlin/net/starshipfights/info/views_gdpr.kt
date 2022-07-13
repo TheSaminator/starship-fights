@@ -7,15 +7,12 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.html.*
 import net.starshipfights.auth.getUser
 import net.starshipfights.auth.getUserSession
-import net.starshipfights.data.admiralty.Admiral
-import net.starshipfights.data.admiralty.BattleRecord
-import net.starshipfights.data.admiralty.ShipInDrydock
-import net.starshipfights.data.admiralty.ShipMemorial
+import net.starshipfights.data.admiralty.*
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.auth.UserSession
 import net.starshipfights.redirect
+import org.litote.kmongo.div
 import org.litote.kmongo.eq
-import org.litote.kmongo.or
 import java.time.Instant
 
 suspend fun ApplicationCall.privateInfo(): String {
@@ -30,10 +27,7 @@ suspend fun ApplicationCall.privateInfo(): String {
 		val getSessions = async { UserSession.filter(UserSession::user eq userId).toList() }
 		val getBattles = async {
 			BattleRecord.filter(
-				or(
-					BattleRecord::hostUser eq userId,
-					BattleRecord::guestUser eq userId
-				)
+				(BattleRecord::participants / BattleParticipant::user) eq userId
 			).toList()
 		}
 		
@@ -42,11 +36,13 @@ suspend fun ApplicationCall.privateInfo(): String {
 	val (userAdmirals, userSessions, userBattles) = userData
 	user ?: redirect("/login")
 	
-	val battleEndings = userBattles.associate { record ->
-		record.id to record.didUserWin(userId)
+	val admiralBattles = userAdmirals.associate { admiral ->
+		admiral.id to userBattles.filter { record ->
+			record.participants.any { it.admiral == admiral.id }
+		}
 	}
 	
-	val (admiralShips, battleOpponents, battleAdmirals) = coroutineScope {
+	val (admiralShips, battleOtherParticipants) = coroutineScope {
 		val getShips = userAdmirals.associate { admiral ->
 			admiral.id to (async {
 				ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiral.id).toList()
@@ -54,24 +50,24 @@ suspend fun ApplicationCall.privateInfo(): String {
 				ShipMemorial.filter(ShipMemorial::owningAdmiral eq admiral.id).toList()
 			})
 		}
-		val getOpponents = userBattles.associate { record ->
-			val (opponentId, opponentAdmiralId) = if (record.hostUser == userId) record.guestUser to record.guestAdmiral else record.hostUser to record.hostAdmiral
-			
-			record.id to (async { User.get(opponentId) } to async { Admiral.get(opponentAdmiralId) })
-		}
-		val getAdmirals = userBattles.associate { record ->
-			val admiralId = if (record.hostUser == userId) record.hostAdmiral else record.guestAdmiral
-			record.id to userAdmirals.singleOrNull { it.id == admiralId }
+		val getOtherParticipants = admiralBattles.mapValues { (admiralId, records) ->
+			records.associate { record ->
+				record.id to record.participants.filter { it.admiral != admiralId }.map { participant ->
+					async { Admiral.get(participant.admiral) }
+				}
+			}
 		}
 		
-		Triple(
-			getShips.mapValues { (_, pair) ->
-				val (ships, graves) = pair
-				ships.await() to graves.await()
-			},
-			getOpponents.mapValues { (_, deferred) -> deferred.let { (u, a) -> u.await() to a.await() } },
-			getAdmirals
-		)
+		getShips.mapValues { (_, pair) ->
+			val (ships, graves) = pair
+			ships.await() to graves.await()
+		} to getOtherParticipants.mapValues { (_, records) ->
+			records.mapValues { (_, admirals) ->
+				admirals.mapNotNull { admiralAsync ->
+					admiralAsync.await()
+				}
+			}
+		}
 	}
 	
 	return buildString {
@@ -105,24 +101,6 @@ suspend fun ApplicationCall.privateInfo(): String {
 			appendLine("${if (session.expiration > now) "Will expire" else "Has expired"} at: ${session.expiration}")
 		}
 		appendLine("")
-		appendLine("## Battle-record data")
-		for (record in userBattles.sortedBy { it.whenEnded }) {
-			appendLine("")
-			appendLine("### Battle record ${record.id}")
-			appendLine("Battle size: ${record.battleInfo.size.displayName} (${record.battleInfo.size.numPoints})")
-			appendLine("Battle background: ${record.battleInfo.bg.displayName}")
-			appendLine("Battle started at: ${record.whenStarted}")
-			appendLine("Battle completed at: ${record.whenEnded}")
-			appendLine("Battle was fought by ${battleAdmirals[record.id]?.let { "${it.fullName} (https://starshipfights.net/admiral/${it.id})" } ?: "{deleted admiral}"}")
-			appendLine("Battle was fought against ${battleOpponents[record.id]?.second?.let { "${it.fullName} (https://starshipfights.net/admiral/${it.id})" } ?: "{deleted admiral}"}")
-			appendLine(" => ${battleOpponents[record.id]?.first?.let { "${it.profileName} (https://starshipfights.net/user/${it.id})" } ?: "{deleted user}"}")
-			when (battleEndings[record.id]) {
-				true -> appendLine("Battle ended in victory")
-				false -> appendLine("Battle ended in defeat")
-				null -> appendLine("Battle ended in stalemate")
-			}
-			appendLine(" => \"${record.winMessage}\"")
-		}
 		appendLine("")
 		appendLine("## Admiral data")
 		for (admiral in userAdmirals) {
@@ -149,6 +127,34 @@ suspend fun ApplicationCall.privateInfo(): String {
 				appendLine("#### ${grave.fullName} (${grave.id})")
 				appendLine("Ship is a ${grave.shipType.fullerDisplayName}")
 				appendLine("Ship was destroyed at ${grave.destroyedAt} in battle recorded at ${grave.destroyedIn}")
+			}
+			
+			val records = admiralBattles[admiral.id].orEmpty()
+			appendLine("Admiral has fought in ${records.size} battles:")
+			for (record in records.sortedBy { it.whenEnded }) {
+				appendLine("")
+				appendLine("##### Battle record ${record.id}")
+				appendLine("Battle size: ${record.battleInfo.size.displayName} (${record.battleInfo.size.numPoints})")
+				appendLine("Battle background: ${record.battleInfo.bg.displayName}")
+				appendLine("Battle started at: ${record.whenStarted}")
+				appendLine("Battle completed at: ${record.whenEnded}")
+				
+				val otherParticipants = battleOtherParticipants[admiral.id]?.get(record.id)
+					.orEmpty()
+					.filter { record.getSide(it.id) != null }
+					.sortedBy { if (record.getSide(it.id) == record.getSide(admiral.id)) 0 else 1 }
+				
+				for (otherParticipant in otherParticipants) {
+					val preposition = if (record.getSide(otherParticipant.id) == record.getSide(admiral.id))
+						"alongside"
+					else "against"
+					
+					appendLine("Battle was fought $preposition ${otherParticipant.fullName} (https://starshipfights.net/admiral/${otherParticipant.id})")
+				}
+				
+				val endMessage = record.participants.singleOrNull { it.admiral == admiral.id }?.endMessage ?: "Stalemate"
+				appendLine("Battle ended in a $endMessage")
+				appendLine(" => \"${record.winMessage}\"")
 			}
 		}
 		appendLine("")

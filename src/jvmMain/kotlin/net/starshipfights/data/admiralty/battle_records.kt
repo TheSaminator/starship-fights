@@ -9,7 +9,9 @@ import net.starshipfights.data.Id
 import net.starshipfights.data.auth.User
 import net.starshipfights.data.invoke
 import net.starshipfights.game.BattleInfo
+import net.starshipfights.game.GlobalShipController
 import net.starshipfights.game.GlobalSide
+import org.litote.kmongo.div
 import java.time.Instant
 
 @Serializable
@@ -22,47 +24,30 @@ data class BattleRecord(
 	val whenStarted: @Contextual Instant,
 	val whenEnded: @Contextual Instant,
 	
-	val hostUser: Id<User>,
-	val guestUser: Id<User>,
-	
-	val hostAdmiral: Id<Admiral>,
-	val guestAdmiral: Id<Admiral>,
-	
-	val hostEndingMessage: String,
-	val guestEndingMessage: String,
+	val participants: List<BattleParticipant>,
 	
 	val winner: GlobalSide?,
 	val winMessage: String,
-	val was2v1: Boolean = false,
 ) : DataDocument<BattleRecord> {
-	fun getSide(admiral: Id<Admiral>) = when (admiral) {
-		hostAdmiral -> GlobalSide.HOST
-		guestAdmiral -> GlobalSide.GUEST
-		else -> null
-	}
-	
-	fun getUserSide(user: Id<User>) = when (user) {
-		hostUser -> GlobalSide.HOST
-		guestUser -> GlobalSide.GUEST
-		else -> null
-	}
+	fun getSide(admiral: Id<Admiral>) = participants.singleOrNull { it.admiral == admiral }?.side?.side
 	
 	fun wasWinner(side: GlobalSide) = if (winner == null)
 		null
-	else if (was2v1)
-		winner == GlobalSide.HOST
 	else
 		winner == side
 	
 	fun didAdmiralWin(admiral: Id<Admiral>) = getSide(admiral)?.let { wasWinner(it) }
 	
-	fun didUserWin(user: Id<User>) = getUserSide(user)?.let { wasWinner(it) }
-	
 	companion object Table : DocumentTable<BattleRecord> by DocumentTable.create({
-		index(BattleRecord::hostUser)
-		index(BattleRecord::guestUser)
-		
-		index(BattleRecord::hostAdmiral)
-		index(BattleRecord::guestAdmiral)
+		index(BattleRecord::participants / BattleParticipant::user)
+		index(BattleRecord::participants / BattleParticipant::admiral)
 	})
 }
+
+@Serializable
+data class BattleParticipant(
+	val user: Id<User>,
+	val admiral: Id<Admiral>,
+	val side: GlobalShipController,
+	val endMessage: String,
+)

@@ -42,7 +42,7 @@ object GameManager {
 			val end = session.gameEnd.await()
 			val endedAt = Instant.now()
 			
-			on1v1GameEnd(session.state.value, end, startedAt, endedAt)
+			onGameEnd(session.state.value, end, startedAt, endedAt)
 			
 			unlockAdmiral(hostInfo.id.reinterpret())
 			unlockAdmiral(guestInfo.id.reinterpret())
@@ -99,7 +99,7 @@ object GameManager {
 			
 			aiJob.cancel()
 			
-			on2v1GameEnd(session.state.value, end, startedAt, endedAt)
+			onGameEnd(session.state.value, end, startedAt, endedAt)
 			
 			unlockAdmiral(hostInfo.id.reinterpret())
 			unlockAdmiral(guestInfo.id.reinterpret())
@@ -321,18 +321,16 @@ private val BattleSize.shipPointsPerAcumen: Int
 private val BattleSize.acumenPerSubplotWon: Int
 	get() = numPoints / 100
 
-private suspend fun on1v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
+private suspend fun onGameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
 	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
 	val escapedShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
 	
 	val shipWrecks = gameState.destroyedShips
 	val ships = gameState.ships
 	
-	val hostInfo = gameState.hostInfo.values.single()
-	val guestInfo = gameState.guestInfo.values.single()
-	
-	val hostAdmiralId = hostInfo.id.reinterpret<Admiral>()
-	val guestAdmiralId = guestInfo.id.reinterpret<Admiral>()
+	val playerSides = gameState.allShipControllers.associateBy { controller ->
+		gameState.admiralInfo(controller).id.reinterpret<Admiral>()
+	}
 	
 	val battleRecord = BattleRecord(
 		battleInfo = gameState.battleInfo,
@@ -340,17 +338,24 @@ private suspend fun on1v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEn
 		whenStarted = startedAt,
 		whenEnded = endedAt,
 		
-		hostUser = hostInfo.user.id.reinterpret(),
-		guestUser = guestInfo.user.id.reinterpret(),
-		
-		hostAdmiral = hostAdmiralId,
-		guestAdmiral = guestAdmiralId,
-		
-		hostEndingMessage = victoryTitle(GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation), gameEnd.winner, gameEnd.subplotOutcomes),
-		guestEndingMessage = victoryTitle(GlobalShipController(GlobalSide.GUEST, GlobalShipController.Player1Disambiguation), gameEnd.winner, gameEnd.subplotOutcomes),
+		participants = gameState.hostInfo.map { (disambiguation, admiral) ->
+			BattleParticipant(
+				user = admiral.user.id.reinterpret(),
+				admiral = admiral.id.reinterpret(),
+				side = GlobalShipController(GlobalSide.HOST, disambiguation),
+				victoryTitle(GlobalShipController(GlobalSide.HOST, disambiguation), gameEnd.winner, gameEnd.subplotOutcomes)
+			)
+		} + gameState.guestInfo.map { (disambiguation, admiral) ->
+			BattleParticipant(
+				user = admiral.user.id.reinterpret(),
+				admiral = admiral.id.reinterpret(),
+				side = GlobalShipController(GlobalSide.GUEST, disambiguation),
+				victoryTitle(GlobalShipController(GlobalSide.GUEST, disambiguation), gameEnd.winner, gameEnd.subplotOutcomes)
+			)
+		},
 		
 		winner = gameEnd.winner,
-		winMessage = gameEnd.message
+		winMessage = gameEnd.message,
 	)
 	
 	val destructions = shipWrecks.filterValues { !it.isEscape }
@@ -361,10 +366,7 @@ private suspend fun on1v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEn
 			name = wreck.ship.name,
 			shipType = wreck.ship.shipType,
 			destroyedAt = wreck.wreckedAt.instant,
-			owningAdmiral = when (wreck.owner.side) {
-				GlobalSide.HOST -> hostAdmiralId
-				GlobalSide.GUEST -> guestAdmiralId
-			},
+			owningAdmiral = gameState.admiralInfo(wreck.owner).id.reinterpret(),
 			destroyedIn = battleRecord.id
 		)
 	}
@@ -399,114 +401,18 @@ private suspend fun on1v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEn
 		}
 		
 		launch {
-			Admiral.set(
-				hostAdmiralId, combine(
+			Admiral.update(
+				Admiral::id `in` playerSides.filterValues { it.side == GlobalSide.HOST }.keys, combine(
 					inc(Admiral::acumen, hostAcumenGain),
 					inc(Admiral::money, hostPayment),
 				)
 			)
 		}
 		launch {
-			Admiral.set(
-				guestAdmiralId, combine(
+			Admiral.update(
+				Admiral::id `in` playerSides.filterValues { it.side == GlobalSide.GUEST }.keys, combine(
 					inc(Admiral::acumen, guestAcumenGain),
 					inc(Admiral::money, guestPayment),
-				)
-			)
-		}
-		
-		launch {
-			BattleRecord.put(battleRecord)
-		}
-	}
-}
-
-private suspend fun on2v1GameEnd(gameState: GameState, gameEnd: GameEvent.GameEnd, startedAt: Instant, endedAt: Instant) {
-	val damagedShipReadyAt = endedAt.plus(6, ChronoUnit.HOURS)
-	val escapedShipReadyAt = endedAt.plus(4, ChronoUnit.HOURS)
-	
-	val shipWrecks = gameState.destroyedShips
-	val ships = gameState.ships
-	
-	val hostInfo = gameState.hostInfo.getValue(GlobalShipController.Player1Disambiguation)
-	val guestInfo = gameState.hostInfo.getValue(GlobalShipController.Player2Disambiguation)
-	
-	val hostAdmiralId = hostInfo.id.reinterpret<Admiral>()
-	val guestAdmiralId = guestInfo.id.reinterpret<Admiral>()
-	
-	val battleRecord = BattleRecord(
-		battleInfo = gameState.battleInfo,
-		
-		whenStarted = startedAt,
-		whenEnded = endedAt,
-		
-		hostUser = hostInfo.user.id.reinterpret(),
-		guestUser = guestInfo.user.id.reinterpret(),
-		
-		hostAdmiral = hostAdmiralId,
-		guestAdmiral = guestAdmiralId,
-		
-		hostEndingMessage = victoryTitle(GlobalShipController(GlobalSide.HOST, GlobalShipController.Player1Disambiguation), gameEnd.winner, gameEnd.subplotOutcomes),
-		guestEndingMessage = victoryTitle(GlobalShipController(GlobalSide.HOST, GlobalShipController.Player2Disambiguation), gameEnd.winner, gameEnd.subplotOutcomes),
-		
-		winner = gameEnd.winner,
-		winMessage = gameEnd.message,
-		was2v1 = true,
-	)
-	
-	val destructions = shipWrecks.filterValues { !it.isEscape }
-	val destroyedShips = destructions.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val rememberedShips = destructions.values.map { wreck ->
-		ShipMemorial(
-			id = Id("RIP_${wreck.id.id}"),
-			name = wreck.ship.name,
-			shipType = wreck.ship.shipType,
-			destroyedAt = wreck.wreckedAt.instant,
-			owningAdmiral = when (wreck.owner.side) {
-				GlobalSide.HOST -> hostAdmiralId
-				GlobalSide.GUEST -> guestAdmiralId
-			},
-			destroyedIn = battleRecord.id
-		)
-	}
-	
-	val escapedShips = shipWrecks.filterValues { it.isEscape }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	val damagedShips = ships.filterValues { it.hullAmount < it.durability.maxHullPoints || it.troopsAmount < it.durability.troopsDefense }.keys.map { it.reinterpret<ShipInDrydock>() }.toSet()
-	
-	val battleSize = gameState.battleInfo.size
-	
-	val playersAcumenGainFromShips = shipWrecks.values.filter { it.owner.side == GlobalSide.GUEST && !it.isEscape }.sumOf { it.ship.pointCost / battleSize.shipPointsPerAcumen }
-	val playersAcumenGainFromSubplots = gameEnd.subplotOutcomes.filterKeys { it.player.side == GlobalSide.HOST }.count { (_, outcome) -> outcome == SubplotOutcome.WON } * battleSize.acumenPerSubplotWon
-	val playersAcumenGain = playersAcumenGainFromShips + playersAcumenGainFromSubplots
-	val playersPayment = playersAcumenGain * 2
-	
-	coroutineScope {
-		launch {
-			ShipMemorial.put(rememberedShips)
-		}
-		launch {
-			ShipInDrydock.remove(ShipInDrydock::id `in` destroyedShips)
-		}
-		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` damagedShips, setValue(ShipInDrydock::readyAt, damagedShipReadyAt))
-		}
-		launch {
-			ShipInDrydock.update(ShipInDrydock::id `in` escapedShips, setValue(ShipInDrydock::readyAt, escapedShipReadyAt))
-		}
-		
-		launch {
-			Admiral.set(
-				hostAdmiralId, combine(
-					inc(Admiral::acumen, playersAcumenGain),
-					inc(Admiral::money, playersPayment),
-				)
-			)
-		}
-		launch {
-			Admiral.set(
-				guestAdmiralId, combine(
-					inc(Admiral::acumen, playersAcumenGain),
-					inc(Admiral::money, playersPayment),
 				)
 			)
 		}

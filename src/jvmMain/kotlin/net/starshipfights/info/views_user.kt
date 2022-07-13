@@ -16,10 +16,13 @@ import net.starshipfights.forbid
 import net.starshipfights.game.*
 import net.starshipfights.redirect
 import org.litote.kmongo.and
+import org.litote.kmongo.div
 import org.litote.kmongo.eq
 import org.litote.kmongo.gt
-import org.litote.kmongo.or
 import java.time.Instant
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.set
 
 suspend fun ApplicationCall.userPage(): HTML.() -> Unit {
 	val userId = Id<User>(parameters["id"]!!)
@@ -392,31 +395,20 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 	val (ships, graveyard, records) = coroutineScope {
 		val ships = async { ShipInDrydock.filter(ShipInDrydock::owningAdmiral eq admiralId).toList() }
 		val graveyard = async { ShipMemorial.filter(ShipMemorial::owningAdmiral eq admiralId).toList() }
-		val records = async { BattleRecord.filter(or(BattleRecord::hostAdmiral eq admiralId, BattleRecord::guestAdmiral eq admiralId)).toList() }
+		val records = async { BattleRecord.filter(BattleRecord::participants / BattleParticipant::admiral eq admiralId).toList() }
 		
 		Triple(ships.await(), graveyard.await(), records.await())
 	}
 	
-	val recordRoles = records.mapNotNull {
-		when (admiralId) {
-			it.hostAdmiral -> GlobalSide.HOST
-			it.guestAdmiral -> GlobalSide.GUEST
-			else -> null
-		}?.let { role -> it.id to role }
-	}.toMap()
-	
-	val recordOpponents = coroutineScope {
-		records.mapNotNull {
-			recordRoles[it.id]?.let { role ->
-				val aId = when (role) {
-					GlobalSide.HOST -> it.guestAdmiral
-					GlobalSide.GUEST -> it.hostAdmiral
-				}
-				it.id to async { Admiral.get(aId) }
+	val otherRecordAdmirals = coroutineScope {
+		records.associate { record ->
+			val currAdmiralSide = record.getSide(admiralId)
+			record.id to record.participants.filter { it.admiral != admiralId }.map { participant ->
+				async { Admiral.get(participant.admiral)?.let { admiral -> admiral to (participant.side.side == currAdmiralSide) } }
 			}
-		}.mapNotNull { (id, deferred) ->
-			deferred.await()?.let { id to it }
-		}.toMap()
+		}.mapValues { (_, admiralsAsync) ->
+			admiralsAsync.mapNotNull { it.await() }
+		}
 	}
 	
 	return page(
@@ -501,18 +493,6 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 							}
 						}
 						td {
-							+"Destroyed by "
-							val opponent = recordOpponents[ship.destroyedIn]
-							if (opponent == null)
-								i { +"(Deleted Admiral)" }
-							else if (records.singleOrNull { it.id == ship.destroyedIn }?.was2v1 == true)
-								i { +"(Non-Player Admiral)" }
-							else
-								a(href = "/admiral/${opponent.id}") {
-									+opponent.fullName
-								}
-							br
-							br
 							+"Destroyed at "
 							span(classes = "moment") {
 								style = "display:none"
@@ -558,27 +538,25 @@ suspend fun ApplicationCall.admiralPage(): HTML.() -> Unit {
 							+")"
 						}
 						td {
-							+when (recordRoles[record.id]) {
+							+when (record.getSide(admiralId)) {
 								GlobalSide.HOST -> "Host"
 								GlobalSide.GUEST -> "Guest"
 								else -> "N/A"
 							}
 						}
 						td {
-							val opponent = recordOpponents[record.id]
-							if (opponent == null)
-								i { +"(Deleted Admiral)" }
-							else
-								a(href = "/admiral/${opponent.id}") {
-									+opponent.fullName
+							for ((otherAdmiral, onSameSide) in otherRecordAdmirals[record.id].orEmpty()) {
+								+if (onSameSide)
+									"With "
+								else
+									"Against "
+								a(href = "/admiral/${otherAdmiral.id}") {
+									+otherAdmiral.fullName
 								}
+							}
 						}
 						td {
-							+when (recordRoles[record.id]) {
-								GlobalSide.HOST -> record.hostEndingMessage
-								GlobalSide.GUEST -> record.guestEndingMessage
-								else -> "N/A"
-							}
+							+(record.participants.singleOrNull { it.admiral == admiralId }?.endMessage ?: "Stalemate")
 						}
 					}
 				}
