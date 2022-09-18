@@ -61,7 +61,7 @@ enum class ShipWeightClass(
 			BATTLE_BARGE -> 300
 			
 			GRAND_CRUISER -> 300
-			COLOSSUS -> 370
+			COLOSSUS -> 490
 			
 			FF_ESCORT -> 25
 			FF_DESTROYER -> 125
@@ -147,6 +147,7 @@ enum class ShipType(
 	SCYLLA(Faction.MASRA_DRAETSEN, ShipWeightClass.GRAND_CRUISER),
 	
 	AEDON(Faction.MASRA_DRAETSEN, ShipWeightClass.COLOSSUS),
+	KHAGAN(Faction.MASRA_DRAETSEN, ShipWeightClass.COLOSSUS),
 	
 	// Felinae Felices
 	KODKOD(Faction.FELINAE_FELICES, ShipWeightClass.FF_ESCORT),

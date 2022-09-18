@@ -746,7 +746,7 @@ suspend fun ApplicationCall.manageAdmiralPage(): HTML.() -> Unit {
 							+ship.shipType.sellPrice.toString()
 							+" "
 							+admiral.faction.currencyName
-							if (ship.readyAt <= now && !ship.shipType.weightClass.isUnique) {
+							if (ship.readyAt <= now) {
 								br
 								a(href = "/admiral/${admiralId}/sell/${ship.id}") { +"Sell" }
 							}
@@ -846,7 +846,6 @@ suspend fun ApplicationCall.sellShipConfirmPage(): HTML.() -> Unit {
 	if (ship.owningAdmiral != admiralId) forbid()
 	
 	if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage")
-	if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage")
 	
 	return page(
 		"Are You Sure?", null, null

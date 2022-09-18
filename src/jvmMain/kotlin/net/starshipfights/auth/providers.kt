@@ -239,7 +239,6 @@ interface AuthProvider {
 					if (ship.owningAdmiral != admiralId) forbid()
 					
 					if (ship.readyAt > Instant.now()) redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot sell ships that are not ready for battle"))
-					if (ship.shipType.weightClass.isUnique) redirect("/admiral/${admiralId}/manage" + withErrorMessage("Cannot sell a ${ship.shipType.fullDisplayName}"))
 					
 					coroutineScope {
 						launch { ShipInDrydock.del(shipId) }

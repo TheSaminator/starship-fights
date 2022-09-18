@@ -302,7 +302,7 @@ sealed class PlayerAbilityType {
 					ships = newShips,
 					destroyedShips = newWrecks,
 					chatBox = newChatEntries,
-				).withRecalculatedInitiative { calculateMovePhaseInitiative() }
+				)
 			)
 		}
 	}
@@ -403,7 +403,7 @@ sealed class PlayerAbilityType {
 					ships = newShips,
 					destroyedShips = newWrecks,
 					chatBox = newChatEntries,
-				).withRecalculatedInitiative { calculateMovePhaseInitiative() }
+				)
 			)
 		}
 	}
@@ -519,7 +519,7 @@ sealed class PlayerAbilityType {
 							bomberWings = targetShip.bomberWings - hangarWing,
 						)
 					} + mapOf(ship to newShip)
-				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
+				)
 			)
 		}
 	}
@@ -574,7 +574,7 @@ sealed class PlayerAbilityType {
 			return GameEvent.StateChange(
 				gameState.copy(
 					ships = gameState.ships + changedShips
-				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
+				)
 			)
 		}
 	}
@@ -619,7 +619,7 @@ sealed class PlayerAbilityType {
 					ships = newShips,
 					destroyedShips = newWrecks,
 					chatBox = newChatEntries
-				).withRecalculatedInitiative { calculateAttackPhaseInitiative() }
+				)
 			)
 		}
 	}
@@ -820,6 +820,7 @@ else when (phase) {
 		
 		deployShips + undeployShips + finishDeploying
 	}
+	
 	is GamePhase.Power -> {
 		val powerableShips = ships
 			.filterValues { it.owner == forPlayer && !it.isDoneCurrentPhase && it.ship.reactor is StandardShipReactor }
@@ -841,6 +842,7 @@ else when (phase) {
 		
 		powerableShips + configurableShips + finishPowering
 	}
+	
 	is GamePhase.Move -> {
 		val movableShips = ships
 			.filterKeys { canShipMove(it) }
@@ -860,6 +862,7 @@ else when (phase) {
 		
 		movableShips + inertialessShips + finishMoving
 	}
+	
 	is GamePhase.Attack -> {
 		val chargeableLances = ships
 			.filterValues { it.owner == forPlayer && it.weaponAmount > 0 }
@@ -913,6 +916,7 @@ else when (phase) {
 		
 		usableBoardingTransportaria + chargeableLances + usableWeapons + recallableStrikeWings + usableDisruptionPulses + finishAttacking
 	}
+	
 	is GamePhase.Repair -> {
 		val repairableModules = ships
 			.filterValues { it.owner == forPlayer && it.remainingRepairTokens > 0 }

@@ -366,6 +366,7 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 	is ShipWeaponInstance.Cannon -> {
 		copy(weaponAmount = weaponAmount - 1, usedArmaments = usedArmaments + setOf(weaponId))
 	}
+	
 	is ShipWeaponInstance.Lance -> {
 		val newWeapons = armaments + mapOf(
 			weaponId to weapon.copy(numCharges = 0.0)
@@ -373,6 +374,7 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 		
 		copy(armaments = newWeapons, usedArmaments = usedArmaments + setOf(weaponId))
 	}
+	
 	is ShipWeaponInstance.MegaCannon -> {
 		val newWeapons = armaments + mapOf(
 			weaponId to weapon.copy(remainingShots = weapon.remainingShots - 1)
@@ -380,6 +382,7 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 		
 		copy(armaments = newWeapons, usedArmaments = usedArmaments + setOf(weaponId))
 	}
+	
 	is ShipWeaponInstance.RevelationGun -> {
 		val newWeapons = armaments + mapOf(
 			weaponId to weapon.copy(remainingShots = weapon.remainingShots - 1)
@@ -387,6 +390,7 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 		
 		copy(armaments = newWeapons, usedArmaments = usedArmaments + setOf(weaponId))
 	}
+	
 	is ShipWeaponInstance.EmpAntenna -> {
 		val newWeapons = armaments + mapOf(
 			weaponId to weapon.copy(remainingShots = weapon.remainingShots - 1)
@@ -394,6 +398,7 @@ fun ShipInstance.afterUsing(weaponId: Id<ShipWeapon>) = when (val weapon = armam
 		
 		copy(armaments = newWeapons, usedArmaments = usedArmaments + setOf(weaponId))
 	}
+	
 	else -> copy(usedArmaments = usedArmaments + setOf(weaponId))
 }
 
@@ -408,6 +413,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 		
 		impact(hits).applyCriticals(by, weaponId)
 	}
+	
 	is ShipWeaponInstance.Lance -> {
 		var hits = 0
 		
@@ -418,6 +424,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 		
 		impact(hits).applyCriticals(by, weaponId)
 	}
+	
 	is ShipWeaponInstance.Torpedo -> {
 		if (shieldAmount > 0) {
 			if (Random.nextBoolean())
@@ -427,6 +434,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 		} else
 			impact(2).applyCriticals(by, weaponId)
 	}
+	
 	is ShipWeaponInstance.Hangar -> {
 		ImpactResult.Damaged(
 			if (weapon.weapon.wing == StrikeCraftWing.FIGHTERS)
@@ -436,6 +444,7 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 			ImpactDamage.OtherEffect
 		)
 	}
+	
 	is ShipWeaponInstance.ParticleClawLauncher -> {
 		var impactResult = impact(weapon.weapon.numShots)
 		
@@ -449,15 +458,19 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 		
 		impactResult
 	}
+	
 	is ShipWeaponInstance.LightningYarn -> {
 		impact(weapon.weapon.numShots, true).applyCriticals(by, weaponId)
 	}
+	
 	is ShipWeaponInstance.MegaCannon -> {
 		impact((3..7).random()).applyCriticals(by, weaponId)
 	}
+	
 	is ShipWeaponInstance.RevelationGun -> {
 		ImpactResult.Destroyed(ShipWreck(ship, owner))
 	}
+	
 	is ShipWeaponInstance.EmpAntenna -> {
 		ImpactResult.Damaged(
 			copy(
@@ -528,21 +541,25 @@ fun ImpactResult.Damaged.withCritResult(critical: CritResult): ImpactResult = wh
 		damage = damage,
 		critical = critical
 	)
+	
 	is CritResult.ModulesDisabled -> copy(
 		ship = critical.ship,
 		damage = damage,
 		critical = critical
 	)
+	
 	is CritResult.TroopsKilled -> copy(
 		ship = critical.ship,
 		damage = damage,
 		critical = critical
 	)
+	
 	is CritResult.HullDamaged -> copy(
 		ship = critical.ship,
 		damage = damage + critical.amount,
 		critical = critical
 	)
+	
 	is CritResult.Destroyed -> ImpactResult.Destroyed(critical.ship)
 }
 
@@ -607,6 +624,7 @@ fun ShipInstance.getWeaponPickRequest(weapon: ShipWeapon): PickRequest = when (w
 				firingArcs = weapon.firingArcs,
 			),
 	)
+	
 	else -> {
 		val targetSet = if ((weapon as? ShipWeapon.Hangar)?.wing == StrikeCraftWing.FIGHTERS)
 			setOf(owner.side)
@@ -645,6 +663,7 @@ fun ImpactResult.toChatEntry(attacker: ShipAttacker, weapon: ShipWeaponInstance?
 			weapon = weapon?.weapon,
 			critical = critical.report(),
 		)
+		
 		is ImpactDamage.Failed -> ChatEntry.ShipAttackFailed(
 			ship = ship.id,
 			attacker = attacker,
@@ -652,8 +671,10 @@ fun ImpactResult.toChatEntry(attacker: ShipAttacker, weapon: ShipWeaponInstance?
 			weapon = weapon?.weapon,
 			damageIgnoreType = damage.ignore
 		)
+		
 		else -> null
 	}
+	
 	is ImpactResult.Destroyed -> {
 		ChatEntry.ShipDestroyed(
 			ship = ship.id,
@@ -695,9 +716,9 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			
 			GameEvent.StateChange(
 				copy(ships = newShips, destroyedShips = newWrecks, chatBox = newChatMessages)
-					.withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
+		
 		else -> {
 			val targetedShipId = (target as? PickResponse.Ship)?.id ?: return GameEvent.InvalidAction("Invalid pick response type")
 			val targetedShip = ships[targetedShipId] ?: return GameEvent.InvalidAction("That ship does not exist")
@@ -728,7 +749,6 @@ fun GameState.useWeaponPickResponse(attacker: ShipInstance, weaponId: Id<ShipWea
 			
 			GameEvent.StateChange(
 				copy(ships = newShips, destroyedShips = newWrecks, chatBox = newChatMessages)
-					.withRecalculatedInitiative { calculateAttackPhaseInitiative() }
 			)
 		}
 	}
@@ -758,6 +778,7 @@ val ShipWeapon.displayName: String
 				StrikeCraftWing.FIGHTERS -> "Fighters"
 				StrikeCraftWing.BOMBERS -> "Bombers"
 			}
+			
 			is ShipWeapon.Torpedo -> "Torpedo" + (if (weaponIsPlural) "es" else "")
 			is ShipWeapon.ParticleClawLauncher -> "Particle Claw" + (if (weaponIsPlural) "s" else "")
 			is ShipWeapon.LightningYarn -> "Lightning Yarn"

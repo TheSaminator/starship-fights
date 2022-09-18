@@ -48,7 +48,8 @@ val ShipType.armaments: ShipArmaments
 		ShipType.KAKIA -> diadochiShipWeapons(3, false, 1, 2, 0, 3)
 		ShipType.MOLOCH -> diadochiShipWeapons(3, false, 1, 1, 1, 3)
 		ShipType.SCYLLA -> diadochiShipWeapons(3, false, 1, 0, 2, 3)
-		ShipType.AEDON -> diadochiShipWeapons(0, true, 4, 0, 2, 4)
+		ShipType.AEDON -> diadochiShipWeapons(4, false, 4, 0, 2, 4)
+		ShipType.KHAGAN -> diadochiShipWeapons(0, true, 1, 2, 0, 0)
 		
 		ShipType.KODKOD -> felinaeShipWeapons(
 			mapOf(
@@ -58,6 +59,7 @@ val ShipType.armaments: ShipArmaments
 			),
 			emptyMap()
 		)
+		
 		ShipType.ONCILLA -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 2,
@@ -67,6 +69,7 @@ val ShipType.armaments: ShipArmaments
 				setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) to 1,
 			)
 		)
+		
 		ShipType.MARGAY -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 2,
@@ -81,6 +84,7 @@ val ShipType.armaments: ShipArmaments
 				setOf(FiringArc.ABEAM_STARBOARD) to 1,
 			)
 		)
+		
 		ShipType.OCELOT -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 4,
@@ -91,6 +95,7 @@ val ShipType.armaments: ShipArmaments
 				FiringArc.FIRE_FORE_270 to 2,
 			)
 		)
+		
 		ShipType.BOBCAT -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 3,
@@ -103,6 +108,7 @@ val ShipType.armaments: ShipArmaments
 				FiringArc.FIRE_BROADSIDE to 3,
 			)
 		)
+		
 		ShipType.LYNX -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 5,
@@ -111,6 +117,7 @@ val ShipType.armaments: ShipArmaments
 			),
 			emptyMap()
 		)
+		
 		ShipType.LEOPARD -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 5,
@@ -119,6 +126,7 @@ val ShipType.armaments: ShipArmaments
 			),
 			emptyMap()
 		)
+		
 		ShipType.TIGER -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 3,
@@ -131,6 +139,7 @@ val ShipType.armaments: ShipArmaments
 				FiringArc.FIRE_BROADSIDE to 3,
 			)
 		)
+		
 		ShipType.CARACAL -> felinaeShipWeapons(
 			mapOf(
 				FiringArc.BOW to 10,
