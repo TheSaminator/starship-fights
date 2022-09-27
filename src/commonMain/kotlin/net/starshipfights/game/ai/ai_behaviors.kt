@@ -43,9 +43,11 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 										brain[shipAttackPriority forShip identifiedShip.id] += (identifiedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatTargetShipWeight])
 								}
 							}
+							
 							is ChatEntry.ShipEscaped -> {
 								// handle escaping ship
 							}
+							
 							is ChatEntry.ShipAttacked -> {
 								state.ships[msg.ship]?.let { targetedShip ->
 									if (targetedShip.owner != mySide)
@@ -54,12 +56,14 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 										brain[shipAttackPriority forShip msg.attacker.id] += Random.nextDouble(msg.damageInflicted.toDouble(), msg.damageInflicted + 1.0) * instincts[combatAvengeAttacks]
 								}
 							}
+							
 							is ChatEntry.ShipAttackFailed -> {
 								state.ships[msg.ship]?.let { targetedShip ->
 									if (targetedShip.owner != mySide)
 										brain[shipAttackPriority forShip targetedShip.id] += instincts[combatFrustratedByFailedAttacks]
 								}
 							}
+							
 							is ChatEntry.ShipBoarded -> {
 								state.ships[msg.ship]?.let { targetedShip ->
 									if (targetedShip.owner != mySide)
@@ -68,12 +72,14 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 										brain[shipAttackPriority forShip msg.boarder] += Random.nextDouble(msg.damageAmount.toDouble(), msg.damageAmount + 1.0) * instincts[combatAvengeAttacks]
 								}
 							}
+							
 							is ChatEntry.ShipDestroyed -> {
 								state.destroyedShips[msg.ship]?.let { targetedShip ->
 									if (targetedShip.owner == mySide && msg.destroyedBy is ShipAttacker.EnemyShip)
 										brain[shipAttackPriority forShip msg.destroyedBy.id] += instincts[combatAvengeShipwrecks] * (targetedShip.ship.shipType.weightClass.tier.ordinal + 1.5).pow(instincts[combatAvengeShipWeight])
 								}
 							}
+							
 							else -> {
 								// ignore
 							}
@@ -90,7 +96,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 					
 					when (phase) {
 						GamePhase.Deploy -> {
-							for ((shipId, position) in deploy(state, mySide, instincts)) {
+							for ((shipId, position) in deploy(state, mySide)) {
 								val abilityType = PlayerAbilityType.DeployShip(shipId.reinterpret())
 								val abilityData = PlayerAbilityData.DeployShip(position)
 								
@@ -103,6 +109,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 							
 							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 						}
+						
 						is GamePhase.Power -> {
 							val powerableShips = state.ships.values.filter { ship ->
 								ship.owner == mySide && !ship.isDoneCurrentPhase
@@ -118,6 +125,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 										
 										doActions.send(PlayerAction.UseAbility(PlayerAbilityType.ConfigurePower(ship.id, newPowerMode), PlayerAbilityData.ConfigurePower))
 									}
+									
 									is StandardShipReactor -> {
 										val enginesToShields = when {
 											ship.powerMode.engines == 0 -> -1
@@ -140,6 +148,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 							
 							doActions.send(PlayerAction.UseAbility(PlayerAbilityType.DonePhase(phase), PlayerAbilityData.DonePhase))
 						}
+						
 						is GamePhase.Move -> {
 							val movableShips = state.ships.values.filter { ship ->
 								ship.owner == mySide && !ship.isDoneCurrentPhase
@@ -169,6 +178,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 								)
 							}
 						}
+						
 						is GamePhase.Attack -> {
 							val potentialAttacks = state.ships.values.flatMap { ship ->
 								if (ship.owner == mySide)
@@ -233,6 +243,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 									
 									PickResponse.Location(chosenLocation)
 								}
+								
 								is ShipWeapon.Lance -> {
 									doActions.send(PlayerAction.UseAbility(PlayerAbilityType.ChargeLance(ship.id, weaponId), PlayerAbilityData.ChargeLance))
 									withTimeoutOrNull(50L) { getErrors.receive() }?.let { error ->
@@ -241,6 +252,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 									
 									PickResponse.Ship(target.id)
 								}
+								
 								else -> PickResponse.Ship(target.id)
 							}
 							
@@ -263,6 +275,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 								}
 							}
 						}
+						
 						is GamePhase.Repair -> {
 							val repairAbility = state.getPossibleAbilities(mySide).filter {
 								it !is PlayerAbilityType.DonePhase
@@ -294,7 +307,7 @@ suspend fun AIPlayer.behave(instincts: Instincts, mySide: GlobalShipController) 
 	}
 }
 
-fun deploy(gameState: GameState, mySide: GlobalShipController, instincts: Instincts): Map<Id<ShipInstance>, Position> {
+fun deploy(gameState: GameState, mySide: GlobalShipController): Map<Id<ShipInstance>, Position> {
 	val size = gameState.battleInfo.size
 	val totalPoints = gameState.getUsablePoints(mySide)
 	val maxTier = size.maxTier
@@ -308,7 +321,7 @@ fun deploy(gameState: GameState, mySide: GlobalShipController, instincts: Instin
 		val deployShip = deployable.filter { ship ->
 			deployed.sumOf { it.pointCost } + ship.pointCost <= totalPoints
 		}.associateWith { ship ->
-			instincts[ship.shipType.weightClass.focus]
+			ship.pointCost.toDouble()
 		}.weightedRandomOrNull() ?: break
 		
 		deployable -= deployShip

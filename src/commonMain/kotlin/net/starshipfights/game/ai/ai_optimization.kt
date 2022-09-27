@@ -23,10 +23,6 @@ val allInstincts = listOf(
 	combatPreyOnTheWeak,
 	combatFrustratedByFailedAttacks,
 	
-	deployEscortFocus,
-	deployCruiserFocus,
-	deployBattleshipFocus,
-	
 	navAggression,
 	navPassivity,
 	navLustForBlood,
@@ -73,9 +69,11 @@ class TestSession(gameState: GameState) {
 					stateMutable.value = result.newState
 					result.newState.checkVictory()?.let { gameEndMutable.complete(it) }
 				}
+				
 				is GameEvent.InvalidAction -> {
 					errorMessageChannel(player.side).send(result.message)
 				}
+				
 				is GameEvent.GameEnd -> {
 					gameEndMutable.complete(result)
 				}

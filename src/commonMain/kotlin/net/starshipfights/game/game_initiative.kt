@@ -9,9 +9,7 @@ fun GameState.calculateMovePhaseInitiative(): InitiativeMap =
 		.values
 		.groupBy { it.owner }
 		.mapValues { (_, shipList) ->
-			shipList
-				.filter { !it.isDoneCurrentPhase }
-				.sumOf { it.ship.pointCost * it.movementCoefficient }
+			100.0 / (1 + shipList.sumOf { it.ship.pointCost })
 		}
 
 fun GameState.getValidAttackersWith(target: ShipInstance): Map<Id<ShipInstance>, Set<Id<ShipWeapon>>> {
@@ -30,6 +28,7 @@ fun GameState.isValidTarget(ship: ShipInstance, weapon: ShipWeaponInstance, pick
 	return when (val weaponSpec = weapon.weapon) {
 		is AreaWeapon ->
 			target.owner.side != ship.owner.side && (targetPos - pickRequest.boundary.closestPointTo(targetPos)).length < weaponSpec.areaRadius
+		
 		else ->
 			target.owner.side in (pickRequest.type as PickType.Ship).allowSides && isValidPick(pickRequest, PickResponse.Ship(target.id))
 	}
@@ -53,24 +52,7 @@ fun GameState.calculateAttackPhaseInitiative(): InitiativeMap =
 		.values
 		.groupBy { it.owner }
 		.mapValues { (_, shipList) ->
-			shipList
-				.filter { !it.isDoneCurrentPhase }
-				.sumOf { ship ->
-					val allWeapons = ship.armaments
-						.filterValues { weapon -> hasValidTargets(ship, weapon) }
-					val usableWeapons = allWeapons - ship.usedArmaments
-					
-					val boardingPartyShot = (if (ship.canSendBoardingParty || ship.hasSentBoardingParty) 1 else 0)
-					val usableBoardingPartyShot = (if (ship.canSendBoardingParty) 1 else 0)
-					
-					val disruptionPulseShot = (if (ship.canUseDisruptionPulse || ship.hasUsedDisruptionPulse) 1 else 0)
-					val usableDisruptionPulseShot = (if (ship.canUseDisruptionPulse) 1 else 0)
-					
-					val allWeaponShots = allWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + boardingPartyShot + disruptionPulseShot
-					val usableWeaponShots = usableWeapons.values.sumOf { it.weapon.numShots * it.weapon.firingArcs.size } + usableBoardingPartyShot + usableDisruptionPulseShot
-					
-					ship.ship.pointCost * (usableWeaponShots.toDouble() / allWeaponShots)
-				}
+			100.0 / (1 + shipList.sumOf { it.ship.pointCost })
 		}
 
 fun GameState.withRecalculatedInitiative(initiativeMapAccessor: GameState.() -> InitiativeMap): GameState {

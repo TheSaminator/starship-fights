@@ -17,7 +17,7 @@ object AITesting {
 	fun main(args: Array<String>) {
 		UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel")
 		
-		val instinctVectorCounts = listOf(5, 11, 17)
+		val instinctVectorCounts = listOf(4, 9, 14)
 		val instinctVectorOptions = instinctVectorCounts.map { it.toString() }.toTypedArray()
 		
 		val instinctVectorIndex = JOptionPane.showOptionDialog(

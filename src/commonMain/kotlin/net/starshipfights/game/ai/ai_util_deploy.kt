@@ -4,39 +4,6 @@ import net.starshipfights.data.Id
 import net.starshipfights.game.*
 import kotlin.math.sign
 
-val deployEscortFocus by instinct(1.0..5.0)
-val deployCruiserFocus by instinct(1.0..5.0)
-val deployBattleshipFocus by instinct(1.0..5.0)
-
-val ShipWeightClass.focus: Instinct
-	get() = when (this) {
-		ShipWeightClass.ESCORT -> deployEscortFocus
-		ShipWeightClass.DESTROYER -> deployCruiserFocus
-		ShipWeightClass.CRUISER -> deployCruiserFocus
-		ShipWeightClass.BATTLECRUISER -> deployCruiserFocus
-		ShipWeightClass.BATTLESHIP -> deployBattleshipFocus
-		
-		ShipWeightClass.BATTLE_BARGE -> deployBattleshipFocus
-		
-		ShipWeightClass.GRAND_CRUISER -> deployBattleshipFocus
-		ShipWeightClass.COLOSSUS -> deployBattleshipFocus
-		
-		ShipWeightClass.FF_ESCORT -> deployEscortFocus
-		ShipWeightClass.FF_DESTROYER -> deployCruiserFocus
-		ShipWeightClass.FF_CRUISER -> deployCruiserFocus
-		ShipWeightClass.FF_BATTLECRUISER -> deployCruiserFocus
-		ShipWeightClass.FF_BATTLESHIP -> deployBattleshipFocus
-		
-		ShipWeightClass.AUXILIARY_SHIP -> deployEscortFocus
-		ShipWeightClass.LIGHT_CRUISER -> deployEscortFocus
-		ShipWeightClass.MEDIUM_CRUISER -> deployCruiserFocus
-		ShipWeightClass.HEAVY_CRUISER -> deployBattleshipFocus
-		
-		ShipWeightClass.FRIGATE -> deployEscortFocus
-		ShipWeightClass.LINE_SHIP -> deployCruiserFocus
-		ShipWeightClass.DREADNOUGHT -> deployBattleshipFocus
-	}
-
 private val ShipWeightClass.rowIndex: Int
 	get() = when (this) {
 		ShipWeightClass.ESCORT -> 3
