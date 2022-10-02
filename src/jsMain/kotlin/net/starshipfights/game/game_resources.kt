@@ -337,6 +337,9 @@ object RenderResources {
 				}).apply {
 					userData = "hologram"
 					
+					depthTest = false
+					side = DoubleSide
+					
 					blending = CustomBlending
 					blendEquation = AddEquation
 					blendSrc = OneFactor
