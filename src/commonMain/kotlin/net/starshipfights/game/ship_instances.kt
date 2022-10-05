@@ -90,6 +90,7 @@ data class ShipInstance(
 		return when (weapon) {
 			is ShipWeaponInstance.Cannon -> weaponAmount > 0
 			is ShipWeaponInstance.Lance -> weapon.numCharges > EPSILON
+			is ShipWeaponInstance.Missile -> true
 			is ShipWeaponInstance.Torpedo -> true
 			is ShipWeaponInstance.Hangar -> weapon.wingHealth > 0.0
 			is ShipWeaponInstance.ParticleClawLauncher -> true
@@ -218,6 +219,7 @@ val ShipInstance.movement: ShipMovement
 				copy(turnAngle = turnAngle * coefficient, moveSpeed = moveSpeed * coefficient)
 			}
 		}
+		
 		is FelinaeShipMovement -> {
 			val coefficient = movementCoefficient
 			with(m) {
@@ -235,6 +237,7 @@ val ShipInstance.durability: ShipDurability
 		is FelinaeShipDurability -> d.copy(
 			maxHullPoints = d.maxHullPoints - recoalescenceMaxHullDamage,
 		)
+		
 		is StandardShipDurability -> d.copy(
 			turretDefense = if (canUseTurrets) d.turretDefense else 0.0
 		)
@@ -271,6 +274,7 @@ const val SHIP_BASE_SIZE = 250.0
 const val SHIP_TRANSPORTARIUM_RANGE = 1_500.0
 
 const val SHIP_TORPEDO_RANGE = 2_000.0
+const val SHIP_MISSILE_RANGE = 2_250.0
 const val SHIP_CANNON_RANGE = 2_500.0
 const val SHIP_LANCE_RANGE = 3_000.0
 const val SHIP_HANGAR_RANGE = 3_500.0

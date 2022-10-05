@@ -33,23 +33,30 @@ val ShipType.armaments: ShipArmaments
 		ShipType.VOORHOEDE -> ndrcShipWeapons(3, true, 0, false, 3, 1)
 		ShipType.KRIJGSCHUIT -> ndrcShipWeapons(4, true, 2, false, 6, 0)
 		
-		ShipType.ERIS -> diadochiShipWeapons(2, false, 1, 0, 0, 0)
-		ShipType.TYPHON -> diadochiShipWeapons(0, false, 1, 0, 0, 1)
-		ShipType.AHRIMAN -> diadochiShipWeapons(1, false, 0, 1, 0, 0)
-		ShipType.APOPHIS -> diadochiShipWeapons(1, false, 0, 0, 1, 1)
-		ShipType.AZATHOTH -> diadochiShipWeapons(1, false, 1, 0, 0, 0)
-		ShipType.CHERNOBOG -> diadochiShipWeapons(2, false, 0, 2, 0, 0)
-		ShipType.CIPACTLI -> diadochiShipWeapons(2, false, 2, 0, 0, 0)
-		ShipType.LAMASHTU -> diadochiShipWeapons(2, false, 0, 1, 1, 0)
-		ShipType.LOTAN -> diadochiShipWeapons(2, false, 0, 0, 2, 2)
-		ShipType.MORGOTH -> diadochiShipWeapons(2, false, 1, 1, 0, 0)
-		ShipType.TIAMAT -> diadochiShipWeapons(2, false, 1, 0, 1, 1)
-		ShipType.CHARYBDIS -> diadochiShipWeapons(3, false, 3, 0, 0, 3)
-		ShipType.KAKIA -> diadochiShipWeapons(3, false, 1, 2, 0, 3)
-		ShipType.MOLOCH -> diadochiShipWeapons(3, false, 1, 1, 1, 3)
-		ShipType.SCYLLA -> diadochiShipWeapons(3, false, 1, 0, 2, 3)
-		ShipType.AEDON -> diadochiShipWeapons(4, false, 4, 0, 2, 4)
-		ShipType.KHAGAN -> diadochiShipWeapons(0, true, 1, 2, 0, 0)
+		ShipType.ERIS -> diadochiShipWeapons(2, false, 1, 0, 0, 0, 0)
+		ShipType.PAZUZU -> diadochiShipWeapons(0, false, 1, 0, 1, 0, 0)
+		ShipType.TYPHON -> diadochiShipWeapons(0, false, 1, 0, 0, 0, 1)
+		ShipType.AHRIMAN -> diadochiShipWeapons(1, false, 0, 1, 0, 0, 0)
+		ShipType.AIPALOOVIK -> diadochiShipWeapons(1, false, 0, 0, 1, 0, 0)
+		ShipType.APOPHIS -> diadochiShipWeapons(1, false, 0, 0, 0, 1, 1)
+		ShipType.AZATHOTH -> diadochiShipWeapons(1, false, 1, 0, 0, 0, 0)
+		ShipType.CHARON -> diadochiShipWeapons(2, false, 0, 0, 1, 1, 1)
+		ShipType.CHERNOBOG -> diadochiShipWeapons(2, false, 0, 2, 0, 0, 0)
+		ShipType.CIPACTLI -> diadochiShipWeapons(2, false, 2, 0, 0, 0, 0)
+		ShipType.ERESHKIGAL -> diadochiShipWeapons(2, false, 0, 0, 2, 0, 0)
+		ShipType.LAMASHTU -> diadochiShipWeapons(2, false, 0, 1, 0, 1, 0)
+		ShipType.LOTAN -> diadochiShipWeapons(2, false, 0, 0, 0, 2, 2)
+		ShipType.MORGOTH -> diadochiShipWeapons(2, false, 1, 1, 0, 0, 0)
+		ShipType.TAMAG -> diadochiShipWeapons(2, false, 0, 1, 1, 0, 0)
+		ShipType.TIAMAT -> diadochiShipWeapons(2, false, 1, 0, 0, 1, 1)
+		ShipType.WHIRO -> diadochiShipWeapons(2, false, 1, 0, 1, 0, 0)
+		ShipType.CHARYBDIS -> diadochiShipWeapons(3, false, 3, 0, 0, 0, 3)
+		ShipType.KAKIA -> diadochiShipWeapons(3, false, 1, 2, 0, 0, 3)
+		ShipType.MOLOCH -> diadochiShipWeapons(3, false, 1, 1, 0, 1, 3)
+		ShipType.SCYLLA -> diadochiShipWeapons(3, false, 1, 0, 0, 2, 3)
+		ShipType.THANATOS -> diadochiShipWeapons(0, false, 2, 0, 0, 1, 3, 1)
+		ShipType.AEDON -> diadochiShipWeapons(4, false, 4, 0, 0, 2, 4)
+		ShipType.KHAGAN -> diadochiShipWeapons(0, true, 1, 2, 0, 0, 0)
 		
 		ShipType.KODKOD -> felinaeShipWeapons(
 			mapOf(
@@ -111,18 +118,18 @@ val ShipType.armaments: ShipArmaments
 		
 		ShipType.LYNX -> felinaeShipWeapons(
 			mapOf(
-				FiringArc.BOW to 5,
-				FiringArc.ABEAM_PORT to 5,
-				FiringArc.ABEAM_STARBOARD to 5,
+				FiringArc.BOW to 6,
+				FiringArc.ABEAM_PORT to 6,
+				FiringArc.ABEAM_STARBOARD to 6,
 			),
 			emptyMap()
 		)
 		
 		ShipType.LEOPARD -> felinaeShipWeapons(
 			mapOf(
-				FiringArc.BOW to 5,
-				FiringArc.ABEAM_PORT to 5,
-				FiringArc.ABEAM_STARBOARD to 5,
+				FiringArc.BOW to 6,
+				FiringArc.ABEAM_PORT to 6,
+				FiringArc.ABEAM_STARBOARD to 6,
 			),
 			emptyMap()
 		)

@@ -1,0 +1,9 @@
+newmtl diadochi_2_aipaloovik_class
+illum 1
+Ka 0.0 0.0 0.0
+Kd 0.8 0.8 0.8
+Ks 0.6 0.6 0.6
+Ns 6.9
+map_Ka diadochi-2-aipaloovik-class.diff.png
+map_Kd diadochi-2-aipaloovik-class.diff.png
+map_Ks diadochi-2-aipaloovik-class.spec.png

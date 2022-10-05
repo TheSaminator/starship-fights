@@ -132,8 +132,11 @@ fun diadochiShipWeapons(
 	
 	cannonSections: Int,
 	lanceSections: Int,
+	missileSections: Int,
 	hangarSections: Int,
 	dorsalLances: Int,
+	
+	extraHangars: Int = 0
 ): ShipArmaments {
 	val idCounter = ShipWeaponIdCounter()
 	val weapons = mutableMapOf<Id<ShipWeapon>, ShipWeapon>()
@@ -155,7 +158,11 @@ fun diadochiShipWeapons(
 		idCounter.add(weapons, ShipWeapon.Lance(2, setOf(FiringArc.ABEAM_STARBOARD), "Starboard lance battery"))
 	}
 	
-	repeat(hangarSections * 2) { w ->
+	repeat(missileSections) {
+		idCounter.add(weapons, ShipWeapon.Missile(4, "Dorsal missile battery"))
+	}
+	
+	repeat((hangarSections * 2) + extraHangars) { w ->
 		if (w % 2 == 0)
 			idCounter.add(weapons, ShipWeapon.Hangar(StrikeCraftWing.FIGHTERS, "Fighter complement"))
 		else

@@ -176,6 +176,7 @@ object GameUI {
 						is ChatEntry.AdminAnnouncement -> {
 							+entry.message
 						}
+						
 						is ChatEntry.PlayerMessage -> {
 							val senderInfo = state.admiralInfo(entry.senderSide)
 							val senderSide = entry.senderSide.relativeTo(mySide)
@@ -190,6 +191,7 @@ object GameUI {
 							+Entities.nbsp
 							+entry.message
 						}
+						
 						is ChatEntry.ShipIdentified -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -207,6 +209,7 @@ object GameUI {
 								+" by the enemy"
 							+"!"
 						}
+						
 						is ChatEntry.ShipEscaped -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -225,6 +228,7 @@ object GameUI {
 								"disengaged"
 							+" from the battlefield!"
 						}
+						
 						is ChatEntry.ShipAttacked -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -255,6 +259,7 @@ object GameUI {
 										+when (entry.weapon) {
 											is ShipWeapon.Cannon -> "cannons"
 											is ShipWeapon.Lance -> "lances"
+											is ShipWeapon.Missile -> "missiles"
 											is ShipWeapon.Hangar -> "bombers"
 											is ShipWeapon.Torpedo -> "torpedoes"
 											is ShipWeapon.ParticleClawLauncher -> "particle claws"
@@ -271,9 +276,11 @@ object GameUI {
 										+state.getShipInfo(entry.attacker.id).fullName
 									}
 								}
+								
 								ShipAttacker.Fire -> {
 									+"onboard fires"
 								}
+								
 								ShipAttacker.Bombers -> {
 									if (owner == LocalSide.RED)
 										+"our "
@@ -291,6 +298,7 @@ object GameUI {
 							}
 							+"."
 						}
+						
 						is ChatEntry.ShipAttackFailed -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -311,6 +319,7 @@ object GameUI {
 										+when (entry.weapon) {
 											is ShipWeapon.Cannon -> "cannons"
 											is ShipWeapon.Lance -> "lances"
+											is ShipWeapon.Missile -> "missiles"
 											is ShipWeapon.Hangar -> "bombers"
 											is ShipWeapon.Torpedo -> "torpedoes"
 											is ShipWeapon.ParticleClawLauncher -> "particle claws"
@@ -327,9 +336,11 @@ object GameUI {
 										+state.getShipInfo(entry.attacker.id).fullName
 									}
 								}
+								
 								ShipAttacker.Fire -> {
 									+"onboard fires"
 								}
+								
 								ShipAttacker.Bombers -> {
 									if (owner == LocalSide.RED)
 										+"our "
@@ -344,6 +355,7 @@ object GameUI {
 							}
 							+"."
 						}
+						
 						is ChatEntry.ShipBoarded -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -372,6 +384,7 @@ object GameUI {
 							}
 							+"."
 						}
+						
 						is ChatEntry.ShipDestroyed -> {
 							val ship = state.getShipInfo(entry.ship)
 							val owner = state.getShipOwner(entry.ship).relativeTo(mySide)
@@ -393,9 +406,11 @@ object GameUI {
 										+state.getShipInfo(entry.destroyedBy.id).fullName
 									}
 								}
+								
 								ShipAttacker.Fire -> {
 									+"onboard fires"
 								}
+								
 								ShipAttacker.Bombers -> {
 									+if (owner == LocalSide.RED)
 										"our "
@@ -436,6 +451,7 @@ object GameUI {
 							+"Pre-Battle Deployment"
 						}
 					}
+					
 					is GamePhase.Power -> {
 						strong(classes = "heading") {
 							+"Turn ${state.phase.turn}"
@@ -443,6 +459,7 @@ object GameUI {
 						br
 						+"Phase I - Power Distribution"
 					}
+					
 					is GamePhase.Move -> {
 						strong(classes = "heading") {
 							+"Turn ${state.phase.turn}"
@@ -450,6 +467,7 @@ object GameUI {
 						br
 						+"Phase II - Ship Movement"
 					}
+					
 					is GamePhase.Attack -> {
 						strong(classes = "heading") {
 							+"Turn ${state.phase.turn}"
@@ -457,6 +475,7 @@ object GameUI {
 						br
 						+"Phase III - Weapons Fire"
 					}
+					
 					is GamePhase.Repair -> {
 						strong(classes = "heading") {
 							+"Turn ${state.phase.turn}"
@@ -489,6 +508,7 @@ object GameUI {
 				GamePhase.Deploy -> {
 					drawDeployPhase(state, abilities)
 				}
+				
 				else -> {
 					drawShipActions(state, selectedShip.value)
 				}
@@ -552,6 +572,7 @@ object GameUI {
 							}
 					}
 				}
+				
 				else -> {
 					if (ship.canUseShields) {
 						val totalShield = ship.powerMode.shields
@@ -838,6 +859,7 @@ object GameUI {
 									}
 								}
 							}
+							
 							is FelinaeShipReactor -> p {
 								+"Reactor Priority: ${ship.felinaeShipPowerMode.displayName}"
 							}
@@ -854,6 +876,7 @@ object GameUI {
 								}
 								br
 							}
+							
 							ShipModuleStatus.DESTROYED -> {
 								span {
 									style = "color:#d22"
@@ -861,6 +884,7 @@ object GameUI {
 								}
 								br
 							}
+							
 							ShipModuleStatus.ABSENT -> {}
 						}
 					}
@@ -972,6 +996,7 @@ object GameUI {
 										}
 									}
 								}
+								
 								is PlayerAbilityType.ConfigurePower -> {
 									a(href = "#") {
 										+"Set Priority: ${ability.powerMode.displayName}"
@@ -982,6 +1007,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.MoveShip -> {
 									a(href = "#") {
 										+"Move Ship"
@@ -992,6 +1018,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.UseInertialessDrive -> {
 									a(href = "#") {
 										+"Activate Inertialess Drive (${ship.remainingInertialessDriveJumps})"
@@ -1002,6 +1029,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.DisruptionPulse -> {
 									a(href = "#") {
 										+"Activate Strike-Craft Disruption Pulse (${ship.remainingDisruptionPulseEmissions})"
@@ -1012,6 +1040,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.BoardingParty -> {
 									a(href = "#") {
 										+"Board Enemy Vessel"
@@ -1022,6 +1051,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.RepairShipModule -> {
 									a(href = "#") {
 										+"Repair ${ability.module.getDisplayName(ship.ship)}"
@@ -1032,6 +1062,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.ExtinguishFire -> {
 									a(href = "#") {
 										+"Extinguish Fire"
@@ -1042,6 +1073,7 @@ object GameUI {
 									}
 									br
 								}
+								
 								is PlayerAbilityType.Recoalesce -> {
 									a(href = "#") {
 										+"Activate Recoalescence"
@@ -1073,6 +1105,7 @@ object GameUI {
 										}
 									}
 								}
+								
 								is PlayerAbilityType.UseWeapon -> {
 									a(href = "#") {
 										+"$weaponVerb $weaponDesc"
@@ -1082,6 +1115,7 @@ object GameUI {
 										}
 									}
 								}
+								
 								is PlayerAbilityType.RecallStrikeCraft -> {
 									a(href = "#") {
 										+"Recall $weaponDesc"
@@ -1157,6 +1191,7 @@ object GameUI {
 				
 				ClientAbilityData.newShipPowerModes.clear()
 			}
+			
 			else -> {
 				// nothing needs to be done
 			}

@@ -108,6 +108,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 						br
 						+"Rotate ${(movement.turnAngle * 180.0 / PI).roundToInt()} degrees/turn"
 					}
+					
 					is FelinaeShipMovement -> td {
 						+"Accelerate ${movement.moveSpeed.roundToInt()} meters/turn"
 						br
@@ -129,6 +130,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 							+reactor.gridEfficiency.toString()
 						}
 					}
+					
 					FelinaeShipReactor -> {
 						td {
 							colSpan = "2"
@@ -185,6 +187,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 						val weaponRangeMult = when (weapon) {
 							is ShipWeapon.Cannon -> shipType.weightClass.firepower.rangeMultiplier
 							is ShipWeapon.Lance -> shipType.weightClass.firepower.rangeMultiplier
+							is ShipWeapon.Missile -> shipType.weightClass.firepower.rangeMultiplier
 							is ShipWeapon.ParticleClawLauncher -> shipType.weightClass.firepower.rangeMultiplier
 							is ShipWeapon.LightningYarn -> shipType.weightClass.firepower.rangeMultiplier
 							else -> 1.0
@@ -201,6 +204,7 @@ suspend fun ApplicationCall.shipPage(shipType: ShipType): HTML.() -> Unit = page
 						+when (weapon) {
 							is ShipWeapon.Cannon -> "$numShots cannon" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.Lance -> "$numShots lance" + (if (numShots == 1) "" else "s")
+							is ShipWeapon.Missile -> "$numShots missile" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.Torpedo -> "$numShots launcher" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.Hangar -> "$numShots strike wing" + (if (numShots == 1) "" else "s")
 							is ShipWeapon.ParticleClawLauncher -> "$numShots particle claw launcher" + (if (numShots == 1) "" else "s")

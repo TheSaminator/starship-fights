@@ -75,6 +75,23 @@ sealed class ShipWeapon {
 	}
 	
 	@Serializable
+	data class Missile(
+		override val numShots: Int,
+		override val groupLabel: String,
+	) : ShipWeapon() {
+		override val maxRange: Double
+			get() = SHIP_MISSILE_RANGE
+		
+		override val firingArcs: Set<FiringArc>
+			get() = FiringArc.FIRE_FORE_270
+		
+		override val addsPointCost: Int
+			get() = (numShots * 1.25).roundToInt()
+		
+		override fun instantiate() = ShipWeaponInstance.Missile(this)
+	}
+	
+	@Serializable
 	data class Torpedo(
 		override val firingArcs: Set<FiringArc>,
 		override val groupLabel: String,
@@ -246,6 +263,9 @@ sealed class ShipWeaponInstance {
 		val charge: Double
 			get() = -expm1(-numCharges)
 	}
+	
+	@Serializable
+	data class Missile(override val weapon: ShipWeapon.Missile) : ShipWeaponInstance()
 	
 	@Serializable
 	data class Torpedo(override val weapon: ShipWeapon.Torpedo) : ShipWeaponInstance()
@@ -423,6 +443,16 @@ fun ShipInstance.afterTargeted(by: ShipInstance, weaponId: Id<ShipWeapon>) = whe
 		}
 		
 		impact(hits).applyCriticals(by, weaponId)
+	}
+	
+	is ShipWeaponInstance.Missile -> {
+		if (shieldAmount > 0) {
+			if (Random.nextBoolean())
+				impact(1).applyCriticals(by, weaponId)
+			else
+				ImpactResult.Damaged(this, ImpactDamage.Success(0))
+		} else
+			impact(if (Random.nextBoolean()) 2 else 1).applyCriticals(by, weaponId)
 	}
 	
 	is ShipWeaponInstance.Torpedo -> {
@@ -767,13 +797,14 @@ val ShipWeapon.displayName: String
 			setOf(FiringArc.BOW, FiringArc.ABEAM_PORT) -> "Wide-Angle Port "
 			setOf(FiringArc.BOW, FiringArc.ABEAM_STARBOARD) -> "Wide-Angle Starboard "
 			else -> null
-		}.takeIf { this !is ShipWeapon.Hangar } ?: ""
+		}.takeIf { this !is ShipWeapon.Missile && this !is ShipWeapon.Hangar } ?: ""
 		
 		val weaponIsPlural = numShots > 1
 		
 		val weaponDesc = when (this) {
 			is ShipWeapon.Cannon -> "Cannon" + (if (weaponIsPlural) "s" else "")
 			is ShipWeapon.Lance -> "Lance" + (if (weaponIsPlural) "s" else "")
+			is ShipWeapon.Missile -> "Missile" + (if (weaponIsPlural) "s" else "")
 			is ShipWeapon.Hangar -> when (wing) {
 				StrikeCraftWing.FIGHTERS -> "Fighters"
 				StrikeCraftWing.BOMBERS -> "Bombers"

@@ -71,6 +71,7 @@ fun Id<ShipWeapon>.expectedAdvantageFromWeaponUsage(gameState: GameState, ship: 
 	return when (weaponInstance) {
 		is ShipWeaponInstance.Cannon -> cannonChanceToHit(ship, target) * weaponInstance.weapon.numShots
 		is ShipWeaponInstance.Lance -> weaponInstance.charge * weaponInstance.weapon.numShots
+		is ShipWeaponInstance.Missile -> if (target.shieldAmount > 0) 0.5 else 1.5
 		is ShipWeaponInstance.Torpedo -> if (target.shieldAmount > 0) 0.5 else 2.0
 		is ShipWeaponInstance.Hangar -> when (weaponInstance.weapon.wing) {
 			StrikeCraftWing.BOMBERS -> {
@@ -79,6 +80,7 @@ fun Id<ShipWeapon>.expectedAdvantageFromWeaponUsage(gameState: GameState, ship: 
 				
 				calculateShipDamageChanceFromBombing(calculatedNextBombing) - calculateShipDamageChanceFromBombing(calculatedPrevBombing)
 			}
+			
 			StrikeCraftWing.FIGHTERS -> {
 				val calculatedPrevBombing = target.calculateBombing(gameState.ships)
 				val calculatedNextBombing = target.calculateBombing(gameState.ships, extraFighters = weaponInstance.wingHealth)
@@ -86,6 +88,7 @@ fun Id<ShipWeapon>.expectedAdvantageFromWeaponUsage(gameState: GameState, ship: 
 				calculateShipDamageChanceFromBombing(calculatedPrevBombing) - calculateShipDamageChanceFromBombing(calculatedNextBombing)
 			}
 		}
+		
 		is ShipWeaponInstance.ParticleClawLauncher -> (cannonChanceToHit(ship, target) + 1) * weaponInstance.weapon.numShots
 		is ShipWeaponInstance.LightningYarn -> weaponInstance.weapon.numShots.toDouble()
 		is ShipWeaponInstance.MegaCannon -> 5.0
