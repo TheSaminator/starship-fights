@@ -17,7 +17,7 @@ fun generateNPCFleet(owner: FactionFlavor, rank: AdmiralRank, sizeMult: Double):
 	val possibleShips = ShipType.values().filter { it.faction == owner.shipSource && it.weightClass.tier <= battleSize.maxTier }
 	val maxPoints = (battleSize.numPoints * sizeMult).roundToInt()
 	
-	val chosenShipTypes = buildList {
+	val chosenShipTypes = buildList<ShipType> {
 		while (true)
 			this += possibleShips.filter { ship ->
 				this.sumOf { it.pointCost } + ship.pointCost <= maxPoints

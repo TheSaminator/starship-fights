@@ -37,7 +37,7 @@ enum class AdmiralNameFlavor {
 		}
 		
 		fun forFactionFlavor(flavor: FactionFlavor) = when (flavor) {
-			FactionFlavor.MECHYRDIA -> setOf(MECHYRDIA, TYLA, DUTCH)
+			FactionFlavor.MECHYRDIA -> setOf(MECHYRDIA, TYLA, DUTCH, CALIBOR)
 			FactionFlavor.TYLA -> setOf(TYLA)
 			FactionFlavor.OLYMPIA -> setOf(OLYMPIA)
 			FactionFlavor.TEXANDRIA -> setOf(DUTCH, NORSE)
